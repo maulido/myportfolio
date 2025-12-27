@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
+import RichTextEditor from "@/components/RichTextEditor";
 
 export default function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -129,15 +130,11 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium leading-none">Content (Markdown supported)</label>
-                        <textarea
-                            required
-                            name="content"
-                            value={formData.content}
-                            onChange={handleChange}
-                            rows={15}
-                            className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring font-mono"
-                            placeholder="# Markdown Content"
+                        <label className="text-sm font-medium leading-none">Content</label>
+                        <RichTextEditor
+                            content={formData.content}
+                            onChange={(content) => setFormData(prev => ({ ...prev, content }))}
+                            placeholder="Edit your blog post..."
                         />
                     </div>
 
