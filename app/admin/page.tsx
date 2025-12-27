@@ -1,0 +1,687 @@
+"use client";
+
+import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { LogOut, Plus, LayoutDashboard, FileText, Briefcase, Image, Award, MessageCircle, Pencil, Trash2, Search } from "lucide-react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+
+import {
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    AreaChart,
+    Area
+} from "recharts";
+
+const analyticsData = [
+    { name: "Mon", views: 400, downloads: 24, messages: 12 },
+    { name: "Tue", views: 300, downloads: 13, messages: 9 },
+    { name: "Wed", views: 200, downloads: 38, messages: 15 },
+    { name: "Thu", views: 278, downloads: 39, messages: 10 },
+    { name: "Fri", views: 189, downloads: 48, messages: 22 },
+    { name: "Sat", views: 239, downloads: 38, messages: 20 },
+    { name: "Sun", views: 349, downloads: 43, messages: 25 },
+];
+
+export default function AdminDashboard() {
+    const { data: session, status } = useSession();
+    const router = useRouter();
+    const [activeTab, setActiveTab] = useState("overview");
+    const [isWorking, setIsWorking] = useState(true);
+
+    const [stats, setStats] = useState({ totalPosts: 0, totalProjects: 0, totalGallery: 0, visitors: 0, avgDuration: 0 });
+    const [posts, setPosts] = useState([]);
+    const [projects, setProjects] = useState([]);
+    const [gallery, setGallery] = useState([]);
+    const [certs, setCerts] = useState([]);
+    const [testimonials, setTestimonials] = useState([]);
+    const [loadingData, setLoadingData] = useState(true);
+    const [searchTerm, setSearchTerm] = useState("");
+
+    const fetchData = async () => {
+        setLoadingData(true);
+        try {
+            const [postsRes, projectsRes, galleryRes, certsRes, testimonialsRes, analyticsRes, settingsRes, sessionsRes] = await Promise.all([
+                fetch('/api/blog'),
+                fetch('/api/projects'),
+                fetch('/api/gallery'),
+                fetch('/api/certifications'),
+                fetch('/api/testimonials'),
+                fetch('/api/analytics'),
+                fetch('/api/settings?key=isWorking'),
+                fetch('/api/analytics/session/stats')
+            ]);
+
+            const [postsData, projectsData, galleryData, certsData, testimonialsData, analyticsData, settingsData, sessionsData] = await Promise.all([
+                postsRes.json(),
+                projectsRes.json(),
+                galleryRes.json(),
+                certsRes.json(),
+                testimonialsRes.json(),
+                analyticsRes.json(),
+                settingsRes.json(),
+                sessionsRes.json()
+            ]);
+
+            if (postsData.success) setPosts(postsData.data);
+            if (projectsData.success) setProjects(projectsData.data);
+            if (galleryData.success) setGallery(galleryData.data);
+            if (certsData.success) setCerts(certsData.data);
+            if (testimonialsData.success) setTestimonials(testimonialsData.data);
+            if (settingsData.success && settingsData.data !== undefined) setIsWorking(settingsData.data);
+
+            // Calculate aggregate stats
+            const totalViews = analyticsData.data?.filter((a: any) => a.type === 'page_view')?.reduce((acc: number, curr: any) => acc + curr.count, 0) || 0;
+            const totalDownloads = analyticsData.data?.find((a: any) => a.type === 'cv_download')?.count || 0;
+
+            setStats({
+                totalPosts: postsData.data?.length || 0,
+                totalProjects: projectsData.data?.length || 0,
+                totalGallery: galleryData.data?.length || 0,
+                visitors: sessionsData.data?.totalVisitors || 0,
+                avgDuration: sessionsData.data?.avgDuration || 0
+            });
+        } catch (error) {
+            console.error("Failed to fetch admin data", error);
+        } finally {
+            setLoadingData(false);
+        }
+    };
+
+    const handleToggleWorking = async () => {
+        const newValue = !isWorking;
+        setIsWorking(newValue);
+        try {
+            await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key: 'isWorking', value: newValue })
+            });
+        } catch (error) {
+            console.error("Failed to update status", error);
+        }
+    };
+
+    const handleDelete = async (type: string, id: string) => {
+        if (!confirm(`Are you sure you want to delete this ${type}?`)) return;
+
+        try {
+            let endpoint = `/api/${type}/${id}`;
+            if (type === 'post') endpoint = `/api/blog/${id}`;
+            if (type === 'certification') endpoint = `/api/certifications/${id}`;
+            if (type === 'testimonial') endpoint = `/api/testimonials/${id}`;
+
+            const res = await fetch(endpoint, { method: 'DELETE' });
+            if (res.ok) {
+                fetchData();
+            } else {
+                alert(`Failed to delete ${type}`);
+            }
+        } catch (error) {
+            console.error(error);
+            alert("An error occurred");
+        }
+    };
+
+    useEffect(() => {
+        if (status === "authenticated") {
+            fetchData();
+        }
+    }, [status]);
+
+    useEffect(() => {
+        setSearchTerm("");
+    }, [activeTab]);
+
+    if (status === "loading") {
+        return <div className="flex h-screen items-center justify-center bg-background">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>;
+    }
+
+    return (
+        <div className="flex min-h-screen flex-col bg-background/50">
+            <nav className="border-b border-primary/10 bg-card/20 backdrop-blur-md sticky top-0 z-50">
+                <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                            <LayoutDashboard className="h-6 w-6 text-primary" />
+                        </div>
+                        <span className="font-bold text-xl tracking-tighter">ADMIN<span className="text-primary">CORE</span></span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <div className="hidden md:flex flex-col items-end">
+                            <span className="text-sm font-bold text-foreground">{session?.user?.name}</span>
+                            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Super Admin</span>
+                        </div>
+                        <button
+                            onClick={() => signOut({ callbackUrl: "/login" })}
+                            className="p-2 hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-colors border border-primary/10"
+                            title="Sign Out"
+                        >
+                            <LogOut className="h-5 w-5" />
+                        </button>
+                    </div>
+                </div>
+            </nav>
+
+            <main className="flex-1 container mx-auto px-4 py-8">
+                <div className="grid gap-8 md:grid-cols-[250px_1fr]">
+                    {/* Sidebar */}
+                    <aside className="w-full flex flex-col gap-2">
+                        <div className="px-4 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Main Menu</div>
+                        <button
+                            onClick={() => setActiveTab("overview")}
+                            className={`inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${activeTab === "overview" ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}
+                        >
+                            <LayoutDashboard className="mr-3 h-4 w-4" />
+                            Dashboard
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("posts")}
+                            className={`inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${activeTab === "posts" ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}
+                        >
+                            <FileText className="mr-3 h-4 w-4" />
+                            Blog Posts
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("projects")}
+                            className={`inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${activeTab === "projects" ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}
+                        >
+                            <Briefcase className="mr-3 h-4 w-4" />
+                            Projects
+                        </button>
+
+                        <div className="px-4 py-2 mt-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Other Assets</div>
+                        <button
+                            onClick={() => setActiveTab("gallery")}
+                            className={`inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${activeTab === "gallery" ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}
+                        >
+                            <Image className="mr-3 h-4 w-4" />
+                            Gallery
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("certifications")}
+                            className={`inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${activeTab === "certifications" ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}
+                        >
+                            <Award className="mr-3 h-4 w-4" />
+                            Certifications
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("testimonials")}
+                            className={`inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${activeTab === "testimonials" ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}
+                        >
+                            <MessageCircle className="mr-3 h-4 w-4" />
+                            Testimonials
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("documents")}
+                            className={`inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${activeTab === "documents" ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}
+                        >
+                            <FileText className="mr-3 h-4 w-4" />
+                            Documents (CV)
+                        </button>
+                    </aside>
+
+                    {/* Content Area */}
+                    <div className="space-y-8">
+                        {activeTab === "overview" && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="space-y-8"
+                            >
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                    <div>
+                                        <h2 className="text-3xl font-bold tracking-tight">System Overview</h2>
+                                        <p className="text-muted-foreground">Real-time performance and portfolio metrics.</p>
+                                    </div>
+                                    <div className="flex items-center gap-3 bg-card/50 backdrop-blur-xl border border-primary/10 p-2 rounded-2xl">
+                                        <span className="text-xs font-bold pl-2">Status:</span>
+                                        <button
+                                            onClick={handleToggleWorking}
+                                            className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${isWorking ? "bg-green-500 text-white shadow-lg shadow-green-500/20" : "bg-orange-500 text-white shadow-lg shadow-orange-500/20"}`}
+                                        >
+                                            {isWorking ? "Available for Hire" : "Currently Busy"}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Summary Stats */}
+                                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                                    {[
+                                        { label: "Total Posts", value: stats.totalPosts, trend: "+12%", icon: <FileText className="h-4 w-4" /> },
+                                        { label: "Total Projects", value: stats.totalProjects, trend: "+8%", icon: <Briefcase className="h-4 w-4" /> },
+                                        { label: "Gallery Items", value: stats.totalGallery, trend: "+5%", icon: <Image className="h-4 w-4" /> },
+                                        { label: "Avg Session", value: `${Math.floor(stats.avgDuration / 60)}m ${stats.avgDuration % 60}s`, trend: "+10%", icon: <LogOut className="h-4 w-4 rotate-180" /> },
+                                    ].map((stat) => (
+                                        <div key={stat.label} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-6 shadow-sm">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <div className="p-2 bg-primary/10 rounded-lg text-primary">{stat.icon}</div>
+                                                <span className={`text-[10px] font-bold ${stat.trend.startsWith('+') ? 'text-green-500' : 'text-orange-500'}`}>{stat.trend}</span>
+                                            </div>
+                                            <div className="text-2xl font-bold">{stat.value}</div>
+                                            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1">{stat.label}</div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Analytics Charts */}
+                                <div className="grid gap-8 lg:grid-cols-2">
+                                    <div className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-3xl p-6 shadow-xl h-[400px]">
+                                        <h3 className="font-bold mb-6 text-sm uppercase tracking-widest text-muted-foreground">Traffic Analytics</h3>
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <AreaChart data={analyticsData}>
+                                                <defs>
+                                                    <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                                                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(139, 92, 246, 0.1)" />
+                                                <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} />
+                                                <YAxis fontSize={10} axisLine={false} tickLine={false} />
+                                                <Tooltip
+                                                    contentStyle={{
+                                                        background: "var(--card)",
+                                                        color: "var(--foreground)",
+                                                        border: "1px solid var(--border)",
+                                                        borderRadius: "12px",
+                                                        fontSize: "12px"
+                                                    }}
+                                                />
+                                                <Area type="monotone" dataKey="views" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorViews)" />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    </div>
+
+                                    <div className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-3xl p-6 shadow-xl h-[400px]">
+                                        <h3 className="font-bold mb-6 text-sm uppercase tracking-widest text-muted-foreground">Portfolio Performance</h3>
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <LineChart data={analyticsData}>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(139, 92, 246, 0.1)" />
+                                                <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} />
+                                                <YAxis fontSize={10} axisLine={false} tickLine={false} />
+                                                <Tooltip
+                                                    contentStyle={{
+                                                        background: "var(--card)",
+                                                        color: "var(--foreground)",
+                                                        border: "1px solid var(--border)",
+                                                        borderRadius: "12px",
+                                                        fontSize: "12px"
+                                                    }}
+                                                />
+                                                <Line type="monotone" dataKey="downloads" stroke="#ec4899" strokeWidth={2} dot={{ r: 4 }} />
+                                                <Line type="monotone" dataKey="messages" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} />
+                                            </LineChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                        {activeTab === "posts" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-6"
+                            >
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                                    <h2 className="text-3xl font-bold tracking-tight">Manage Posts</h2>
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search posts..."
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                className="pl-10 pr-4 py-2 rounded-xl bg-card border border-primary/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64"
+                                            />
+                                        </div>
+                                        <Link href="/admin/posts/new">
+                                            <button className="inline-flex items-center justify-center rounded-2xl text-sm font-bold bg-primary text-white hover:bg-primary/90 h-11 px-6 shadow-lg shadow-primary/25 transition-all active:scale-95">
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                New Post
+                                            </button>
+                                        </Link>
+                                    </div>
+                                </div>
+
+                                {posts.filter((p: any) => p.title.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
+                                    <div className="grid gap-4">
+                                        {posts.filter((p: any) => p.title.toLowerCase().includes(searchTerm.toLowerCase())).map((post: any) => (
+                                            <div key={post._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                                        {post.title.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold">{post.title}</h4>
+                                                        <p className="text-xs text-muted-foreground">{post.category} • {new Date(post.createdAt).toLocaleDateString()}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Link href={`/admin/posts/${post._id}`}>
+                                                        <button className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
+                                                            <Pencil className="h-4 w-4" />
+                                                        </button>
+                                                    </Link>
+                                                    <button onClick={() => handleDelete('post', post._id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="rounded-3xl border-2 border-dashed border-primary/10 bg-card/20 backdrop-blur-sm px-8 py-20 text-center text-muted-foreground">
+                                        <FileText className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                                        <p className="font-bold">No posts found</p>
+                                        <p className="text-xs">Create your first blog post to see it here.</p>
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+                        {activeTab === "documents" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-6"
+                            >
+                                <div className="flex items-center justify-between mb-8">
+                                    <h2 className="text-3xl font-bold tracking-tight">CV Management</h2>
+                                    <button className="inline-flex items-center justify-center rounded-2xl text-sm font-bold bg-primary text-white hover:bg-primary/90 h-11 px-6 shadow-lg shadow-primary/25 transition-all active:scale-95">
+                                        <Plus className="mr-2 h-4 w-4" />
+                                        Upload New Version
+                                    </button>
+                                </div>
+                                <div className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-6">
+                                    <div className="space-y-4">
+                                        {[
+                                            { version: "v2.1", date: "2023-12-01", status: "Active" },
+                                            { version: "v2.0", date: "2023-10-15", status: "Archived" },
+                                            { version: "v1.9", date: "2023-08-20", status: "Archived" }
+                                        ].map((cv) => (
+                                            <div key={cv.version} className="flex items-center justify-between p-4 bg-background/50 rounded-xl border border-primary/5 hover:border-primary/20 transition-all">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                                                        <FileText className="h-5 w-5" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="font-bold">{cv.version}</div>
+                                                        <div className="text-xs text-muted-foreground">Uploaded on {cv.date}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cv.status === 'Active' ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'}`}>
+                                                        {cv.status}
+                                                    </span>
+                                                    <button className="text-xs font-bold text-primary hover:underline">Download</button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                        {activeTab === "projects" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-6"
+                            >
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                                    <h2 className="text-3xl font-bold tracking-tight">Manage Projects</h2>
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search projects..."
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                className="pl-10 pr-4 py-2 rounded-xl bg-card border border-primary/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64"
+                                            />
+                                        </div>
+                                        <Link href="/admin/projects/new">
+                                            <button className="inline-flex items-center justify-center rounded-2xl text-sm font-bold bg-primary text-white hover:bg-primary/90 h-11 px-6 shadow-lg shadow-primary/25 transition-all active:scale-95">
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                Add Project
+                                            </button>
+                                        </Link>
+                                    </div>
+                                </div>
+
+                                {projects.filter((p: any) => p.title.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
+                                    <div className="grid gap-4">
+                                        {projects.filter((p: any) => p.title.toLowerCase().includes(searchTerm.toLowerCase())).map((project: any) => (
+                                            <div key={project._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden">
+                                                        {project.image ? <img src={project.image} alt="" className="w-full h-full object-cover" /> : project.title.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold">{project.title}</h4>
+                                                        <p className="text-xs text-muted-foreground">{project.tags.join(', ')}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Link href={`/admin/projects/${project._id}`}>
+                                                        <button className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
+                                                            <Pencil className="h-4 w-4" />
+                                                        </button>
+                                                    </Link>
+                                                    <button onClick={() => handleDelete('project', project._id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="rounded-3xl border-2 border-dashed border-primary/10 bg-card/20 backdrop-blur-sm px-8 py-20 text-center text-muted-foreground">
+                                        <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                                        <p className="font-bold">No projects found</p>
+                                        <p className="text-xs">Add your first project to showcase it here.</p>
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+                        {activeTab === "gallery" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-6"
+                            >
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                                    <h2 className="text-3xl font-bold tracking-tight">Manage Gallery</h2>
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search gallery..."
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                className="pl-10 pr-4 py-2 rounded-xl bg-card border border-primary/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64"
+                                            />
+                                        </div>
+                                        <Link href="/admin/gallery/new">
+                                            <button className="inline-flex items-center justify-center rounded-2xl text-sm font-bold bg-primary text-white hover:bg-primary/90 h-11 px-6 shadow-lg shadow-primary/25 transition-all active:scale-95">
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                Add Image
+                                            </button>
+                                        </Link>
+                                    </div>
+                                </div>
+                                {gallery.filter((g: any) => g.title.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
+                                    <div className="grid gap-4">
+                                        {gallery.filter((g: any) => g.title.toLowerCase().includes(searchTerm.toLowerCase())).map((item: any) => (
+                                            <div key={item._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden">
+                                                        {item.imageUrl ? <img src={item.imageUrl} alt="" className="w-full h-full object-cover" /> : item.title.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold">{item.title}</h4>
+                                                        <p className="text-xs text-muted-foreground">{item.category} • {new Date(item.date).toLocaleDateString()}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Link href={`/admin/gallery/${item._id}`}>
+                                                        <button className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
+                                                            <Pencil className="h-4 w-4" />
+                                                        </button>
+                                                    </Link>
+                                                    <button onClick={() => handleDelete('gallery', item._id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="rounded-3xl border-2 border-dashed border-primary/10 bg-card/20 backdrop-blur-sm px-8 py-20 text-center text-muted-foreground">
+                                        <Image className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                                        <p className="font-bold">Gallery is empty</p>
+                                        <p className="text-xs">Upload images to display them in your gallery.</p>
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+                        {activeTab === "certifications" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-6"
+                            >
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                                    <h2 className="text-3xl font-bold tracking-tight">Manage Certifications</h2>
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search certs..."
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                className="pl-10 pr-4 py-2 rounded-xl bg-card border border-primary/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64"
+                                            />
+                                        </div>
+                                        <Link href="/admin/certifications/new">
+                                            <button className="inline-flex items-center justify-center rounded-2xl text-sm font-bold bg-primary text-white hover:bg-primary/90 h-11 px-6 shadow-lg shadow-primary/25 transition-all active:scale-95">
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                Add Certificate
+                                            </button>
+                                        </Link>
+                                    </div>
+                                </div>
+                                {certs.filter((c: any) => c.title.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
+                                    <div className="grid gap-4">
+                                        {certs.filter((c: any) => c.title.toLowerCase().includes(searchTerm.toLowerCase())).map((cert: any) => (
+                                            <div key={cert._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                                        <Award className="h-5 w-5" />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold">{cert.title}</h4>
+                                                        <p className="text-xs text-muted-foreground">{cert.issuer} • {new Date(cert.date).toLocaleDateString()}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Link href={`/admin/certifications/${cert._id}`}>
+                                                        <button className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
+                                                            <Pencil className="h-4 w-4" />
+                                                        </button>
+                                                    </Link>
+                                                    <button onClick={() => handleDelete('certification', cert._id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="rounded-3xl border-2 border-dashed border-primary/10 bg-card/20 backdrop-blur-sm px-8 py-20 text-center text-muted-foreground">
+                                        <Award className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                                        <p className="font-bold">No certifications</p>
+                                        <p className="text-xs">Show off your achievements here.</p>
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+                        {activeTab === "testimonials" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-6"
+                            >
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                                    <h2 className="text-3xl font-bold tracking-tight">Manage Testimonials</h2>
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search testimonials..."
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                className="pl-10 pr-4 py-2 rounded-xl bg-card border border-primary/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64"
+                                            />
+                                        </div>
+                                        <Link href="/admin/testimonials/new">
+                                            <button className="inline-flex items-center justify-center rounded-2xl text-sm font-bold bg-primary text-white hover:bg-primary/90 h-11 px-6 shadow-lg shadow-primary/25 transition-all active:scale-95">
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                Add Testimonial
+                                            </button>
+                                        </Link>
+                                    </div>
+                                </div>
+                                {testimonials.filter((t: any) => t.name.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
+                                    <div className="grid gap-4">
+                                        {testimonials.filter((t: any) => t.name.toLowerCase().includes(searchTerm.toLowerCase())).map((t: any) => (
+                                            <div key={t._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                                        {t.name.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold">{t.name}</h4>
+                                                        <p className="text-xs text-muted-foreground">{t.role} {t.company ? `@ ${t.company}` : ''}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Link href={`/admin/testimonials/${t._id}`}>
+                                                        <button className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
+                                                            <Pencil className="h-4 w-4" />
+                                                        </button>
+                                                    </Link>
+                                                    <button onClick={() => handleDelete('testimonial', t._id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="rounded-3xl border-2 border-dashed border-primary/10 bg-card/20 backdrop-blur-sm px-8 py-20 text-center text-muted-foreground">
+                                        <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                                        <p className="font-bold">No testimonials found</p>
+                                        <p className="text-xs">Manage client feedback and reviews here.</p>
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+                    </div>
+                </div>
+            </main>
+        </div>
+    );
+}

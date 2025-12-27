@@ -1,0 +1,150 @@
+import { NextResponse } from 'next/server';
+import dbConnect from '@/lib/db';
+import Project from '@/models/Project';
+import Testimonial from '@/models/Testimonial';
+import Post from '@/models/Post';
+import GalleryItem from '@/models/GalleryItem';
+import Certification from '@/models/Certification';
+
+export async function GET() {
+    await dbConnect();
+
+    try {
+        // Seed Projects
+        const projectCount = await Project.countDocuments();
+        if (projectCount === 0) {
+            await Project.create([
+                {
+                    title: "Project Alpha",
+                    description: "A comprehensive network monitoring dashboard built with Next.js and real-time data visualization.",
+                    tags: ["Next.js", "TypeScript", "WebSocket", "TailwindCSS"],
+                    github: "https://github.com",
+                    demo: "https://example.com",
+                    image: "/placeholder-project.jpg"
+                },
+                {
+                    title: "Project Beta",
+                    description: "Automated network configuration script generator using Python and Flask.",
+                    tags: ["Python", "Flask", "Network Automation", "Docker"],
+                    github: "https://github.com",
+                    demo: "https://example.com",
+                    image: "/placeholder-project.jpg"
+                },
+                {
+                    title: "Portfolio Website",
+                    description: "This personal portfolio website featuring SEO best practices and smooth animations.",
+                    tags: ["Next.js", "React", "Framer Motion", "TailwindCSS"],
+                    github: "https://github.com",
+                    demo: "https://example.com",
+                    image: "/placeholder-project.jpg"
+                }
+            ]);
+        }
+
+        // Seed Testimonials
+        const testimonialCount = await Testimonial.countDocuments();
+        if (testimonialCount === 0) {
+            await Testimonial.create([
+                {
+                    name: "Jane Smith",
+                    role: "CTO",
+                    company: "Tech Corp",
+                    content: "John is an exceptional engineer who bridges the gap between software and networking perfectly.",
+                    image: "/placeholder-user.jpg"
+                },
+                {
+                    name: "Mike Johnson",
+                    role: "Product Manager",
+                    company: "StartUp Inc",
+                    content: "Highly recommended! Delivered the project on time and exceeded expectations.",
+                    image: "/placeholder-user.jpg"
+                }
+            ]);
+        }
+
+
+        // Seed Blog Posts
+        const postCount = await Post.countDocuments();
+        if (postCount === 0) {
+            await Post.create([
+                {
+                    title: "The Future of Network Automation",
+                    slug: "future-of-network-automation",
+                    excerpt: "Exploring how Python and Ansible are reshaping the landscape of network engineering.",
+                    content: "Network automation is rapidly becoming a requirement rather than a luxury...",
+                    tags: ["Networking", "Automation", "Python"],
+                    coverImage: "/placeholder-project.jpg"
+                },
+                {
+                    title: "Building Scalable Web Apps with Next.js",
+                    slug: "building-scalable-web-apps",
+                    excerpt: "Why Next.js is my go-to framework for modern web development.",
+                    content: "Next.js offers a powerful set of features including server-side rendering...",
+                    tags: ["Next.js", "React", "Web Development"],
+                    coverImage: "/placeholder-project.jpg"
+                }
+            ]);
+        }
+
+        // Seed Gallery Items
+        const galleryCount = await GalleryItem.countDocuments();
+        if (galleryCount === 0) {
+            await GalleryItem.create([
+                {
+                    title: "Data Center Migration",
+                    description: "Successfully migrated 500+ servers to new facility.",
+                    imageUrl: "/placeholder-project.jpg", // Using placeholder for now
+                    category: "Networking",
+                    date: new Date("2024-01-15")
+                },
+                {
+                    title: "Tech Conference Speaker",
+                    description: "Giving a talk on Cloud Security at TechConf 2024.",
+                    imageUrl: "/placeholder-project.jpg",
+                    category: "Events",
+                    date: new Date("2024-03-20")
+                },
+                {
+                    title: "Hackathon Win",
+                    description: "First place at the Global AI Hackathon.",
+                    imageUrl: "/placeholder-project.jpg",
+                    category: "Awards",
+                    date: new Date("2023-11-10")
+                }
+            ]);
+        }
+
+
+        // Seed Certifications
+        const certCount = await Certification.countDocuments();
+        if (certCount === 0) {
+            await Certification.create([
+                {
+                    title: "Cisco Certified Network Associate (CCNA)",
+                    issuer: "Cisco",
+                    date: new Date("2023-05-15"),
+                    credentialUrl: "https://www.credly.com",
+                    imageUrl: "/placeholder-project.jpg"
+                },
+                {
+                    title: "AWS Certified Solutions Architect",
+                    issuer: "Amazon Web Services",
+                    date: new Date("2023-08-20"),
+                    credentialUrl: "https://www.credly.com",
+                    imageUrl: "/placeholder-project.jpg"
+                },
+                {
+                    title: "Google Cloud Professional Data Engineer",
+                    issuer: "Google Cloud",
+                    date: new Date("2024-02-10"),
+                    credentialUrl: "https://www.credly.com",
+                    imageUrl: "/placeholder-project.jpg"
+                }
+            ]);
+        }
+
+        return NextResponse.json({ success: true, message: "Database seeded successfully" });
+    } catch (error) {
+        return NextResponse.json({ success: false, error: error }, { status: 500 });
+    }
+}
