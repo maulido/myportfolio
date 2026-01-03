@@ -27,7 +27,7 @@ export default function EditCertificationPage({ params }: { params: Promise<{ id
                     setFormData({
                         title: data.data.title,
                         issuer: data.data.issuer,
-                        date: data.data.date.split('T')[0],
+                        date: data.data.date ? new Date(data.data.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
                         credentialUrl: data.data.credentialUrl || "",
                         imageUrl: data.data.imageUrl || "",
                     });
