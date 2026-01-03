@@ -441,11 +441,19 @@ export default function AdminDashboard() {
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <Link href={`/admin/posts/${post._id}`}>
-                                                        <button className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
+                                                        <button type="button" className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
                                                             <Pencil className="h-4 w-4" />
                                                         </button>
                                                     </Link>
-                                                    <button onClick={() => handleDelete('post', post._id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            handleDelete('post', post._id);
+                                                        }}
+                                                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                    >
                                                         <Trash2 className="h-4 w-4" />
                                                     </button>
                                                 </div>
@@ -550,7 +558,15 @@ export default function AdminDashboard() {
                                                             <Pencil className="h-4 w-4" />
                                                         </button>
                                                     </Link>
-                                                    <button onClick={() => handleDelete('project', project._id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            handleDelete('project', project._id);
+                                                        }}
+                                                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                    >
                                                         <Trash2 className="h-4 w-4" />
                                                     </button>
                                                 </div>
@@ -612,7 +628,15 @@ export default function AdminDashboard() {
                                                             <Pencil className="h-4 w-4" />
                                                         </button>
                                                     </Link>
-                                                    <button onClick={() => handleDelete('gallery', item._id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            handleDelete('gallery', item._id);
+                                                        }}
+                                                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                    >
                                                         <Trash2 className="h-4 w-4" />
                                                     </button>
                                                 </div>
@@ -674,7 +698,15 @@ export default function AdminDashboard() {
                                                             <Pencil className="h-4 w-4" />
                                                         </button>
                                                     </Link>
-                                                    <button onClick={() => handleDelete('certification', cert._id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            handleDelete('certification', cert._id);
+                                                        }}
+                                                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                    >
                                                         <Trash2 className="h-4 w-4" />
                                                     </button>
                                                 </div>
@@ -736,7 +768,15 @@ export default function AdminDashboard() {
                                                             <Pencil className="h-4 w-4" />
                                                         </button>
                                                     </Link>
-                                                    <button onClick={() => handleDelete('testimonial', t._id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors">
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            handleDelete('testimonial', t._id);
+                                                        }}
+                                                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                    >
                                                         <Trash2 className="h-4 w-4" />
                                                     </button>
                                                 </div>
