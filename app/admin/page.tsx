@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { LogOut, Plus, LayoutDashboard, FileText, Briefcase, Image, Award, MessageCircle, Pencil, Trash2, Search, Mail } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import AboutMeEditor from "@/components/admin/AboutMeEditor";
+import CareerFilter from "@/components/admin/CareerFilter";
 
 import {
     LineChart,
@@ -274,6 +276,25 @@ export default function AdminDashboard() {
         setDeleteConfirm({ show: false, type: '', id: '', name: '' });
     };
 
+    const handleAboutMeSave = async (data: { paragraph1: string; paragraph2: string }) => {
+        const res = await fetch('/api/about', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (res.ok) {
+            const result = await res.json();
+            setAboutMe(result.data);
+            setAboutMeEdit(result.data);
+        } else {
+            throw new Error('Failed to update About Me');
+        }
+    };
+
+    const handleCareerFilterChange = (filter: 'all' | 'work' | 'education' | 'achievement') => {
+        setCareerTypeFilter(filter);
+    };
+
     useEffect(() => {
         if (status === "authenticated") {
             fetchData();
@@ -515,6 +536,12 @@ export default function AdminDashboard() {
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* About Me Editor */}
+                                <AboutMeEditor
+                                    initialData={aboutMe}
+                                    onSave={handleAboutMeSave}
+                                />
                             </motion.div>
                         )}
                         {activeTab === "posts" && (
@@ -920,6 +947,10 @@ export default function AdminDashboard() {
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                                     <h2 className="text-3xl font-bold tracking-tight">Manage Career Journey</h2>
                                     <div className="flex items-center gap-4">
+                                        <CareerFilter
+                                            currentFilter={careerTypeFilter}
+                                            onFilterChange={handleCareerFilterChange}
+                                        />
                                         <div className="relative">
                                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                             <input
@@ -938,9 +969,17 @@ export default function AdminDashboard() {
                                         </Link>
                                     </div>
                                 </div>
-                                {careers.filter((c: CareerJourney) => c.title.toLowerCase().includes(searchTerm.toLowerCase()) || c.organization.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
+                                {careers.filter((c: CareerJourney) => {
+                                    const matchesSearch = c.title.toLowerCase().includes(searchTerm.toLowerCase()) || c.organization.toLowerCase().includes(searchTerm.toLowerCase());
+                                    const matchesType = careerTypeFilter === 'all' || c.type === careerTypeFilter;
+                                    return matchesSearch && matchesType;
+                                }).length > 0 ? (
                                     <div className="grid gap-4">
-                                        {careers.filter((c: CareerJourney) => c.title.toLowerCase().includes(searchTerm.toLowerCase()) || c.organization.toLowerCase().includes(searchTerm.toLowerCase())).map((career: CareerJourney) => (
+                                        {careers.filter((c: CareerJourney) => {
+                                            const matchesSearch = c.title.toLowerCase().includes(searchTerm.toLowerCase()) || c.organization.toLowerCase().includes(searchTerm.toLowerCase());
+                                            const matchesType = careerTypeFilter === 'all' || c.type === careerTypeFilter;
+                                            return matchesSearch && matchesType;
+                                        }).map((career: CareerJourney) => (
                                             <div key={career._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
                                                 <div className="flex items-center gap-4">
                                                     <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
