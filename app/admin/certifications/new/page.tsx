@@ -288,12 +288,14 @@ export default function NewCertificationPage() {
                                 {/* Autocomplete Suggestions Dropdown */}
                                 {newSkill && existingSkills.filter(s =>
                                     s.toLowerCase().includes(newSkill.toLowerCase()) &&
+                                    s.toLowerCase() !== newSkill.toLowerCase() &&
                                     !selectedSkills.includes(s)
                                 ).length > 0 && (
                                         <div className="absolute z-10 w-full mt-1 bg-card border border-primary/20 rounded-md shadow-lg max-h-48 overflow-y-auto">
                                             {existingSkills
                                                 .filter(s =>
                                                     s.toLowerCase().includes(newSkill.toLowerCase()) &&
+                                                    s.toLowerCase() !== newSkill.toLowerCase() &&
                                                     !selectedSkills.includes(s)
                                                 )
                                                 .slice(0, 5)
