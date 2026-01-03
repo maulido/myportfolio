@@ -65,6 +65,21 @@ interface Testimonial {
     company?: string;
 }
 
+interface CareerJourney {
+    _id: string;
+    type: 'work' | 'education' | 'achievement';
+    title: string;
+    organization: string;
+    location?: string;
+    startDate: string;
+    endDate?: string;
+    current: boolean;
+    description: string;
+    skills: string[];
+    achievements?: string[];
+    responsibilities?: string[];
+}
+
 interface AnalyticsData {
     type: string;
     count: number;
@@ -92,6 +107,7 @@ export default function AdminDashboard() {
     const [certs, setCerts] = useState<Certification[]>([]);
     const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
     const [newsletter, setNewsletter] = useState<Newsletter[]>([]);
+    const [careers, setCareers] = useState<CareerJourney[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
 
     // Delete confirmation state
@@ -116,25 +132,27 @@ export default function AdminDashboard() {
 
     const fetchData = async () => {
         try {
-            const [postsRes, projectsRes, galleryRes, certsRes, testimonialsRes, newsletterRes, analyticsRes, settingsRes, sessionsRes] = await Promise.all([
+            const [postsRes, projectsRes, galleryRes, certsRes, testimonialsRes, newsletterRes, careersRes, analyticsRes, settingsRes, sessionsRes] = await Promise.all([
                 fetch('/api/blog'),
                 fetch('/api/projects'),
                 fetch('/api/gallery'),
                 fetch('/api/certifications'),
                 fetch('/api/testimonials'),
                 fetch('/api/newsletter'),
+                fetch('/api/career'),
                 fetch('/api/analytics'),
                 fetch('/api/settings?key=isWorking'),
                 fetch('/api/analytics/session/stats')
             ]);
 
-            const [postsData, projectsData, galleryData, certsData, testimonialsData, newsletterData, analyticsData, settingsData, sessionsData] = await Promise.all([
+            const [postsData, projectsData, galleryData, certsData, testimonialsData, newsletterData, careersData, analyticsData, settingsData, sessionsData] = await Promise.all([
                 postsRes.json(),
                 projectsRes.json(),
                 galleryRes.json(),
                 certsRes.json(),
                 testimonialsRes.json(),
                 newsletterRes.json(),
+                careersRes.json(),
                 analyticsRes.json(),
                 settingsRes.json(),
                 sessionsRes.json()
@@ -146,6 +164,7 @@ export default function AdminDashboard() {
             if (certsData.success) setCerts(certsData.data);
             if (testimonialsData.success) setTestimonials(testimonialsData.data);
             if (newsletterData.success) setNewsletter(newsletterData.data);
+            if (careersData.success) setCareers(careersData.data);
             if (settingsData.success && settingsData.data !== undefined) setIsWorking(settingsData.data);
 
             // Calculate aggregate stats (for future use)
@@ -204,12 +223,24 @@ export default function AdminDashboard() {
         try {
             let endpoint = `/api/${type}/${id}`;
             if (type === 'post') endpoint = `/api/blog/${id}`;
+            if (type === 'project') endpoint = `/api/projects/${id}`;
+            if (type === 'career') endpoint = `/api/career/${id}`;
             if (type === 'certification') endpoint = `/api/certifications/${id}`;
             if (type === 'testimonial') endpoint = `/api/testimonials/${id}`;
 
             console.log(`Deleting ${type} with ID: ${id} at endpoint: ${endpoint}`);
 
             const res = await fetch(endpoint, { method: 'DELETE' });
+
+            // Check if response is JSON before parsing
+            const contentType = res.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                const text = await res.text();
+                console.error('Non-JSON response received:', text.substring(0, 200));
+                alert(`Server error: Expected JSON response but received HTML. Please check if you're logged in and try again.`);
+                return;
+            }
+
             const data = await res.json();
 
             console.log('Delete response:', res.status, data);
@@ -223,7 +254,7 @@ export default function AdminDashboard() {
             }
         } catch (error) {
             console.error('Delete error:', error);
-            alert(`An error occurred while deleting ${type}`);
+            alert(`An error occurred while deleting ${type}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     };
 
@@ -351,6 +382,13 @@ export default function AdminDashboard() {
                         >
                             <MessageCircle className="mr-3 h-4 w-4" />
                             Testimonials
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("career")}
+                            className={`inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${activeTab === "career" ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}
+                        >
+                            <Briefcase className="mr-3 h-4 w-4" />
+                            Career Journey
                         </button>
                         <button
                             onClick={() => setActiveTab("newsletter")}
@@ -858,6 +896,78 @@ export default function AdminDashboard() {
                                         <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-20" />
                                         <p className="font-bold">No testimonials found</p>
                                         <p className="text-xs">Manage client feedback and reviews here.</p>
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+                        {activeTab === "career" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-6"
+                            >
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                                    <h2 className="text-3xl font-bold tracking-tight">Manage Career Journey</h2>
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search career entries..."
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                className="pl-10 pr-4 py-2 rounded-xl bg-card border border-primary/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64"
+                                            />
+                                        </div>
+                                        <Link href="/admin/career/new">
+                                            <button className="inline-flex items-center justify-center rounded-2xl text-sm font-bold bg-primary text-white hover:bg-primary/90 h-11 px-6 shadow-lg shadow-primary/25 transition-all active:scale-95">
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                Add Career Entry
+                                            </button>
+                                        </Link>
+                                    </div>
+                                </div>
+                                {careers.filter((c: CareerJourney) => c.title.toLowerCase().includes(searchTerm.toLowerCase()) || c.organization.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
+                                    <div className="grid gap-4">
+                                        {careers.filter((c: CareerJourney) => c.title.toLowerCase().includes(searchTerm.toLowerCase()) || c.organization.toLowerCase().includes(searchTerm.toLowerCase())).map((career: CareerJourney) => (
+                                            <div key={career._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                                        <Briefcase className="h-5 w-5" />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold">{career.title}</h4>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {career.organization} • {career.type} • {career.current ? 'Current' : new Date(career.startDate).getFullYear()}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Link href={`/admin/career/${career._id}`}>
+                                                        <button type="button" className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
+                                                            <Pencil className="h-4 w-4" />
+                                                        </button>
+                                                    </Link>
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            handleDelete('career', career._id, career.title);
+                                                        }}
+                                                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="rounded-3xl border-2 border-dashed border-primary/10 bg-card/20 backdrop-blur-sm px-8 py-20 text-center text-muted-foreground">
+                                        <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                                        <p className="font-bold">No career entries found</p>
+                                        <p className="text-xs">Add your professional journey and achievements here.</p>
                                     </div>
                                 )}
                             </motion.div>

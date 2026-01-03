@@ -27,10 +27,19 @@ export async function DELETE(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    const { id } = await params;
-    await dbConnect();
-
     try {
+        const { id } = await params;
+
+        // Validate ObjectId format
+        if (!id || id.length !== 24 || !/^[0-9a-fA-F]{24}$/.test(id)) {
+            return NextResponse.json(
+                { success: false, error: "Invalid project ID format" },
+                { status: 400 }
+            );
+        }
+
+        await dbConnect();
+
         // Get the project first to extract file key
         const project = await Project.findById(id);
 
@@ -47,6 +56,7 @@ export async function DELETE(
                     console.log(`Deleted file from UploadThing: ${fileKey}`);
                 } catch (error) {
                     console.error('Failed to delete file from UploadThing:', error);
+                    // Continue with deletion even if file deletion fails
                 }
             }
         }
@@ -57,7 +67,13 @@ export async function DELETE(
         return NextResponse.json({ success: true, data: {} });
     } catch (error) {
         console.error('Delete error:', error);
-        return NextResponse.json({ success: false, error: error }, { status: 400 });
+        return NextResponse.json(
+            {
+                success: false,
+                error: error instanceof Error ? error.message : "Failed to delete project"
+            },
+            { status: 500 }
+        );
     }
 }
 export async function PUT(

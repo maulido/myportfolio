@@ -2,32 +2,62 @@
 
 import { motion } from "framer-motion";
 import { Briefcase, Calendar, MapPin } from "lucide-react";
+import { useState, useEffect } from "react";
 
-const experience = [
-    {
-        company: "Tech Solutions Inc.",
-        role: "Senior Network Engineer",
-        period: "2021 - Present",
-        location: "Jakarta, Indonesia",
-        description: "Leading the network infrastructure team, managing enterprise-grade firewalls, and automating network configurations with Python.",
-    },
-    {
-        company: "Global Connections Ltd.",
-        role: "Network Administrator",
-        period: "2019 - 2021",
-        location: "Bandung, Indonesia",
-        description: "Maintained 99.9% uptime for corporate network, implemented VPN solutions, and resolved widespread connectivity issues.",
-    },
-    {
-        company: "StartUp Creative",
-        role: "Junior Developer",
-        period: "2018 - 2019",
-        location: "Remote",
-        description: "Assisted in frontend development using React and maintained legacy PHP applications.",
-    },
-];
+interface CareerEntry {
+    _id: string;
+    type: 'work' | 'education' | 'achievement';
+    title: string;
+    organization: string;
+    location?: string;
+    startDate: string;
+    endDate?: string;
+    current: boolean;
+    description: string;
+}
 
 export function Experience() {
+    const [experience, setExperience] = useState<CareerEntry[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchCareerData = async () => {
+            try {
+                const res = await fetch('/api/career');
+                const data = await res.json();
+                if (data.success) {
+                    // Filter only work type entries
+                    const workEntries = data.data.filter((entry: CareerEntry) => entry.type === 'work');
+                    setExperience(workEntries);
+                }
+            } catch (error) {
+                console.error('Failed to fetch career data:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchCareerData();
+    }, []);
+
+    const formatPeriod = (startDate: string, endDate: string | undefined, current: boolean) => {
+        const start = new Date(startDate).getFullYear();
+        const end = current ? 'Present' : endDate ? new Date(endDate).getFullYear() : '';
+        return `${start} - ${end}`;
+    };
+
+    if (isLoading) {
+        return (
+            <section id="experience" className="py-16 md:py-24 relative overflow-hidden">
+                <div className="container mx-auto px-4 md:px-6">
+                    <div className="text-center">Loading career journey...</div>
+                </div>
+            </section>
+        );
+    }
+
+    if (experience.length === 0) {
+        return null; // Don't show section if no work experience
+    }
     return (
         <section id="experience" className="py-16 md:py-24 relative overflow-hidden">
             {/* Decorative Background */}
@@ -55,7 +85,7 @@ export function Experience() {
                     <div className="space-y-12 md:space-y-0">
                         {experience.map((item, index) => (
                             <motion.div
-                                key={index}
+                                key={item._id}
                                 initial={{ opacity: 0, y: 30 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.6, delay: index * 0.1 }}
@@ -71,14 +101,14 @@ export function Experience() {
                                     <div className="group bg-card/40 backdrop-blur-md rounded-2xl p-6 border border-white/5 shadow-xl hover:border-primary/40 transition-all duration-300 hover:shadow-primary/5">
                                         <div className="flex flex-col gap-2 mb-4">
                                             <div className="flex items-center justify-between">
-                                                <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">{item.role}</h3>
+                                                <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">{item.title}</h3>
                                                 <span className="hidden sm:inline-flex items-center text-[10px] font-bold uppercase tracking-wider text-accent bg-accent/10 px-2 py-0.5 rounded border border-accent/20">
-                                                    {item.period}
+                                                    {formatPeriod(item.startDate, item.endDate, item.current)}
                                                 </span>
                                             </div>
                                             <div className="flex items-center text-primary/80 font-medium">
                                                 <Briefcase className="mr-2 h-4 w-4" />
-                                                {item.company}
+                                                {item.organization}
                                             </div>
                                         </div>
 
@@ -89,11 +119,11 @@ export function Experience() {
                                         <div className="flex items-center justify-between pt-4 border-t border-white/5">
                                             <div className="flex items-center text-[11px] text-muted-foreground/60">
                                                 <MapPin className="mr-1 h-3 w-3" />
-                                                {item.location}
+                                                {item.location || 'Remote'}
                                             </div>
                                             <div className="flex items-center text-[11px] text-muted-foreground/60 sm:hidden">
                                                 <Calendar className="mr-1 h-3 w-3" />
-                                                {item.period}
+                                                {formatPeriod(item.startDate, item.endDate, item.current)}
                                             </div>
                                         </div>
                                     </div>
