@@ -15,7 +15,7 @@ export default function NewCertificationPage() {
         credentialId: "",
         credentialUrl: "",
         imageUrl: "",
-        category: "Other",
+        category: "",
         skills: "",
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
