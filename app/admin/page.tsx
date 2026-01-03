@@ -94,6 +94,18 @@ export default function AdminDashboard() {
     const [newsletter, setNewsletter] = useState<Newsletter[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
 
+    // Debug: Log component mount
+    useEffect(() => {
+        console.log('AdminDashboard mounted');
+        console.log('Session status:', status);
+        console.log('Session data:', session);
+    }, []);
+
+    // Debug: Log when posts change
+    useEffect(() => {
+        console.log('Posts updated:', posts.length, 'posts');
+    }, [posts]);
+
     const fetchData = async () => {
         try {
             const [postsRes, projectsRes, galleryRes, certsRes, testimonialsRes, newsletterRes, analyticsRes, settingsRes, sessionsRes] = await Promise.all([
@@ -163,7 +175,12 @@ export default function AdminDashboard() {
     };
 
     const handleDelete = async (type: string, id: string) => {
-        if (!confirm(`Are you sure you want to delete this ${type}?`)) return;
+        console.log('🗑️ handleDelete called with:', { type, id });
+
+        if (!confirm(`Are you sure you want to delete this ${type}?`)) {
+            console.log('Delete cancelled by user');
+            return;
+        }
 
         try {
             let endpoint = `/api/${type}/${id}`;
