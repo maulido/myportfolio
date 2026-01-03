@@ -119,12 +119,19 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                                 </p>
                             )}
                         </div>
-                        value={formData.description}
-                        onChange={handleChange}
-                        rows={4}
-                        className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        placeholder="What did you build?"
-                            />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium leading-none">Description</label>
+                        <textarea
+                            required
+                            name="description"
+                            value={formData.description}
+                            onChange={handleChange}
+                            rows={4}
+                            className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            placeholder="What did you build?"
+                        />
                     </div>
 
                     <div className="space-y-2">
