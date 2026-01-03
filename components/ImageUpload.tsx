@@ -47,7 +47,7 @@ export default function ImageUpload({ value, onChange, endpoint = "imageUploader
                     </div>
                 </div>
             ) : (
-                <div className="border-2 border-dashed border-primary/20 rounded-lg p-8 text-center hover:border-primary/40 transition-colors">
+                <div className="border-2 border-dashed border-primary/20 rounded-lg hover:border-primary/40 transition-colors">
                     <UploadDropzone<OurFileRouter, typeof endpoint>
                         endpoint={endpoint}
                         onClientUploadComplete={(res) => {
@@ -65,19 +65,22 @@ export default function ImageUpload({ value, onChange, endpoint = "imageUploader
                         onUploadBegin={() => {
                             setUploading(true);
                         }}
+                        config={{
+                            mode: "auto"
+                        }}
                         appearance={{
-                            container: "w-full",
+                            container: "w-full p-8",
                             uploadIcon: "text-primary",
-                            label: "text-sm text-muted-foreground",
-                            allowedContent: "text-xs text-muted-foreground",
-                            button: "bg-primary text-white hover:bg-primary/90 transition-colors ut-ready:bg-primary ut-uploading:bg-primary/50 cursor-pointer",
+                            label: "text-sm text-muted-foreground mb-4",
+                            allowedContent: "text-xs text-muted-foreground mt-2",
+                            button: "bg-primary text-white hover:bg-primary/90 transition-all ut-ready:bg-primary ut-uploading:bg-primary/50 px-6 py-2.5 rounded-lg font-medium cursor-pointer shadow-sm hover:shadow-md active:scale-95",
                         }}
                         content={{
                             uploadIcon: () => <Upload className="h-10 w-10 mb-4 text-primary" />,
                             label: () => (
-                                <div className="space-y-2">
+                                <div className="space-y-2 mb-4">
                                     <p className="text-sm font-medium">
-                                        {uploading ? "Uploading..." : "Drop image here or click to upload"}
+                                        {uploading ? "Uploading..." : "Drop image here or click button below"}
                                     </p>
                                     <p className="text-xs text-muted-foreground">
                                         Max file size: 4MB • Supported: JPG, PNG, WebP
