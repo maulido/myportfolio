@@ -94,6 +94,14 @@ export default function AdminDashboard() {
     const [newsletter, setNewsletter] = useState<Newsletter[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
 
+    // Delete confirmation state
+    const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; type: string; id: string; name: string }>({
+        show: false,
+        type: '',
+        id: '',
+        name: ''
+    });
+
     // Debug: Log component mount
     useEffect(() => {
         console.log('AdminDashboard mounted');
@@ -174,13 +182,24 @@ export default function AdminDashboard() {
         }
     };
 
-    const handleDelete = async (type: string, id: string) => {
-        console.log('🗑️ handleDelete called with:', { type, id });
+    const handleDelete = async (type: string, id: string, name: string = '') => {
+        console.log('🗑️ handleDelete called with:', { type, id, name });
 
-        if (!confirm(`Are you sure you want to delete this ${type}?`)) {
-            console.log('Delete cancelled by user');
-            return;
-        }
+        // Show confirmation modal instead of browser confirm
+        setDeleteConfirm({
+            show: true,
+            type,
+            id,
+            name
+        });
+    };
+
+    const executeDelete = async () => {
+        const { type, id } = deleteConfirm;
+        console.log('🗑️ Executing delete for:', { type, id });
+
+        // Hide confirmation modal
+        setDeleteConfirm({ show: false, type: '', id: '', name: '' });
 
         try {
             let endpoint = `/api/${type}/${id}`;
@@ -208,6 +227,11 @@ export default function AdminDashboard() {
         }
     };
 
+    const cancelDelete = () => {
+        console.log('Delete cancelled by user');
+        setDeleteConfirm({ show: false, type: '', id: '', name: '' });
+    };
+
     useEffect(() => {
         if (status === "authenticated") {
             fetchData();
@@ -226,6 +250,35 @@ export default function AdminDashboard() {
 
     return (
         <div className="flex min-h-screen flex-col bg-background/50">
+            {/* Delete Confirmation Modal */}
+            {deleteConfirm.show && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-card border border-primary/20 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+                        <h3 className="text-xl font-bold mb-4">Confirm Delete</h3>
+                        <p className="text-muted-foreground mb-6">
+                            Are you sure you want to delete this {deleteConfirm.type}?
+                            {deleteConfirm.name && <><br /><span className="font-semibold text-foreground">"{deleteConfirm.name}"</span></>}
+                            <br /><br />
+                            This action cannot be undone.
+                        </p>
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={cancelDelete}
+                                className="px-4 py-2 rounded-lg border border-primary/20 hover:bg-primary/5 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={executeDelete}
+                                className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <nav className="border-b border-primary/10 bg-card/20 backdrop-blur-md sticky top-0 z-50">
                 <div className="container mx-auto px-4 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-2">
@@ -467,7 +520,7 @@ export default function AdminDashboard() {
                                                         onClick={(e) => {
                                                             e.preventDefault();
                                                             e.stopPropagation();
-                                                            handleDelete('post', post._id);
+                                                            handleDelete('post', post._id, post.title);
                                                         }}
                                                         className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                                                     >
@@ -580,7 +633,7 @@ export default function AdminDashboard() {
                                                         onClick={(e) => {
                                                             e.preventDefault();
                                                             e.stopPropagation();
-                                                            handleDelete('project', project._id);
+                                                            handleDelete('project', project._id, project.title);
                                                         }}
                                                         className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                                                     >
@@ -650,7 +703,7 @@ export default function AdminDashboard() {
                                                         onClick={(e) => {
                                                             e.preventDefault();
                                                             e.stopPropagation();
-                                                            handleDelete('gallery', item._id);
+                                                            handleDelete('gallery', item._id, item.title);
                                                         }}
                                                         className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                                                     >
@@ -720,7 +773,7 @@ export default function AdminDashboard() {
                                                         onClick={(e) => {
                                                             e.preventDefault();
                                                             e.stopPropagation();
-                                                            handleDelete('certification', cert._id);
+                                                            handleDelete('certification', cert._id, cert.title);
                                                         }}
                                                         className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                                                     >
@@ -790,7 +843,7 @@ export default function AdminDashboard() {
                                                         onClick={(e) => {
                                                             e.preventDefault();
                                                             e.stopPropagation();
-                                                            handleDelete('testimonial', t._id);
+                                                            handleDelete('testimonial', t._id, t.name);
                                                         }}
                                                         className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                                                     >
