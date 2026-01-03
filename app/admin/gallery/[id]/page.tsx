@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
+import ImageUpload from "@/components/ImageUpload";
 
 export default function EditGalleryItemPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -17,6 +18,8 @@ export default function EditGalleryItemPage({ params }: { params: Promise<{ id: 
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [existingCategories, setExistingCategories] = useState<string[]>([]);
+    const [showCategoryInput, setShowCategoryInput] = useState(false);
 
     useEffect(() => {
         const fetchItem = async () => {
@@ -38,12 +41,36 @@ export default function EditGalleryItemPage({ params }: { params: Promise<{ id: 
                 setIsLoading(false);
             }
         };
+
+        const fetchCategories = async () => {
+            try {
+                const res = await fetch('/api/gallery');
+                const data = await res.json();
+                if (data.success) {
+                    const categories = [...new Set(data.data.map((item: any) => item.category).filter(Boolean))];
+                    setExistingCategories(categories as string[]);
+                }
+            } catch (error) {
+                console.error("Failed to fetch categories:", error);
+            }
+        };
+
         fetchItem();
+        fetchCategories();
     }, [id]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+
+        if (name === "category" && value === "__new__") {
+            setShowCategoryInput(true);
+            setFormData((prev) => ({ ...prev, category: "" }));
+        } else {
+            setFormData((prev) => ({ ...prev, [name]: value }));
+            if (name === "category") {
+                setShowCategoryInput(false);
+            }
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -101,27 +128,56 @@ export default function EditGalleryItemPage({ params }: { params: Promise<{ id: 
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium leading-none">Category</label>
-                            <input
-                                required
-                                name="category"
-                                value={formData.category}
-                                onChange={handleChange}
-                                className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="Event, Project, etc."
-                            />
+                            {!showCategoryInput ? (
+                                <select
+                                    name="category"
+                                    value={formData.category}
+                                    onChange={handleChange}
+                                    className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                >
+                                    <option value="">Select category...</option>
+                                    {existingCategories.map((cat) => (
+                                        <option key={cat} value={cat}>{cat}</option>
+                                    ))}
+                                    <option value="__new__">+ Add new category</option>
+                                </select>
+                            ) : (
+                                <div className="flex gap-2">
+                                    <input
+                                        required
+                                        name="category"
+                                        value={formData.category}
+                                        onChange={handleChange}
+                                        className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        placeholder="Enter new category"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowCategoryInput(false);
+                                            setFormData(prev => ({ ...prev, category: "" }));
+                                        }}
+                                        className="px-3 py-2 text-sm border border-input/50 rounded-md hover:bg-accent"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium leading-none">Image URL</label>
-                        <input
-                            required
-                            name="imageUrl"
+                        <label className="text-sm font-medium leading-none">Gallery Image</label>
+                        <ImageUpload
                             value={formData.imageUrl}
-                            onChange={handleChange}
-                            className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            placeholder="https://example.com/image.jpg"
+                            onChange={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
+                            endpoint="imageUploader"
                         />
+                        {formData.imageUrl && (
+                            <p className="text-xs text-muted-foreground">
+                                💡 Upload a new image to replace the current one
+                            </p>
+                        )}
                     </div>
 
                     <div className="space-y-2">
