@@ -28,14 +28,20 @@ export const ourFileRouter = {
         })
         .onUploadComplete(async ({ metadata, file }) => {
             // This code RUNS ON YOUR SERVER after upload
+            // Note: UploadThing automatically generates unique file keys
+            // The file.key is already unique (e.g., "abc123xyz.jpg")
+            // The file.name is the original filename uploaded by user
+
             // Log to server logs only in development
             if (process.env.NODE_ENV === 'development') {
                 console.log("Upload complete for userId:", metadata.userId);
+                console.log("Original filename:", file.name);
+                console.log("Unique file key:", file.key);
                 console.log("file url", file.url);
             }
 
             // !!! Whatever is returned here is sent to the clientside `onClientUploadComplete` callback
-            return { uploadedBy: metadata.userId, url: file.url };
+            return { uploadedBy: metadata.userId, url: file.url, key: file.key, originalName: file.name };
         }),
 
     // Multiple image uploader for gallery
@@ -48,8 +54,10 @@ export const ourFileRouter = {
         .onUploadComplete(async ({ metadata, file }) => {
             if (process.env.NODE_ENV === 'development') {
                 console.log("Gallery upload complete for userId:", metadata.userId);
+                console.log("Original filename:", file.name);
+                console.log("Unique file key:", file.key);
             }
-            return { uploadedBy: metadata.userId, url: file.url };
+            return { uploadedBy: metadata.userId, url: file.url, key: file.key, originalName: file.name };
         }),
 } satisfies FileRouter;
 
