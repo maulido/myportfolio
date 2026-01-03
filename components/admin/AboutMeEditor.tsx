@@ -16,15 +16,23 @@ export default function AboutMeEditor({ initialData, onSave }: AboutMeEditorProp
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [editData, setEditData] = useState(initialData);
+    const [error, setError] = useState('');
 
     const handleSave = async () => {
+        // Validate both paragraphs are filled
+        if (!editData.paragraph1.trim() || !editData.paragraph2.trim()) {
+            setError('Both paragraphs are required');
+            return;
+        }
+
+        setError('');
         setIsSaving(true);
         try {
             await onSave(editData);
             setIsEditing(false);
         } catch (error) {
             console.error("Failed to save:", error);
-            alert("Failed to save About Me content");
+            setError('Failed to save About Me content. Please try again.');
         } finally {
             setIsSaving(false);
         }
@@ -56,6 +64,11 @@ export default function AboutMeEditor({ initialData, onSave }: AboutMeEditorProp
 
             {isEditing ? (
                 <div className="space-y-4">
+                    {error && (
+                        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+                            {error}
+                        </div>
+                    )}
                     <div>
                         <label className="text-sm font-medium text-muted-foreground mb-2 block">
                             Paragraph 1
