@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
-import Gallery from '@/models/Gallery';
+import GalleryItem from '@/models/GalleryItem';
 import { UTApi } from 'uploadthing/server';
 
 const utapi = new UTApi();
@@ -14,7 +14,7 @@ export async function DELETE(
 
     try {
         // Get the gallery item first to extract file key
-        const galleryItem = await Gallery.findById(id);
+        const galleryItem = await GalleryItem.findById(id);
 
         if (!galleryItem) {
             return NextResponse.json({ success: false, error: "Gallery item not found" }, { status: 404 });
@@ -35,7 +35,7 @@ export async function DELETE(
         }
 
         // Delete from database
-        await Gallery.findByIdAndDelete(id);
+        await GalleryItem.findByIdAndDelete(id);
 
         return NextResponse.json({ success: true, data: {} });
     } catch (error) {
