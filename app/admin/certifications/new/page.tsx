@@ -20,11 +20,14 @@ export default function NewCertificationPage() {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [existingSkills, setExistingSkills] = useState<string[]>([]);
+    const [existingCategories, setExistingCategories] = useState<string[]>([]);
     const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
     const [newSkill, setNewSkill] = useState("");
+    const [showCategoryInput, setShowCategoryInput] = useState(false);
 
     useEffect(() => {
         fetchExistingSkills();
+        fetchExistingCategories();
     }, []);
 
     const fetchExistingSkills = async () => {
@@ -42,9 +45,32 @@ export default function NewCertificationPage() {
         }
     };
 
+    const fetchExistingCategories = async () => {
+        try {
+            const res = await fetch('/api/certifications');
+            const data = await res.json();
+            if (data.success) {
+                // Extract unique categories
+                const categories = [...new Set(data.data.map((cert: any) => cert.category).filter(Boolean))].sort();
+                setExistingCategories(categories as string[]);
+            }
+        } catch (error) {
+            console.error("Failed to fetch categories:", error);
+        }
+    };
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+
+        if (name === "category" && value === "__new__") {
+            setShowCategoryInput(true);
+            setFormData((prev) => ({ ...prev, category: "" }));
+        } else {
+            setFormData((prev) => ({ ...prev, [name]: value }));
+            if (name === "category") {
+                setShowCategoryInput(false);
+            }
+        }
     };
 
     const addSkill = (skill: string) => {
@@ -153,20 +179,42 @@ export default function NewCertificationPage() {
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
                             <label className="text-sm font-medium leading-none">Category</label>
-                            <select
-                                name="category"
-                                value={formData.category}
-                                // @ts-ignore
-                                onChange={handleChange}
-                                className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            >
-                                <option value="AWS">AWS</option>
-                                <option value="Cisco">Cisco</option>
-                                <option value="Microsoft">Microsoft</option>
-                                <option value="Google">Google</option>
-                                <option value="Security">Security</option>
-                                <option value="Other">Other</option>
-                            </select>
+                            {!showCategoryInput ? (
+                                <select
+                                    name="category"
+                                    value={formData.category}
+                                    // @ts-ignore
+                                    onChange={handleChange}
+                                    className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                >
+                                    <option value="">Select category...</option>
+                                    {existingCategories.map((cat) => (
+                                        <option key={cat} value={cat}>{cat}</option>
+                                    ))}
+                                    <option value="__new__">+ Add new category</option>
+                                </select>
+                            ) : (
+                                <div className="flex gap-2">
+                                    <input
+                                        required
+                                        name="category"
+                                        value={formData.category}
+                                        onChange={handleChange}
+                                        className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        placeholder="Enter new category"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowCategoryInput(false);
+                                            setFormData(prev => ({ ...prev, category: "Other" }));
+                                        }}
+                                        className="px-3 py-2 text-sm border border-input/50 rounded-md hover:bg-accent"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            )}
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium leading-none">Credential ID</label>
