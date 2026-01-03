@@ -1,5 +1,15 @@
 import mongoose from 'mongoose';
 
+interface MongooseCache {
+    conn: typeof mongoose | null;
+    promise: Promise<typeof mongoose> | null;
+}
+
+declare global {
+    // eslint-disable-next-line no-var
+    var mongoose: MongooseCache | undefined;
+}
+
 async function dbConnect() {
     // Suppress noise during build if MONGODB_URI is missing
     const isBuild = process.env.NODE_ENV === 'production' && !process.env.MONGODB_URI;
@@ -18,10 +28,10 @@ async function dbConnect() {
      * in development. This prevents connections growing exponentially
      * during API Route usage.
      */
-    let cached = (global as any).mongoose;
+    let cached = global.mongoose;
 
     if (!cached) {
-        cached = (global as any).mongoose = { conn: null, promise: null };
+        cached = global.mongoose = { conn: null, promise: null };
     }
 
     if (cached.conn) {

@@ -1,4 +1,6 @@
-import NextAuth from "next-auth";
+import NextAuth, { User, Account, Profile } from "next-auth";
+import { JWT } from "next-auth/jwt";
+import { AdapterUser } from "next-auth/adapters";
 import CredentialsProvider from "next-auth/providers/credentials";
 import dbConnect from "@/lib/db";
 import Admin from "@/models/Admin";
@@ -36,15 +38,15 @@ export const authOptions = {
         signIn: "/login",
     },
     callbacks: {
-        async jwt({ token, user }: { token: any, user: any }) {
+        async jwt({ token, user }: { token: JWT; user?: User | AdapterUser }) {
             if (user) {
                 token.id = user.id;
             }
             return token;
         },
-        async session({ session, token }: { session: any, token: any }) {
+        async session({ session, token }: { session: any; token: JWT }) {
             if (session.user) {
-                session.user.id = token.id;
+                (session.user as any).id = token.id as string;
             }
             return session;
         },

@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ISettings extends Document {
     key: string;
-    value: any;
+    value: string | number | boolean | object;
     updatedAt: Date;
 }
 

@@ -39,9 +39,12 @@ export async function POST(req: Request) {
           `,
     });
 
-    console.log(`[EMAIL SENT] From: ${email}, To: ${process.env.CONTACT_EMAIL}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[EMAIL SENT] From: ${email}, To: ${process.env.CONTACT_EMAIL}`);
+    }
     return NextResponse.json({ success: true, message: "Email sent successfully!" });
   } catch (error) {
+    // Log errors in all environments for debugging
     console.error("Email send error:", error);
     return NextResponse.json({ success: false, error: "Failed to send email. Please check server logs." }, { status: 500 });
   }

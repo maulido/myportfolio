@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Session from '@/models/Session';
 
+interface SessionUpdate {
+    lastSeen: Date;
+    $addToSet?: { pageViews: string };
+    duration?: number;
+}
+
 export async function POST(req: Request) {
     try {
         await dbConnect();
@@ -11,7 +17,7 @@ export async function POST(req: Request) {
 
     try {
         const body = await req.json();
-        const { sessionId, path, isHeartbeat, userAgent, isMobile } = body;
+        const { sessionId, path, userAgent, isMobile } = body;
 
         if (!sessionId) {
             return NextResponse.json({ success: false, error: "Missing sessionId" }, { status: 400 });
@@ -31,13 +37,12 @@ export async function POST(req: Request) {
             });
         } else {
             // Update existing session
-            const update: any = {
+            const update: SessionUpdate = {
                 lastSeen: new Date(),
                 $addToSet: { pageViews: path }
             };
 
-            // Calculate duration if it's a heartbeat or page transition
-            const lastSeenTime = new Date(session.lastSeen).getTime();
+            // Calculate duration
             const now = new Date().getTime();
             const sessionStart = new Date(session.startTime).getTime();
 

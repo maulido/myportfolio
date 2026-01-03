@@ -3,7 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LogOut, Plus, LayoutDashboard, FileText, Briefcase, Image, Award, MessageCircle, Pencil, Trash2, Search } from "lucide-react";
+import { LogOut, Plus, LayoutDashboard, FileText, Briefcase, Image, Award, MessageCircle, Pencil, Trash2, Search, Mail } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -19,6 +19,57 @@ import {
     Area
 } from "recharts";
 
+// Type definitions
+interface Post {
+    _id: string;
+    title: string;
+    category: string;
+    createdAt: string;
+}
+
+interface Project {
+    _id: string;
+    title: string;
+    tags: string[];
+    image?: string;
+}
+
+interface GalleryItem {
+    _id: string;
+    title: string;
+    category: string;
+    imageUrl?: string;
+    date: string;
+}
+
+interface Certification {
+    _id: string;
+    title: string;
+    issuer: string;
+    issueDate: string;
+    category: string;
+}
+
+interface Newsletter {
+    _id: string;
+    email: string;
+    name?: string;
+    subscribed: boolean;
+    createdAt: string;
+}
+
+interface Testimonial {
+    _id: string;
+    name: string;
+    role: string;
+    company?: string;
+}
+
+interface AnalyticsData {
+    type: string;
+    count: number;
+}
+
 const analyticsData = [
     { name: "Mon", views: 400, downloads: 24, messages: 12 },
     { name: "Tue", views: 300, downloads: 13, messages: 9 },
@@ -31,39 +82,39 @@ const analyticsData = [
 
 export default function AdminDashboard() {
     const { data: session, status } = useSession();
-    const router = useRouter();
     const [activeTab, setActiveTab] = useState("overview");
     const [isWorking, setIsWorking] = useState(true);
 
     const [stats, setStats] = useState({ totalPosts: 0, totalProjects: 0, totalGallery: 0, visitors: 0, avgDuration: 0 });
-    const [posts, setPosts] = useState([]);
-    const [projects, setProjects] = useState([]);
-    const [gallery, setGallery] = useState([]);
-    const [certs, setCerts] = useState([]);
-    const [testimonials, setTestimonials] = useState([]);
-    const [loadingData, setLoadingData] = useState(true);
+    const [posts, setPosts] = useState<Post[]>([]);
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [gallery, setGallery] = useState<GalleryItem[]>([]);
+    const [certs, setCerts] = useState<Certification[]>([]);
+    const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+    const [newsletter, setNewsletter] = useState<Newsletter[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
 
     const fetchData = async () => {
-        setLoadingData(true);
         try {
-            const [postsRes, projectsRes, galleryRes, certsRes, testimonialsRes, analyticsRes, settingsRes, sessionsRes] = await Promise.all([
+            const [postsRes, projectsRes, galleryRes, certsRes, testimonialsRes, newsletterRes, analyticsRes, settingsRes, sessionsRes] = await Promise.all([
                 fetch('/api/blog'),
                 fetch('/api/projects'),
                 fetch('/api/gallery'),
                 fetch('/api/certifications'),
                 fetch('/api/testimonials'),
+                fetch('/api/newsletter'),
                 fetch('/api/analytics'),
                 fetch('/api/settings?key=isWorking'),
                 fetch('/api/analytics/session/stats')
             ]);
 
-            const [postsData, projectsData, galleryData, certsData, testimonialsData, analyticsData, settingsData, sessionsData] = await Promise.all([
+            const [postsData, projectsData, galleryData, certsData, testimonialsData, newsletterData, analyticsData, settingsData, sessionsData] = await Promise.all([
                 postsRes.json(),
                 projectsRes.json(),
                 galleryRes.json(),
                 certsRes.json(),
                 testimonialsRes.json(),
+                newsletterRes.json(),
                 analyticsRes.json(),
                 settingsRes.json(),
                 sessionsRes.json()
@@ -74,11 +125,15 @@ export default function AdminDashboard() {
             if (galleryData.success) setGallery(galleryData.data);
             if (certsData.success) setCerts(certsData.data);
             if (testimonialsData.success) setTestimonials(testimonialsData.data);
+            if (newsletterData.success) setNewsletter(newsletterData.data);
             if (settingsData.success && settingsData.data !== undefined) setIsWorking(settingsData.data);
 
-            // Calculate aggregate stats
-            const totalViews = analyticsData.data?.filter((a: any) => a.type === 'page_view')?.reduce((acc: number, curr: any) => acc + curr.count, 0) || 0;
-            const totalDownloads = analyticsData.data?.find((a: any) => a.type === 'cv_download')?.count || 0;
+            // Calculate aggregate stats (for future use)
+            // const totalViews = analyticsData.data
+            //     ?.filter((a: AnalyticsData) => a.type === 'page_view')
+            //     ?.reduce((acc: number, curr: AnalyticsData) => acc + curr.count, 0) || 0;
+            // const totalDownloads = analyticsData.data
+            //     ?.find((a: AnalyticsData) => a.type === 'cv_download')?.count || 0;
 
             setStats({
                 totalPosts: postsData.data?.length || 0,
@@ -88,9 +143,8 @@ export default function AdminDashboard() {
                 avgDuration: sessionsData.data?.avgDuration || 0
             });
         } catch (error) {
+            // Keep error logging for admin debugging
             console.error("Failed to fetch admin data", error);
-        } finally {
-            setLoadingData(false);
         }
     };
 
@@ -221,6 +275,13 @@ export default function AdminDashboard() {
                             Testimonials
                         </button>
                         <button
+                            onClick={() => setActiveTab("newsletter")}
+                            className={`inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${activeTab === "newsletter" ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}
+                        >
+                            <Mail className="mr-3 h-4 w-4" />
+                            Newsletter
+                        </button>
+                        <button
                             onClick={() => setActiveTab("documents")}
                             className={`inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${activeTab === "documents" ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}
                         >
@@ -274,53 +335,57 @@ export default function AdminDashboard() {
 
                                 {/* Analytics Charts */}
                                 <div className="grid gap-8 lg:grid-cols-2">
-                                    <div className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-3xl p-6 shadow-xl h-[400px]">
+                                    <div className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-3xl p-6 shadow-xl">
                                         <h3 className="font-bold mb-6 text-sm uppercase tracking-widest text-muted-foreground">Traffic Analytics</h3>
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <AreaChart data={analyticsData}>
-                                                <defs>
-                                                    <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                                                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                                                    </linearGradient>
-                                                </defs>
-                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(139, 92, 246, 0.1)" />
-                                                <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} />
-                                                <YAxis fontSize={10} axisLine={false} tickLine={false} />
-                                                <Tooltip
-                                                    contentStyle={{
-                                                        background: "var(--card)",
-                                                        color: "var(--foreground)",
-                                                        border: "1px solid var(--border)",
-                                                        borderRadius: "12px",
-                                                        fontSize: "12px"
-                                                    }}
-                                                />
-                                                <Area type="monotone" dataKey="views" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorViews)" />
-                                            </AreaChart>
-                                        </ResponsiveContainer>
+                                        <div className="w-full h-[320px]">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <AreaChart data={analyticsData}>
+                                                    <defs>
+                                                        <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                                                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                                                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                                                        </linearGradient>
+                                                    </defs>
+                                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(139, 92, 246, 0.1)" />
+                                                    <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} />
+                                                    <YAxis fontSize={10} axisLine={false} tickLine={false} />
+                                                    <Tooltip
+                                                        contentStyle={{
+                                                            background: "var(--card)",
+                                                            color: "var(--foreground)",
+                                                            border: "1px solid var(--border)",
+                                                            borderRadius: "12px",
+                                                            fontSize: "12px"
+                                                        }}
+                                                    />
+                                                    <Area type="monotone" dataKey="views" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorViews)" />
+                                                </AreaChart>
+                                            </ResponsiveContainer>
+                                        </div>
                                     </div>
 
-                                    <div className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-3xl p-6 shadow-xl h-[400px]">
+                                    <div className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-3xl p-6 shadow-xl">
                                         <h3 className="font-bold mb-6 text-sm uppercase tracking-widest text-muted-foreground">Portfolio Performance</h3>
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <LineChart data={analyticsData}>
-                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(139, 92, 246, 0.1)" />
-                                                <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} />
-                                                <YAxis fontSize={10} axisLine={false} tickLine={false} />
-                                                <Tooltip
-                                                    contentStyle={{
-                                                        background: "var(--card)",
-                                                        color: "var(--foreground)",
-                                                        border: "1px solid var(--border)",
-                                                        borderRadius: "12px",
-                                                        fontSize: "12px"
-                                                    }}
-                                                />
-                                                <Line type="monotone" dataKey="downloads" stroke="#ec4899" strokeWidth={2} dot={{ r: 4 }} />
-                                                <Line type="monotone" dataKey="messages" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} />
-                                            </LineChart>
-                                        </ResponsiveContainer>
+                                        <div className="w-full h-[320px]">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <LineChart data={analyticsData}>
+                                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(139, 92, 246, 0.1)" />
+                                                    <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} />
+                                                    <YAxis fontSize={10} axisLine={false} tickLine={false} />
+                                                    <Tooltip
+                                                        contentStyle={{
+                                                            background: "var(--card)",
+                                                            color: "var(--foreground)",
+                                                            border: "1px solid var(--border)",
+                                                            borderRadius: "12px",
+                                                            fontSize: "12px"
+                                                        }}
+                                                    />
+                                                    <Line type="monotone" dataKey="downloads" stroke="#ec4899" strokeWidth={2} dot={{ r: 4 }} />
+                                                    <Line type="monotone" dataKey="messages" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4 }} />
+                                                </LineChart>
+                                            </ResponsiveContainer>
+                                        </div>
                                     </div>
                                 </div>
                             </motion.div>
@@ -353,9 +418,9 @@ export default function AdminDashboard() {
                                     </div>
                                 </div>
 
-                                {posts.filter((p: any) => p.title.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
+                                {posts.filter((p: Post) => p.title.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
                                     <div className="grid gap-4">
-                                        {posts.filter((p: any) => p.title.toLowerCase().includes(searchTerm.toLowerCase())).map((post: any) => (
+                                        {posts.filter((p: Post) => p.title.toLowerCase().includes(searchTerm.toLowerCase())).map((post: Post) => (
                                             <div key={post._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
                                                 <div className="flex items-center gap-4">
                                                     <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
@@ -458,9 +523,9 @@ export default function AdminDashboard() {
                                     </div>
                                 </div>
 
-                                {projects.filter((p: any) => p.title.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
+                                {projects.filter((p: Project) => p.title.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
                                     <div className="grid gap-4">
-                                        {projects.filter((p: any) => p.title.toLowerCase().includes(searchTerm.toLowerCase())).map((project: any) => (
+                                        {projects.filter((p: Project) => p.title.toLowerCase().includes(searchTerm.toLowerCase())).map((project: Project) => (
                                             <div key={project._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
                                                 <div className="flex items-center gap-4">
                                                     <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden">
@@ -520,9 +585,9 @@ export default function AdminDashboard() {
                                         </Link>
                                     </div>
                                 </div>
-                                {gallery.filter((g: any) => g.title.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
+                                {gallery.filter((g: GalleryItem) => g.title.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
                                     <div className="grid gap-4">
-                                        {gallery.filter((g: any) => g.title.toLowerCase().includes(searchTerm.toLowerCase())).map((item: any) => (
+                                        {gallery.filter((g: GalleryItem) => g.title.toLowerCase().includes(searchTerm.toLowerCase())).map((item: GalleryItem) => (
                                             <div key={item._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
                                                 <div className="flex items-center gap-4">
                                                     <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden">
@@ -582,9 +647,9 @@ export default function AdminDashboard() {
                                         </Link>
                                     </div>
                                 </div>
-                                {certs.filter((c: any) => c.title.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
+                                {certs.filter((c: Certification) => c.title.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
                                     <div className="grid gap-4">
-                                        {certs.filter((c: any) => c.title.toLowerCase().includes(searchTerm.toLowerCase())).map((cert: any) => (
+                                        {certs.filter((c: Certification) => c.title.toLowerCase().includes(searchTerm.toLowerCase())).map((cert: Certification) => (
                                             <div key={cert._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
                                                 <div className="flex items-center gap-4">
                                                     <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
@@ -592,7 +657,7 @@ export default function AdminDashboard() {
                                                     </div>
                                                     <div>
                                                         <h4 className="font-bold">{cert.title}</h4>
-                                                        <p className="text-xs text-muted-foreground">{cert.issuer} • {new Date(cert.date).toLocaleDateString()}</p>
+                                                        <p className="text-xs text-muted-foreground">{cert.issuer} • {cert.issueDate ? new Date(cert.issueDate).toLocaleDateString() : 'No date'}</p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2">
@@ -644,9 +709,9 @@ export default function AdminDashboard() {
                                         </Link>
                                     </div>
                                 </div>
-                                {testimonials.filter((t: any) => t.name.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
+                                {testimonials.filter((t: Testimonial) => t.name.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
                                     <div className="grid gap-4">
-                                        {testimonials.filter((t: any) => t.name.toLowerCase().includes(searchTerm.toLowerCase())).map((t: any) => (
+                                        {testimonials.filter((t: Testimonial) => t.name.toLowerCase().includes(searchTerm.toLowerCase())).map((t: Testimonial) => (
                                             <div key={t._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
                                                 <div className="flex items-center gap-4">
                                                     <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
@@ -675,6 +740,58 @@ export default function AdminDashboard() {
                                         <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-20" />
                                         <p className="font-bold">No testimonials found</p>
                                         <p className="text-xs">Manage client feedback and reviews here.</p>
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+                        {activeTab === "newsletter" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-6"
+                            >
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                                    <h2 className="text-3xl font-bold tracking-tight">Newsletter Subscribers</h2>
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search subscribers..."
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                className="pl-10 pr-4 py-2 rounded-xl bg-card border border-primary/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {newsletter.filter((n: Newsletter) => n.email.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
+                                    <div className="grid gap-4">
+                                        {newsletter.filter((n: Newsletter) => n.email.toLowerCase().includes(searchTerm.toLowerCase())).map((sub: Newsletter) => (
+                                            <div key={sub._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                                        <Mail className="h-5 w-5" />
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold">{sub.email}</h4>
+                                                        <p className="text-xs text-muted-foreground">{sub.name || 'No name'} • {new Date(sub.createdAt).toLocaleDateString()}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${sub.subscribed ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                                                        {sub.subscribed ? 'Subscribed' : 'Unsubscribed'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="rounded-3xl border-2 border-dashed border-primary/10 bg-card/20 backdrop-blur-sm px-8 py-20 text-center text-muted-foreground">
+                                        <Mail className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                                        <p className="font-bold">No subscribers yet</p>
+                                        <p className="text-xs">Share your newsletter to get subscribers.</p>
                                     </div>
                                 )}
                             </motion.div>

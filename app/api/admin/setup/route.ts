@@ -29,7 +29,10 @@ export async function GET() {
                 password: "admin123"
             }
         });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    } catch (error: unknown) {
+        return NextResponse.json({
+            success: false,
+            error: error instanceof Error ? error.message : "Setup failed"
+        }, { status: 500 });
     }
 }

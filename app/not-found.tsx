@@ -16,7 +16,7 @@ export default function NotFound() {
                 <h2 className="text-4xl font-bold tracking-tight sm:text-5xl">Page Not Found</h2>
                 <p className="text-lg text-muted-foreground max-w-[600px] mx-auto">
                     The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
-                    Or maybe it's just a glitch in the matrix.
+                    Or maybe it&apos;s just a glitch in the matrix.
                 </p>
                 <div className="pt-8">
                     <Link href="/" className="inline-flex h-11 items-center justify-center rounded-full bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">

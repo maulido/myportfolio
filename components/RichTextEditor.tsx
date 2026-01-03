@@ -5,7 +5,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
-import { lowlight } from "lowlight";
+import { createLowlight } from "lowlight";
 import {
     Bold,
     Italic,
@@ -24,6 +24,9 @@ import {
     Code2,
 } from "lucide-react";
 import { useCallback } from "react";
+
+// Initialize lowlight instance
+const lowlight = createLowlight();
 
 interface RichTextEditorProps {
     content: string;

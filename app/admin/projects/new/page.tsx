@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
+import ImageUpload from "@/components/ImageUpload";
 
 export default function NewProjectPage() {
     const router = useRouter();
@@ -74,62 +75,61 @@ export default function NewProjectPage() {
                                 placeholder="Project Name"
                             />
                         </div>
+
                         <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Image URL</label>
-                            <input
-                                name="image"
+                            <label className="text-sm font-medium leading-none">Project Image</label>
+                            <ImageUpload
                                 value={formData.image}
-                                onChange={handleChange}
-                                className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="/project.png or https://..."
+                                onChange={(url) => setFormData(prev => ({ ...prev, image: url }))}
+                                endpoint="imageUploader"
                             />
                         </div>
-                    </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium leading-none">Description</label>
-                        <textarea
-                            required
-                            name="description"
-                            value={formData.description}
-                            onChange={handleChange}
-                            rows={4}
-                            className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            placeholder="What did you build?"
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium leading-none">Tags (comma separated)</label>
-                        <input
-                            name="tags"
-                            value={formData.tags}
-                            onChange={handleChange}
-                            className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            placeholder="React, Next.js, MongoDB"
-                        />
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">GitHub URL</label>
-                            <input
-                                name="github"
-                                value={formData.github}
+                            <label className="text-sm font-medium leading-none">Description</label>
+                            <textarea
+                                required
+                                name="description"
+                                value={formData.description}
                                 onChange={handleChange}
-                                className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="https://github.com/..."
+                                rows={4}
+                                className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                placeholder="What did you build?"
                             />
                         </div>
+
                         <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Demo/Live URL</label>
+                            <label className="text-sm font-medium leading-none">Tags (comma separated)</label>
                             <input
-                                name="demo"
-                                value={formData.demo}
+                                name="tags"
+                                value={formData.tags}
                                 onChange={handleChange}
                                 className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="https://example.com"
+                                placeholder="React, Next.js, MongoDB"
                             />
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none">GitHub URL</label>
+                                <input
+                                    name="github"
+                                    value={formData.github}
+                                    onChange={handleChange}
+                                    className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="https://github.com/..."
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none">Demo/Live URL</label>
+                                <input
+                                    name="demo"
+                                    value={formData.demo}
+                                    onChange={handleChange}
+                                    className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="https://example.com"
+                                />
+                            </div>
                         </div>
                     </div>
 

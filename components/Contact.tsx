@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { useState } from "react";
+import toast, { Toaster } from 'react-hot-toast';
 
 export function Contact() {
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -10,14 +11,35 @@ export function Contact() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        // Simulate form submission
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        setIsSubmitting(false);
-        alert("Message sent! (Simulation)");
+
+        try {
+            // Simulate API call - replace with actual API endpoint
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+
+            toast.success('Message sent successfully! I\'ll get back to you soon.', {
+                duration: 5000,
+                icon: '✉️',
+                style: {
+                    background: '#10b981',
+                    color: '#fff',
+                },
+            });
+
+            // Reset form
+            (e.target as HTMLFormElement).reset();
+        } catch (error) {
+            toast.error('Failed to send message. Please try again.', {
+                duration: 4000,
+                icon: '❌',
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
         <section id="contact" className="py-24 relative overflow-hidden bg-background">
+            <Toaster position="top-right" />
             {/* Background Decoration */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent -z-10" />
             <div className="container mx-auto px-4 md:px-6">
@@ -34,7 +56,7 @@ export function Contact() {
                                 Get in <span className="text-gradient">Touch</span>
                             </h2>
                             <p className="text-muted-foreground text-lg leading-relaxed max-w-md">
-                                Have a project in mind or just want to say hi? I'm always open to discussing new opportunities and creative ideas.
+                                Have a project in mind or just want to say hi? I&apos;m always open to discussing new opportunities and creative ideas.
                             </p>
                         </div>
 

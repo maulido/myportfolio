@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, FileText, Mail, X, Plus, Github, Linkedin } from "lucide-react";
+import { MessageCircle, FileText, Mail, X, Plus } from "lucide-react";
 import Link from "next/link";
 
 export default function FloatingActionButton() {
@@ -17,7 +17,7 @@ export default function FloatingActionButton() {
     ];
 
     return (
-        <div className="fixed bottom-8 left-8 z-50 flex flex-col items-start gap-3">
+        <div className="fixed bottom-8 left-8 z-50 hidden md:flex flex-col items-start gap-3">
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
@@ -50,10 +50,10 @@ export default function FloatingActionButton() {
                                 ) : (
                                     <Link
                                         href={item.href}
-                                        onClick={(e) => {
-                                            if ((item as any).onClick) {
+                                        onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
+                                            if (item.onClick) {
                                                 e.preventDefault();
-                                                (item as any).onClick();
+                                                item.onClick();
                                             }
                                             setIsOpen(false);
                                         }}

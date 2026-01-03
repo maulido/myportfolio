@@ -10,13 +10,17 @@ export default function NewCertificationPage() {
     const [formData, setFormData] = useState({
         title: "",
         issuer: "",
-        date: new Date().toISOString().split('T')[0],
+        issueDate: new Date().toISOString().split('T')[0],
+        expiryDate: "",
+        credentialId: "",
         credentialUrl: "",
         imageUrl: "",
+        category: "Other",
+        skills: "",
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
@@ -26,10 +30,15 @@ export default function NewCertificationPage() {
         setIsSubmitting(true);
 
         try {
+            const dataToSubmit = {
+                ...formData,
+                skills: formData.skills.split(',').map(s => s.trim()).filter(Boolean)
+            };
+
             const res = await fetch("/api/certifications", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(dataToSubmit),
             });
 
             if (res.ok) {
@@ -77,7 +86,7 @@ export default function NewCertificationPage() {
                                 name="issuer"
                                 value={formData.issuer}
                                 onChange={handleChange}
-                                className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                 placeholder="Issuing Organization"
                             />
                         </div>
@@ -85,26 +94,67 @@ export default function NewCertificationPage() {
 
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Date Issued</label>
+                            <label className="text-sm font-medium leading-none">Issue Date</label>
                             <input
                                 type="date"
                                 required
-                                name="date"
-                                value={formData.date}
+                                name="issueDate"
+                                value={formData.issueDate}
                                 onChange={handleChange}
                                 className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Credential URL</label>
+                            <label className="text-sm font-medium leading-none">Expiry Date</label>
                             <input
-                                name="credentialUrl"
-                                value={formData.credentialUrl}
+                                type="date"
+                                name="expiryDate"
+                                value={formData.expiryDate}
                                 onChange={handleChange}
                                 className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="https://credly.com/..."
                             />
                         </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium leading-none">Category</label>
+                            <select
+                                name="category"
+                                value={formData.category}
+                                // @ts-ignore
+                                onChange={handleChange}
+                                className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                                <option value="AWS">AWS</option>
+                                <option value="Cisco">Cisco</option>
+                                <option value="Microsoft">Microsoft</option>
+                                <option value="Google">Google</option>
+                                <option value="Security">Security</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium leading-none">Credential ID</label>
+                            <input
+                                name="credentialId"
+                                value={formData.credentialId}
+                                onChange={handleChange}
+                                className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                placeholder="ID-12345"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium leading-none">Credential URL</label>
+                        <input
+                            name="credentialUrl"
+                            value={formData.credentialUrl}
+                            onChange={handleChange}
+                            className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            placeholder="https://credly.com/..."
+                        />
                     </div>
 
                     <div className="space-y-2">
@@ -115,6 +165,17 @@ export default function NewCertificationPage() {
                             onChange={handleChange}
                             className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             placeholder="https://example.com/badge.png"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium leading-none">Skills (comma separated)</label>
+                        <input
+                            name="skills"
+                            value={formData.skills}
+                            onChange={handleChange}
+                            className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            placeholder="Cloud, Networking, Security..."
                         />
                     </div>
 

@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { ExternalLink, Github } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { ProjectSkeleton } from "./Skeleton";
 
 interface IProject {
@@ -68,6 +67,25 @@ export function Projects() {
                         {[1, 2, 3].map((i) => (
                             <ProjectSkeleton key={i} />
                         ))}
+                    </div>
+                ) : projects.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                        <div className="mb-6 p-4 rounded-full bg-muted/30 text-muted-foreground">
+                            <Github className="h-12 w-12" />
+                        </div>
+                        <h3 className="text-xl font-bold mb-2">No Projects Yet</h3>
+                        <p className="text-muted-foreground max-w-md mb-6">
+                            I'm currently working on exciting projects. Check out my GitHub for the latest work!
+                        </p>
+                        <a
+                            href="https://github.com/maulido"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
+                        >
+                            <Github className="h-5 w-5" />
+                            View GitHub
+                        </a>
                     </div>
                 ) : (
                     <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">

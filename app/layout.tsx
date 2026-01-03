@@ -18,6 +18,7 @@ const geistMono = Geist_Mono({
 import ClientLayout from "@/components/ClientLayout";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'),
   title: "Professional Portfolio | Network & Software Engineer",
   description: "Explore the portfolio of a dedicated Network and Software Engineer specializing in modern web apps and robust network solutions.",
   keywords: ["Software Engineer", "Network Engineer", "Portfolio", "Next.js", "React", "Cisco"],

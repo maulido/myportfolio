@@ -1,9 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Download, Mail } from "lucide-react";
+import { ArrowRight, Download } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 const roles = [
     "Network Specialist",
@@ -17,15 +17,17 @@ export function Hero() {
     const [isDeleting, setIsDeleting] = useState(false);
     const [loopNum, setLoopNum] = useState(0);
     const [typingSpeed, setTypingSpeed] = useState(150);
-    const [greeting, setGreeting] = useState("Hello");
     const [isWorking, setIsWorking] = useState(true);
 
-    useEffect(() => {
+    // Calculate greeting outside of useEffect to avoid setState in effect
+    const greeting = useMemo(() => {
         const hour = new Date().getHours();
-        if (hour < 12) setGreeting("Good Morning");
-        else if (hour < 18) setGreeting("Good Afternoon");
-        else setGreeting("Good Evening");
+        if (hour < 12) return "Good Morning";
+        if (hour < 18) return "Good Afternoon";
+        return "Good Evening";
+    }, []);
 
+    useEffect(() => {
         // Fetch availability status
         fetch('/api/settings?key=isWorking')
             .then(res => res.json())
@@ -73,7 +75,7 @@ export function Hero() {
                 >
                     <div className="flex flex-col items-center gap-4 mb-6">
                         <div className="inline-block rounded-full bg-muted/50 px-3 py-1 text-sm text-muted-foreground backdrop-blur-md border border-primary/20">
-                            👋 {greeting}, I'm a...
+                            👋 {greeting}, I&apos;m a...
                         </div>
                         {isWorking && (
                             <motion.div

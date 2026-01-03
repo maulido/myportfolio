@@ -49,7 +49,7 @@ export function About() {
 
                         <p className="text-muted-foreground text-lg leading-relaxed">
                             I love solving complex problems and building efficient, scalable solutions.
-                            Whether it's configuring a complex network topology or building a modern web application,
+                            Whether it&apos;s configuring a complex network topology or building a modern web application,
                             I bring dedication and attention to detail to every project.
                         </p>
 

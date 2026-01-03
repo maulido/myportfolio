@@ -10,7 +10,7 @@ export async function GET() {
         }
         const projects = await Project.find({}).sort({ createdAt: -1 });
         return NextResponse.json({ success: true, data: projects });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("API GET Projects Error:", error);
         return NextResponse.json({
             success: false,

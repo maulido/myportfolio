@@ -22,7 +22,7 @@ export function Footer() {
             } else {
                 setStatus("error");
             }
-        } catch (error) {
+        } catch {
             setStatus("error");
         }
     };
@@ -62,7 +62,7 @@ export function Footer() {
                     </a>
                 </div>
                 <div className="space-y-6 max-w-sm mx-auto mb-16">
-                    <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">Subscribe to Intel</h4>
+                    <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">Subscribe to Newsletter</h4>
                     <form className="flex flex-col sm:flex-row gap-3" onSubmit={handleSubscribe}>
                         <input
                             type="email"

@@ -10,7 +10,7 @@ import {
     PolarRadiusAxis,
     ResponsiveContainer,
 } from "recharts";
-import { SiNextdotjs, SiReact, SiTypescript, SiTailwindcss, SiFramer, SiNodedotjs, SiMongodb, SiPostgresql, SiPython, SiCisco, SiDocker, SiLinux, SiAmazonwebservices } from "react-icons/si";
+import { SiNextdotjs, SiReact, SiTypescript, SiTailwindcss, SiNodedotjs, SiMongodb, SiPostgresql, SiPython, SiCisco, SiDocker, SiLinux, SiAmazonwebservices } from "react-icons/si";
 import { Brain, Users, MessageSquare, Zap } from "lucide-react";
 
 type Skill = {
@@ -96,26 +96,29 @@ export function Skills() {
                     whileInView={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.7 }}
                     viewport={{ once: true }}
-                    className="mb-20 h-[300px] md:h-[450px] w-full flex justify-center items-center rounded-3xl bg-card/50 backdrop-blur-xl border border-primary/10 p-4 shadow-2xl relative group"
+                    className="mb-20 w-full flex justify-center items-center rounded-3xl bg-card/50 backdrop-blur-xl border border-primary/10 p-4 shadow-2xl relative group"
+                    style={{ minHeight: '450px' }}
                 >
                     <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 rounded-3xl pointer-events-none" />
-                    <ResponsiveContainer width="100%" height="100%">
-                        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                            <PolarGrid stroke="rgba(139, 92, 246, 0.2)" />
-                            <PolarAngleAxis
-                                dataKey="subject"
-                                tick={{ fill: "currentColor", fontSize: 12, opacity: 0.7 }}
-                            />
-                            <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                            <Radar
-                                name="Skills"
-                                dataKey="A"
-                                stroke="var(--primary)"
-                                fill="var(--primary)"
-                                fillOpacity={0.5}
-                            />
-                        </RadarChart>
-                    </ResponsiveContainer>
+                    <div className="w-full h-[300px] md:h-[400px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                                <PolarGrid stroke="rgba(139, 92, 246, 0.2)" />
+                                <PolarAngleAxis
+                                    dataKey="subject"
+                                    tick={{ fill: "currentColor", fontSize: 12, opacity: 0.7 }}
+                                />
+                                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                                <Radar
+                                    name="Skills"
+                                    dataKey="A"
+                                    stroke="var(--primary)"
+                                    fill="var(--primary)"
+                                    fillOpacity={0.5}
+                                />
+                            </RadarChart>
+                        </ResponsiveContainer>
+                    </div>
                 </motion.div>
 
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, Upload } from "lucide-react";
 import Link from "next/link";
+import ImageUpload from "@/components/ImageUpload";
 
 export default function NewGalleryItemPage() {
     const router = useRouter();
@@ -87,18 +88,12 @@ export default function NewGalleryItemPage() {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium leading-none">Image URL</label>
-                        <div className="flex gap-2">
-                            <input
-                                required
-                                name="imageUrl"
-                                value={formData.imageUrl}
-                                onChange={handleChange}
-                                className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="https://example.com/image.jpg"
-                            />
-                        </div>
-                        <p className="text-xs text-muted-foreground">For demo purposes, paste a direct image URL.</p>
+                        <label className="text-sm font-medium leading-none">Gallery Image</label>
+                        <ImageUpload
+                            value={formData.imageUrl}
+                            onChange={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
+                            endpoint="imageUploader"
+                        />
                     </div>
 
                     <div className="space-y-2">

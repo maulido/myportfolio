@@ -20,4 +20,7 @@ const AnalyticsSchema = new mongoose.Schema({
     },
 }, { timestamps: true });
 
+// Add index for better query performance
+AnalyticsSchema.index({ type: 1, identifier: 1 });
+
 export default mongoose.models.Analytics || mongoose.model('Analytics', AnalyticsSchema);

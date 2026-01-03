@@ -37,6 +37,13 @@ export default function GalleryPage() {
             }
         }
         fetchGallery();
+
+        // Timeout after 5 seconds
+        const timeout = setTimeout(() => {
+            setLoading(false);
+        }, 5000);
+
+        return () => clearTimeout(timeout);
     }, []);
 
     return (
@@ -63,6 +70,16 @@ export default function GalleryPage() {
                             {[1, 2, 3, 4, 5, 6].map((i) => (
                                 <GallerySkeleton key={i} />
                             ))}
+                        </div>
+                    ) : items.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                            <div className="mb-6 p-4 rounded-full bg-muted/30 text-muted-foreground">
+                                <X className="h-12 w-12" />
+                            </div>
+                            <h3 className="text-xl font-bold mb-2">Gallery Coming Soon</h3>
+                            <p className="text-muted-foreground max-w-md">
+                                I&apos;m curating a collection of project screenshots and photos. Check back later!
+                            </p>
                         </div>
                     ) : (
                         <div className="columns-1 md:columns-2 lg:columns-3 gap-8 space-y-8 max-w-7xl mx-auto">

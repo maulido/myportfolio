@@ -3,10 +3,12 @@ import { Hero } from "@/components/Hero";
 import { About } from "@/components/About";
 import { Skills } from "@/components/Skills";
 import { Experience } from "@/components/Experience";
+import { Certifications } from "@/components/Certifications";
 import { Projects } from "@/components/Projects";
 import { Contact } from "@/components/Contact";
 import { Footer } from "@/components/Footer";
 import { Testimonials } from "@/components/Testimonials";
+import { GitHubActivity } from "@/components/GitHubActivity";
 import Separator from "@/components/Separator";
 import { Metadata } from 'next';
 
@@ -30,8 +32,10 @@ export default function Home() {
         <About />
         <Skills />
         <Experience />
+        <Certifications />
         <Projects />
         <Testimonials />
+        <GitHubActivity username="maulido" />
         <Contact />
       </main>
       <Footer />

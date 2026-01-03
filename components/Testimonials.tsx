@@ -1,9 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Image from "next/image";
 import { useEffect, useState } from "react";
-import { Quote } from "lucide-react";
+import { Quote, Star } from "lucide-react";
 import { TestimonialSkeleton } from "./Skeleton";
 
 interface ITestimonial {
@@ -12,6 +11,7 @@ interface ITestimonial {
     role: string;
     company: string;
     content: string;
+    rating?: number;
     image?: string;
 }
 
@@ -82,7 +82,16 @@ export function Testimonials() {
                             className="glass rounded-xl p-8 relative transition-transform hover:-translate-y-1"
                         >
                             <Quote className="absolute top-4 right-4 h-8 w-8 text-primary/20" />
-                            <p className="text-lg text-foreground/90 mb-6 italic">"{item.content}"</p>
+                            <p className="text-lg text-foreground/90 mb-4 italic">&quot;{item.content}&quot;</p>
+
+                            {item.rating && (
+                                <div className="flex gap-1 mb-4">
+                                    {Array.from({ length: item.rating }).map((_, i) => (
+                                        <Star key={i} className="h-4 w-4 fill-primary text-primary" />
+                                    ))}
+                                </div>
+                            )}
+
                             <div className="flex items-center">
                                 <div className="h-10 w-10 rounded-full bg-muted mr-3 overflow-hidden border border-primary/20">
                                     {item.image ? (

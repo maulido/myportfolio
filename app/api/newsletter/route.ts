@@ -12,7 +12,9 @@ export async function POST(req: Request) {
         }
 
         // MOCK: In a real app, you would save this to Mailcham/ConvertKit/Database
-        console.log(`[Mock Newsletter] Subscribed: ${email}`);
+        if (process.env.NODE_ENV === 'development') {
+            console.log(`[Mock Newsletter] Subscribed: ${email}`);
+        }
 
         return NextResponse.json({
             success: true,
