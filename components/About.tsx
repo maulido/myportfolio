@@ -2,8 +2,54 @@
 
 import { motion } from "framer-motion";
 import { Download, ShieldCheck, Bot } from "lucide-react";
+import { useState, useEffect } from "react";
+
+interface AboutMeContent {
+    paragraph1: string;
+    paragraph2: string;
+}
+
+interface EducationEntry {
+    _id: string;
+    title: string;
+    organization: string;
+    startDate: string;
+    endDate?: string;
+}
 
 export function About() {
+    const [aboutMe, setAboutMe] = useState<AboutMeContent>({
+        paragraph1: 'Loading...',
+        paragraph2: ''
+    });
+    const [education, setEducation] = useState<EducationEntry[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                // Fetch About Me content
+                const aboutRes = await fetch('/api/about');
+                const aboutData = await aboutRes.json();
+                if (aboutData.success) {
+                    setAboutMe(aboutData.data);
+                }
+
+                // Fetch Education entries
+                const eduRes = await fetch('/api/career?type=education');
+                const eduData = await eduRes.json();
+                if (eduData.success) {
+                    setEducation(eduData.data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch About data:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
+
     return (
         <section id="about" className="py-16 md:py-24 bg-muted/50 overflow-hidden">
             <div className="container mx-auto px-4 md:px-6">
@@ -41,17 +87,18 @@ export function About() {
                             <div className="h-1.5 w-20 bg-primary rounded-full mb-6"></div>
                         </div>
 
-                        <p className="text-muted-foreground text-lg leading-relaxed">
-                            I am a passionate professional with a strong background in IT and software development.
-                            My journey started with a curiosity about how things work, leading me to specialize in
-                            Network Engineering and Software Engineering.
-                        </p>
-
-                        <p className="text-muted-foreground text-lg leading-relaxed">
-                            I love solving complex problems and building efficient, scalable solutions.
-                            Whether it&apos;s configuring a complex network topology or building a modern web application,
-                            I bring dedication and attention to detail to every project.
-                        </p>
+                        {isLoading ? (
+                            <p className="text-muted-foreground text-lg leading-relaxed">Loading...</p>
+                        ) : (
+                            <>
+                                <p className="text-muted-foreground text-lg leading-relaxed">
+                                    {aboutMe.paragraph1}
+                                </p>
+                                <p className="text-muted-foreground text-lg leading-relaxed">
+                                    {aboutMe.paragraph2}
+                                </p>
+                            </>
+                        )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                             <div className="p-4 rounded-xl bg-card border border-primary/10 shadow-sm">
@@ -59,14 +106,23 @@ export function About() {
                                     <ShieldCheck className="h-5 w-5" /> Education
                                 </h3>
                                 <ul className="space-y-2 text-sm text-muted-foreground">
-                                    <li className="flex items-start gap-2">
-                                        <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0"></div>
-                                        <span>B.S. in Computer Science (2018-2022)</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                        <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0"></div>
-                                        <span>Cisco Certified Network Associate (CCNA)</span>
-                                    </li>
+                                    {education.length > 0 ? (
+                                        education.map((edu) => {
+                                            const startYear = new Date(edu.startDate).getFullYear();
+                                            const endYear = edu.endDate ? new Date(edu.endDate).getFullYear() : 'Present';
+                                            return (
+                                                <li key={edu._id} className="flex items-start gap-2">
+                                                    <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0"></div>
+                                                    <span>{edu.title} ({startYear}-{endYear})</span>
+                                                </li>
+                                            );
+                                        })
+                                    ) : (
+                                        <li className="flex items-start gap-2">
+                                            <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0"></div>
+                                            <span>No education entries yet</span>
+                                        </li>
+                                    )}
                                 </ul>
                             </div>
 

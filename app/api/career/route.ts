@@ -2,15 +2,18 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import CareerJourney from '@/models/CareerJourney';
 
-export async function GET() {
+export async function GET(req: Request) {
     try {
-        const conn = await dbConnect();
-        if (!conn) {
-            return NextResponse.json({ success: false, error: "Database connection not established" }, { status: 503 });
-        }
+        await dbConnect();
 
-        // Sort by startDate descending (newest first)
-        const careers = await CareerJourney.find({}).sort({ startDate: -1 });
+        // Get type filter from query params
+        const { searchParams } = new URL(req.url);
+        const type = searchParams.get('type');
+
+        // Build query
+        const query = type ? { type } : {};
+
+        const careers = await CareerJourney.find(query).sort({ startDate: -1 });
         return NextResponse.json({ success: true, data: careers });
     } catch (error: unknown) {
         console.error("API GET Career Error:", error);
