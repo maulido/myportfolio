@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, X } from "lucide-react";
 import Link from "next/link";
 
 export default function NewCertificationPage() {
@@ -19,10 +19,44 @@ export default function NewCertificationPage() {
         skills: "",
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [existingSkills, setExistingSkills] = useState<string[]>([]);
+    const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+    const [newSkill, setNewSkill] = useState("");
+
+    useEffect(() => {
+        fetchExistingSkills();
+    }, []);
+
+    const fetchExistingSkills = async () => {
+        try {
+            const res = await fetch('/api/certifications');
+            const data = await res.json();
+            if (data.success) {
+                // Extract all unique skills from all certifications
+                const allSkills = data.data.flatMap((cert: any) => cert.skills || []);
+                const uniqueSkills = [...new Set(allSkills)].filter(Boolean).sort();
+                setExistingSkills(uniqueSkills as string[]);
+            }
+        } catch (error) {
+            console.error("Failed to fetch skills:", error);
+        }
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const addSkill = (skill: string) => {
+        const trimmedSkill = skill.trim();
+        if (trimmedSkill && !selectedSkills.includes(trimmedSkill)) {
+            setSelectedSkills([...selectedSkills, trimmedSkill]);
+        }
+        setNewSkill("");
+    };
+
+    const removeSkill = (skillToRemove: string) => {
+        setSelectedSkills(selectedSkills.filter(s => s !== skillToRemove));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -32,7 +66,7 @@ export default function NewCertificationPage() {
         try {
             const dataToSubmit = {
                 ...formData,
-                skills: formData.skills.split(',').map(s => s.trim()).filter(Boolean)
+                skills: selectedSkills
             };
 
             const res = await fetch("/api/certifications", {
@@ -169,14 +203,72 @@ export default function NewCertificationPage() {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium leading-none">Skills (comma separated)</label>
-                        <input
-                            name="skills"
-                            value={formData.skills}
-                            onChange={handleChange}
-                            className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            placeholder="Cloud, Networking, Security..."
-                        />
+                        <label className="text-sm font-medium leading-none">Skills</label>
+                        <div className="space-y-3">
+                            {/* Selected Skills Display */}
+                            {selectedSkills.length > 0 && (
+                                <div className="flex flex-wrap gap-2 p-3 rounded-md border border-input/50 bg-background/30">
+                                    {selectedSkills.map((skill) => (
+                                        <span
+                                            key={skill}
+                                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-primary/10 text-primary border border-primary/20"
+                                        >
+                                            {skill}
+                                            <button
+                                                type="button"
+                                                onClick={() => removeSkill(skill)}
+                                                className="hover:bg-primary/20 rounded-full p-0.5"
+                                            >
+                                                <X className="h-3 w-3" />
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Existing Skills Dropdown */}
+                            <select
+                                onChange={(e) => {
+                                    if (e.target.value) {
+                                        addSkill(e.target.value);
+                                        e.target.value = "";
+                                    }
+                                }}
+                                className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                                <option value="">Select from existing skills...</option>
+                                {existingSkills.map((skill) => (
+                                    <option key={skill} value={skill}>{skill}</option>
+                                ))}
+                            </select>
+
+                            {/* Manual Input for New Skill */}
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    value={newSkill}
+                                    onChange={(e) => setNewSkill(e.target.value)}
+                                    onKeyPress={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            addSkill(newSkill);
+                                        }
+                                    }}
+                                    className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="Or type a new skill..."
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => addSkill(newSkill)}
+                                    className="px-4 py-2 text-sm bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded-md transition-colors"
+                                >
+                                    Add
+                                </button>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                💡 Select from dropdown or type new skills. Press Enter or click Add.
+                            </p>
+                        </div>
                     </div>
 
                     <div className="flex justify-end pt-4">
