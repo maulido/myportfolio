@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Project from '@/models/Project';
+import { UTApi } from 'uploadthing/server';
+
+const utapi = new UTApi();
 
 export async function GET(
     request: Request,
@@ -28,12 +31,32 @@ export async function DELETE(
     await dbConnect();
 
     try {
-        const deletedProject = await Project.findByIdAndDelete(id);
-        if (!deletedProject) {
+        // Get the project first to extract file key
+        const project = await Project.findById(id);
+
+        if (!project) {
             return NextResponse.json({ success: false, error: "Project not found" }, { status: 404 });
         }
+
+        // Extract file key from image URL if exists
+        if (project.image) {
+            const fileKey = project.image.split('/f/')[1];
+            if (fileKey) {
+                try {
+                    await utapi.deleteFiles(fileKey);
+                    console.log(`Deleted file from UploadThing: ${fileKey}`);
+                } catch (error) {
+                    console.error('Failed to delete file from UploadThing:', error);
+                }
+            }
+        }
+
+        // Delete from database
+        await Project.findByIdAndDelete(id);
+
         return NextResponse.json({ success: true, data: {} });
     } catch (error) {
+        console.error('Delete error:', error);
         return NextResponse.json({ success: false, error: error }, { status: 400 });
     }
 }
