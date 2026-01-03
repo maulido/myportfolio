@@ -106,7 +106,6 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                                 placeholder="Project Name"
                             />
                         </div>
-
                         <div className="space-y-2">
                             <label className="text-sm font-medium leading-none">Project Image</label>
                             <ImageUpload
@@ -120,68 +119,62 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                                 </p>
                             )}
                         </div>
-
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Description</label>
-                            <textarea
-                                required
-                                name="description"
-                                value={formData.description}
-                                onChange={handleChange}
-                                rows={4}
-                                className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="What did you build?"
+                        value={formData.description}
+                        onChange={handleChange}
+                        rows={4}
+                        className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        placeholder="What did you build?"
                             />
-                        </div>
+                    </div>
 
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium leading-none">Tags (comma separated)</label>
+                        <input
+                            name="tags"
+                            value={formData.tags}
+                            onChange={handleChange}
+                            className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            placeholder="React, Next.js, MongoDB"
+                        />
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Tags (comma separated)</label>
+                            <label className="text-sm font-medium leading-none">GitHub URL</label>
                             <input
-                                name="tags"
-                                value={formData.tags}
+                                name="github"
+                                value={formData.github}
                                 onChange={handleChange}
                                 className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="React, Next.js, MongoDB"
+                                placeholder="https://github.com/..."
                             />
                         </div>
-
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium leading-none">GitHub URL</label>
-                                <input
-                                    name="github"
-                                    value={formData.github}
-                                    onChange={handleChange}
-                                    className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                    placeholder="https://github.com/..."
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium leading-none">Demo/Live URL</label>
-                                <input
-                                    name="demo"
-                                    value={formData.demo}
-                                    onChange={handleChange}
-                                    className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                    placeholder="https://example.com"
-                                />
-                            </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium leading-none">Demo/Live URL</label>
+                            <input
+                                name="demo"
+                                value={formData.demo}
+                                onChange={handleChange}
+                                className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                placeholder="https://example.com"
+                            />
                         </div>
+                    </div>
 
-                        <div className="flex justify-end pt-4">
-                            <button
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 min-w-[120px]"
-                            >
-                                {isSubmitting ? "Updating..." : (
-                                    <>
-                                        <Save className="mr-2 h-4 w-4" />
-                                        Update Project
-                                    </>
-                                )}
-                            </button>
-                        </div>
+                    <div className="flex justify-end pt-4">
+                        <button
+                            type="submit"
+                            disabled={isSubmitting}
+                            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 min-w-[120px]"
+                        >
+                            {isSubmitting ? "Updating..." : (
+                                <>
+                                    <Save className="mr-2 h-4 w-4" />
+                                    Update Project
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
