@@ -1,6 +1,6 @@
 "use client";
 
-import { UploadButton, UploadDropzone } from "@uploadthing/react";
+import { UploadDropzone } from "@uploadthing/react";
 import type { OurFileRouter } from "@/app/api/uploadthing/core";
 import { useState } from "react";
 import { X, Upload, CheckCircle2 } from "lucide-react";
@@ -70,7 +70,7 @@ export default function ImageUpload({ value, onChange, endpoint = "imageUploader
                             uploadIcon: "text-primary",
                             label: "text-sm text-muted-foreground",
                             allowedContent: "text-xs text-muted-foreground",
-                            button: "bg-primary text-white hover:bg-primary/90 transition-colors ut-ready:bg-primary ut-uploading:bg-primary/50",
+                            button: "bg-primary text-white hover:bg-primary/90 transition-colors ut-ready:bg-primary ut-uploading:bg-primary/50 cursor-pointer",
                         }}
                         content={{
                             uploadIcon: () => <Upload className="h-10 w-10 mb-4 text-primary" />,
@@ -80,7 +80,7 @@ export default function ImageUpload({ value, onChange, endpoint = "imageUploader
                                         {uploading ? "Uploading..." : "Drop image here or click to upload"}
                                     </p>
                                     <p className="text-xs text-muted-foreground">
-                                        Max file size: 4MB
+                                        Max file size: 4MB • Supported: JPG, PNG, WebP
                                     </p>
                                 </div>
                             ),
@@ -94,27 +94,11 @@ export default function ImageUpload({ value, onChange, endpoint = "imageUploader
                 </div>
             )}
 
-            {/* Alternative: Simple Button Upload */}
+            {/* Info: File uploads immediately to UploadThing when selected */}
             {!uploadedUrl && (
-                <div className="flex justify-center">
-                    <UploadButton<OurFileRouter, typeof endpoint>
-                        endpoint={endpoint}
-                        onClientUploadComplete={(res) => {
-                            if (res && res[0]) {
-                                const url = res[0].url;
-                                setUploadedUrl(url);
-                                onChange(url);
-                            }
-                        }}
-                        onUploadError={(error: Error) => {
-                            alert(`Upload failed: ${error.message}`);
-                        }}
-                        appearance={{
-                            button: "bg-primary text-white hover:bg-primary/90 transition-colors px-6 py-2 rounded-lg text-sm font-medium",
-                            allowedContent: "hidden",
-                        }}
-                    />
-                </div>
+                <p className="text-xs text-muted-foreground text-center">
+                    ℹ️ Note: Image will be uploaded immediately when selected, but won't be saved to your gallery until you click "Save to Gallery"
+                </p>
             )}
         </div>
     );
