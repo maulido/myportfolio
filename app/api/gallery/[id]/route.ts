@@ -53,12 +53,34 @@ export async function PUT(
 
     try {
         const body = await request.json();
+
+        // Get the current item to check if image is being replaced
+        const currentItem = await GalleryItem.findById(id);
+        if (!currentItem) {
+            return NextResponse.json({ success: false, error: "Gallery item not found" }, { status: 404 });
+        }
+
+        // If imageUrl is being updated and is different from current, delete old file
+        if (body.imageUrl && body.imageUrl !== currentItem.imageUrl && currentItem.imageUrl) {
+            const oldFileKey = currentItem.imageUrl.split('/f/')[1];
+            if (oldFileKey) {
+                try {
+                    await utapi.deleteFiles(oldFileKey);
+                    console.log(`Deleted old file from UploadThing: ${oldFileKey}`);
+                } catch (error) {
+                    console.error('Failed to delete old file from UploadThing:', error);
+                    // Continue with update even if old file deletion fails
+                }
+            }
+        }
+
         const item = await GalleryItem.findByIdAndUpdate(id, body, { new: true });
         if (!item) {
             return NextResponse.json({ success: false, error: "Gallery item not found" }, { status: 404 });
         }
         return NextResponse.json({ success: true, data: item });
     } catch (error) {
+        console.error('Update error:', error);
         return NextResponse.json({ success: false, error: error }, { status: 400 });
     }
 }
