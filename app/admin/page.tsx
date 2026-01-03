@@ -171,15 +171,23 @@ export default function AdminDashboard() {
             if (type === 'certification') endpoint = `/api/certifications/${id}`;
             if (type === 'testimonial') endpoint = `/api/testimonials/${id}`;
 
+            console.log(`Deleting ${type} with ID: ${id} at endpoint: ${endpoint}`);
+
             const res = await fetch(endpoint, { method: 'DELETE' });
+            const data = await res.json();
+
+            console.log('Delete response:', res.status, data);
+
             if (res.ok) {
+                alert(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully!`);
                 fetchData();
             } else {
-                alert(`Failed to delete ${type}`);
+                console.error('Delete failed:', data);
+                alert(`Failed to delete ${type}: ${data.error || 'Unknown error'}`);
             }
         } catch (error) {
-            console.error(error);
-            alert("An error occurred");
+            console.error('Delete error:', error);
+            alert(`An error occurred while deleting ${type}`);
         }
     };
 
