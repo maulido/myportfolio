@@ -23,7 +23,6 @@ export default function NewCertificationPage() {
     const [existingCategories, setExistingCategories] = useState<string[]>([]);
     const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
     const [newSkill, setNewSkill] = useState("");
-    const [showCategoryInput, setShowCategoryInput] = useState(false);
 
     useEffect(() => {
         fetchExistingSkills();
@@ -61,16 +60,7 @@ export default function NewCertificationPage() {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-
-        if (name === "category" && value === "__new__") {
-            setShowCategoryInput(true);
-            setFormData((prev) => ({ ...prev, category: "" }));
-        } else {
-            setFormData((prev) => ({ ...prev, [name]: value }));
-            if (name === "category") {
-                setShowCategoryInput(false);
-            }
-        }
+        setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
     const addSkill = (skill: string) => {
@@ -179,41 +169,45 @@ export default function NewCertificationPage() {
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
                             <label className="text-sm font-medium leading-none">Category</label>
-                            {!showCategoryInput ? (
-                                <select
+                            <div className="relative">
+                                <input
+                                    required
                                     name="category"
                                     value={formData.category}
                                     onChange={handleChange}
                                     className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                >
-                                    <option value="">Select category...</option>
-                                    {existingCategories.map((cat) => (
-                                        <option key={cat} value={cat}>{cat}</option>
-                                    ))}
-                                    <option value="__new__">+ Add new category</option>
-                                </select>
-                            ) : (
-                                <div className="flex gap-2">
-                                    <input
-                                        required
-                                        name="category"
-                                        value={formData.category}
-                                        onChange={handleChange}
-                                        className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                        placeholder="Enter new category"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setShowCategoryInput(false);
-                                            setFormData(prev => ({ ...prev, category: "Other" }));
-                                        }}
-                                        className="px-3 py-2 text-sm border border-input/50 rounded-md hover:bg-accent"
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            )}
+                                    placeholder="Type category (e.g., AWS, Cisco)..."
+                                />
+
+                                {/* Autocomplete Suggestions Dropdown */}
+                                {formData.category && existingCategories.filter(cat =>
+                                    cat.toLowerCase().includes(formData.category.toLowerCase())
+                                ).length > 0 && (
+                                        <div className="absolute z-10 w-full mt-1 bg-card border border-primary/20 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                                            {existingCategories
+                                                .filter(cat =>
+                                                    cat.toLowerCase().includes(formData.category.toLowerCase())
+                                                )
+                                                .slice(0, 5)
+                                                .map((cat) => (
+                                                    <button
+                                                        key={cat}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setFormData(prev => ({ ...prev, category: cat }));
+                                                        }}
+                                                        className="w-full text-left px-3 py-2 hover:bg-primary/10 text-sm transition-colors"
+                                                    >
+                                                        {cat}
+                                                    </button>
+                                                ))
+                                            }
+                                        </div>
+                                    )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                💡 Type to see suggestions or enter a new category
+                            </p>
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium leading-none">Credential ID</label>
