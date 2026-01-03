@@ -181,12 +181,14 @@ export default function NewCertificationPage() {
 
                                 {/* Autocomplete Suggestions Dropdown */}
                                 {formData.category && existingCategories.filter(cat =>
-                                    cat.toLowerCase().includes(formData.category.toLowerCase())
+                                    cat.toLowerCase().includes(formData.category.toLowerCase()) &&
+                                    cat.toLowerCase() !== formData.category.toLowerCase()
                                 ).length > 0 && (
                                         <div className="absolute z-10 w-full mt-1 bg-card border border-primary/20 rounded-md shadow-lg max-h-48 overflow-y-auto">
                                             {existingCategories
                                                 .filter(cat =>
-                                                    cat.toLowerCase().includes(formData.category.toLowerCase())
+                                                    cat.toLowerCase().includes(formData.category.toLowerCase()) &&
+                                                    cat.toLowerCase() !== formData.category.toLowerCase()
                                                 )
                                                 .slice(0, 5)
                                                 .map((cat) => (
