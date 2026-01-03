@@ -226,24 +226,8 @@ export default function NewCertificationPage() {
                                 </div>
                             )}
 
-                            {/* Existing Skills Dropdown */}
-                            <select
-                                onChange={(e) => {
-                                    if (e.target.value) {
-                                        addSkill(e.target.value);
-                                        e.target.value = "";
-                                    }
-                                }}
-                                className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            >
-                                <option value="">Select from existing skills...</option>
-                                {existingSkills.map((skill) => (
-                                    <option key={skill} value={skill}>{skill}</option>
-                                ))}
-                            </select>
-
-                            {/* Manual Input for New Skill */}
-                            <div className="flex gap-2">
+                            {/* Single Input with Autocomplete */}
+                            <div className="relative">
                                 <input
                                     type="text"
                                     value={newSkill}
@@ -255,18 +239,40 @@ export default function NewCertificationPage() {
                                         }
                                     }}
                                     className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                    placeholder="Or type a new skill..."
+                                    placeholder="Type a skill (e.g., Cloud, Networking) and press Enter..."
                                 />
-                                <button
-                                    type="button"
-                                    onClick={() => addSkill(newSkill)}
-                                    className="px-4 py-2 text-sm bg-primary/10 hover:bg-primary/20 border border-primary/20 rounded-md transition-colors"
-                                >
-                                    Add
-                                </button>
+
+                                {/* Autocomplete Suggestions Dropdown */}
+                                {newSkill && existingSkills.filter(s =>
+                                    s.toLowerCase().includes(newSkill.toLowerCase()) &&
+                                    !selectedSkills.includes(s)
+                                ).length > 0 && (
+                                        <div className="absolute z-10 w-full mt-1 bg-card border border-primary/20 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                                            {existingSkills
+                                                .filter(s =>
+                                                    s.toLowerCase().includes(newSkill.toLowerCase()) &&
+                                                    !selectedSkills.includes(s)
+                                                )
+                                                .slice(0, 5)
+                                                .map((skill) => (
+                                                    <button
+                                                        key={skill}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            addSkill(skill);
+                                                        }}
+                                                        className="w-full text-left px-3 py-2 hover:bg-primary/10 text-sm transition-colors"
+                                                    >
+                                                        {skill}
+                                                    </button>
+                                                ))
+                                            }
+                                        </div>
+                                    )}
                             </div>
+
                             <p className="text-xs text-muted-foreground">
-                                💡 Select from dropdown or type new skills. Press Enter or click Add.
+                                💡 Type to see suggestions or enter a new skill. Press Enter to add.
                             </p>
                         </div>
                     </div>
