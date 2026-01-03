@@ -183,7 +183,6 @@ export default function NewCertificationPage() {
                                 <select
                                     name="category"
                                     value={formData.category}
-                                    // @ts-ignore
                                     onChange={handleChange}
                                     className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                 >
