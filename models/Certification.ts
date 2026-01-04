@@ -8,6 +8,7 @@ export interface ICertification extends Document {
     credentialId?: string;
     credentialUrl?: string;
     imageUrl?: string;
+    certificateFileUrl?: string;
     category: string;
     skills: string[];
     description?: string;
@@ -21,6 +22,7 @@ const CertificationSchema: Schema = new Schema({
     credentialId: { type: String },
     credentialUrl: { type: String },
     imageUrl: { type: String },
+    certificateFileUrl: { type: String },
     category: { type: String, required: true, default: 'Other' },
     skills: [{ type: String }],
     description: { type: String },

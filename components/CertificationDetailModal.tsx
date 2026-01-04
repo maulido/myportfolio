@@ -12,6 +12,7 @@ interface Certification {
     credentialId?: string;
     credentialUrl?: string;
     imageUrl?: string;
+    certificateFileUrl?: string;
     category: string;
     skills: string[];
     description?: string;
@@ -167,13 +168,26 @@ export default function CertificationDetailModal({ certification, isOpen, onClos
                             )}
 
                             {/* Credential Info */}
-                            {(certification.credentialId || certification.credentialUrl) && (
+                            {(certification.certificateFileUrl || certification.credentialId || certification.credentialUrl) && (
                                 <div>
                                     <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
                                         <div className="h-1 w-8 bg-emerald-500 rounded-full" />
                                         Credential Information
                                     </h3>
                                     <div className="space-y-3">
+                                        {/* Certificate File */}
+                                        {certification.certificateFileUrl && (
+                                            <a
+                                                href={certification.certificateFileUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-white hover:from-primary/90 hover:to-primary/70 transition-all font-bold shadow-lg shadow-primary/25"
+                                            >
+                                                <Award className="h-5 w-5" />
+                                                View Certificate (PDF)
+                                                <ExternalLink className="h-4 w-4" />
+                                            </a>
+                                        )}
                                         {certification.credentialId && (
                                             <div className="p-4 rounded-xl bg-muted/20 border border-primary/10">
                                                 <p className="text-xs text-muted-foreground mb-1">Credential ID</p>
@@ -185,7 +199,7 @@ export default function CertificationDetailModal({ certification, isOpen, onClos
                                                 href={certification.credentialUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors font-medium"
+                                                className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-medium border border-primary/20"
                                             >
                                                 <ExternalLink className="h-4 w-4" />
                                                 Verify Credential Online

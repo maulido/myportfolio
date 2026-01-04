@@ -14,6 +14,7 @@ interface ICertification {
     credentialId?: string;
     credentialUrl?: string;
     imageUrl?: string;
+    certificateFileUrl?: string;
     category: string;
     skills: string[];
     description?: string;

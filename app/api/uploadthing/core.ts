@@ -77,6 +77,28 @@ export const ourFileRouter = {
             }
             return { uploadedBy: metadata.userId, url: file.url, key: file.key, fileName: file.name };
         }),
+
+    // Certificate PDF uploader
+    certificateUploader: f({ pdf: { maxFileSize: "8MB", maxFileCount: 1 } })
+        .middleware(async ({ req, files }) => {
+            const user = await auth(req);
+            if (!user) throw new UploadThingError("Unauthorized");
+
+            // Generate custom filenames for uploaded certificate
+            const fileOverrides = files.map((file) => ({
+                name: generateReadableFilename(file.name),
+            }));
+
+            return { userId: user.id, [UTFiles]: fileOverrides };
+        })
+        .onUploadComplete(async ({ metadata, file }) => {
+            if (process.env.NODE_ENV === 'development') {
+                console.log("Certificate upload complete for userId:", metadata.userId);
+                console.log("Custom filename:", file.name);
+                console.log("Unique file key:", file.key);
+            }
+            return { uploadedBy: metadata.userId, url: file.url, key: file.key, fileName: file.name };
+        }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;

@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, X } from "lucide-react";
+import { ArrowLeft, Save, X, FileText, Upload } from "lucide-react";
 import Link from "next/link";
+import { UploadButton } from "@/lib/uploadthing";
 
 export default function NewCertificationPage() {
     const router = useRouter();
@@ -15,6 +16,7 @@ export default function NewCertificationPage() {
         credentialId: "",
         credentialUrl: "",
         imageUrl: "",
+        certificateFileUrl: "",
         category: "",
         skills: "",
     });
@@ -243,6 +245,61 @@ export default function NewCertificationPage() {
                             className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             placeholder="https://example.com/badge.png"
                         />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium leading-none">Certificate File (PDF)</label>
+                        <div className="space-y-3">
+                            {formData.certificateFileUrl ? (
+                                <div className="flex items-center justify-between p-4 rounded-lg border border-primary/20 bg-primary/5">
+                                    <div className="flex items-center gap-3">
+                                        <FileText className="h-5 w-5 text-primary" />
+                                        <div>
+                                            <p className="text-sm font-medium">Certificate uploaded</p>
+                                            <p className="text-xs text-muted-foreground">Click to view or replace</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <a
+                                            href={formData.certificateFileUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-xs text-primary hover:underline"
+                                        >
+                                            View
+                                        </a>
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData(prev => ({ ...prev, certificateFileUrl: "" }))}
+                                            className="p-1 hover:bg-red-500/10 rounded"
+                                        >
+                                            <X className="h-4 w-4 text-red-500" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-center p-6 border-2 border-dashed border-primary/20 rounded-lg hover:border-primary/40 transition-colors">
+                                    <UploadButton
+                                        endpoint="certificateUploader"
+                                        onClientUploadComplete={(res) => {
+                                            if (res && res[0]) {
+                                                setFormData(prev => ({ ...prev, certificateFileUrl: res[0].url }));
+                                            }
+                                        }}
+                                        onUploadError={(error: Error) => {
+                                            alert(`Upload failed: ${error.message}`);
+                                        }}
+                                        appearance={{
+                                            button: "bg-primary text-white hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium",
+                                            allowedContent: "text-xs text-muted-foreground"
+                                        }}
+                                    />
+                                </div>
+                            )}
+                            <p className="text-xs text-muted-foreground">
+                                💡 Upload the certificate PDF file (max 8MB)
+                            </p>
+                        </div>
                     </div>
 
                     <div className="space-y-2">
