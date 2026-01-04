@@ -110,16 +110,18 @@ export default function ProjectDetailPage() {
                     <h1 className="text-4xl md:text-5xl font-bold mb-4">{project.title}</h1>
 
                     {/* Technologies */}
-                    <div className="flex flex-wrap gap-2 mb-8">
-                        {project.technologies.map((tech, index) => (
-                            <span
-                                key={index}
-                                className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
-                            >
-                                {tech}
-                            </span>
-                        ))}
-                    </div>
+                    {project.technologies && project.technologies.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-8">
+                            {project.technologies.map((tech, index) => (
+                                <span
+                                    key={index}
+                                    className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
+                                >
+                                    {tech}
+                                </span>
+                            ))}
+                        </div>
+                    )}
 
                     {/* Cover Image */}
                     {project.imageUrl && (
