@@ -112,12 +112,32 @@ export default function RichTextEditor({ content, onChange, placeholder = "Start
     const addImage = useCallback(() => {
         if (!editor) return;
 
-        // Simple approach: ask for URL
-        const url = window.prompt("Enter image URL:");
-        if (url) {
-            editor.chain().focus().setImage({ src: url }).run();
-        }
-    }, [editor]);
+        // Create file input
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+
+        input.onchange = async (e) => {
+            const file = (e.target as HTMLInputElement).files?.[0];
+            if (!file) return;
+
+            setIsUploading(true);
+
+            try {
+                await startUpload([file]);
+            } catch (error) {
+                console.error("Upload error:", error);
+                setIsUploading(false);
+                // Fallback to URL input
+                const url = window.prompt("Upload failed. Enter image URL instead:");
+                if (url) {
+                    editor.chain().focus().setImage({ src: url }).run();
+                }
+            }
+        };
+
+        input.click();
+    }, [editor, startUpload]);
 
     if (!editor) {
         return null;
