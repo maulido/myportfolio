@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from 'framer-motion';
-import { Award, ExternalLink, Calendar, CheckCircle2 } from 'lucide-react';
+import { Award, ExternalLink, Calendar, CheckCircle2, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import CertificationDetailModal from './CertificationDetailModal';
 
 interface ICertification {
     _id: string;
@@ -22,6 +23,18 @@ export function Certifications() {
     const [certs, setCerts] = useState<ICertification[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
+    const [selectedCert, setSelectedCert] = useState<ICertification | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const handleCertClick = (cert: ICertification) => {
+        setSelectedCert(cert);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setTimeout(() => setSelectedCert(null), 300);
+    };
 
     useEffect(() => {
         async function fetchCertifications() {
@@ -82,8 +95,8 @@ export function Certifications() {
                             key={cat}
                             onClick={() => setFilter(cat)}
                             className={`px-4 py-2 rounded-lg font-medium transition-all ${filter === cat
-                                    ? 'bg-primary text-white shadow-lg shadow-primary/25'
-                                    : 'bg-muted/30 hover:bg-muted/50'
+                                ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                                : 'bg-muted/30 hover:bg-muted/50'
                                 }`}
                         >
                             {cat.charAt(0).toUpperCase() + cat.slice(1)}
@@ -101,7 +114,8 @@ export function Certifications() {
                             transition={{ delay: i * 0.1 }}
                             viewport={{ once: true }}
                             whileHover={{ scale: 1.02, y: -5 }}
-                            className="border border-primary/20 rounded-xl p-6 bg-card/40 backdrop-blur-sm hover:border-primary/40 transition-all group"
+                            onClick={() => handleCertClick(cert)}
+                            className="border border-primary/20 rounded-xl p-6 bg-card/40 backdrop-blur-sm hover:border-primary/40 transition-all group cursor-pointer"
                         >
                             {/* Certificate Image/Badge */}
                             {cert.imageUrl && (
@@ -185,10 +199,25 @@ export function Certifications() {
                                     ID: {cert.credentialId}
                                 </p>
                             )}
+
+                            {/* View Details Indicator */}
+                            <div className="mt-4 pt-4 border-t border-primary/10 flex items-center justify-end">
+                                <div className="flex items-center text-xs text-primary font-medium group-hover:gap-1 transition-all">
+                                    View Details
+                                    <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+                                </div>
+                            </div>
                         </motion.div>
                     ))}
                 </div>
             </div>
+
+            {/* Certification Detail Modal */}
+            <CertificationDetailModal
+                certification={selectedCert}
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+            />
         </section>
     );
 }
