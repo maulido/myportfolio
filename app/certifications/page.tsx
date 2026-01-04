@@ -184,8 +184,8 @@ export default function CertificationsPage() {
                                     key={cat}
                                     onClick={() => setSelectedCategory(cat)}
                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedCategory === cat
-                                            ? "bg-primary text-white shadow-lg shadow-primary/25"
-                                            : "bg-card/40 border border-primary/20 hover:border-primary/40"
+                                        ? "bg-primary text-white shadow-lg shadow-primary/25"
+                                        : "bg-card/40 border border-primary/20 hover:border-primary/40"
                                         }`}
                                 >
                                     {cat}
@@ -242,6 +242,17 @@ export default function CertificationsPage() {
                                     >
                                         {/* Decoration */}
                                         <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors"></div>
+
+                                        {/* Certificate Image/Badge */}
+                                        {cert.imageUrl && (
+                                            <div className="aspect-video relative mb-4 rounded-lg overflow-hidden bg-muted/20 border border-primary/10">
+                                                <img
+                                                    src={cert.imageUrl}
+                                                    alt={cert.title}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                />
+                                            </div>
+                                        )}
 
                                         <div className="relative z-10 mb-8">
                                             <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary group-hover:scale-110 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-500 shadow-inner">
