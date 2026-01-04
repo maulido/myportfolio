@@ -18,9 +18,33 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
             return { title: 'Post Not Found' };
         }
 
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
         return {
             title: `${post.title} | John Doe`,
             description: post.excerpt,
+            openGraph: {
+                title: post.title,
+                description: post.excerpt,
+                type: 'article',
+                publishedTime: post.createdAt?.toISOString(),
+                authors: ['John Doe'],
+                url: `${baseUrl}/blog/${slug}`,
+                images: [
+                    {
+                        url: `${baseUrl}/blog/${slug}/opengraph-image`,
+                        width: 1200,
+                        height: 630,
+                        alt: post.title,
+                    },
+                ],
+            },
+            twitter: {
+                card: 'summary_large_image',
+                title: post.title,
+                description: post.excerpt,
+                images: [`${baseUrl}/blog/${slug}/opengraph-image`],
+            },
         }
     } catch (e) {
         return { title: 'Blog | John Doe' };
