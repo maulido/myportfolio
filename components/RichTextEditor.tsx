@@ -35,8 +35,6 @@ interface RichTextEditorProps {
 }
 
 export default function RichTextEditor({ content, onChange, placeholder = "Start writing..." }: RichTextEditorProps) {
-    const uploadButtonRef = useRef<HTMLButtonElement>(null);
-
     const editor = useEditor({
         immediatelyRender: false, // Fix SSR hydration mismatch
         extensions: [
