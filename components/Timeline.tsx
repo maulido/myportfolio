@@ -9,6 +9,7 @@ export interface TimelineItem {
     type: 'work' | 'education' | 'achievement';
     title: string;
     organization: string;
+    companyLogo?: string;
     location?: string;
     startDate: string;
     endDate?: string;
@@ -84,9 +85,17 @@ export function Timeline({ items }: TimelineProps) {
                             viewport={{ once: true }}
                             className="relative pl-20"
                         >
-                            {/* Icon */}
-                            <div className={`absolute left-0 w-16 h-16 rounded-full flex items-center justify-center border-4 border-background ${getIconColor(item.type)}`}>
-                                {getIcon(item.type)}
+                            {/* Icon or Company Logo */}
+                            <div className={`absolute left-0 w-16 h-16 rounded-full flex items-center justify-center border-4 border-background ${getIconColor(item.type)} overflow-hidden`}>
+                                {item.companyLogo ? (
+                                    <img
+                                        src={item.companyLogo}
+                                        alt={item.organization}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    getIcon(item.type)
+                                )}
                             </div>
 
                             {/* Content Card */}

@@ -4,6 +4,7 @@ export interface ICareerJourney extends Document {
     type: 'work' | 'education' | 'achievement';
     title: string;
     organization: string;
+    companyLogo?: string;
     location?: string;
     startDate: Date;
     endDate?: Date;
@@ -32,6 +33,10 @@ const CareerJourneySchema = new Schema<ICareerJourney>(
         organization: {
             type: String,
             required: [true, 'Organization is required'],
+            trim: true
+        },
+        companyLogo: {
+            type: String,
             trim: true
         },
         location: {
