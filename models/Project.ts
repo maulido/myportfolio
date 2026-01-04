@@ -2,37 +2,22 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IProject extends Document {
     title: string;
+    slug: string;
     description: string;
-    tags: string[];
-    github: string;
-    demo?: string;
-    image?: string;
+    problemStatement?: string;
+    solutionApproach?: string;
+    imageUrl?: string;
+    architectureDiagram?: string;
+    screenshots?: string[];
+    technologies: string[];
+    githubUrl?: string;
+    liveUrl?: string;
+    demoUrl?: string;
+    caseStudyUrl?: string;
     featured?: boolean;
-    status?: string;
-    caseStudy?: {
-        problem: string;
-        solution: string;
-        challenges: string[];
-        results: {
-            metric: string;
-            value: string;
-            description?: string;
-        }[];
-        screenshots?: string[];
-        codeSnippets?: {
-            language: string;
-            code: string;
-            description: string;
-            filename?: string;
-        }[];
-        technologies?: {
-            name: string;
-            purpose: string;
-        }[];
-        teamSize?: number;
-        duration?: string;
-        role?: string;
-    };
+    relatedProjects?: mongoose.Types.ObjectId[];
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
 const ProjectSchema = new Schema({
@@ -50,21 +35,7 @@ const ProjectSchema = new Schema({
     demoUrl: { type: String },
     caseStudyUrl: { type: String },
     featured: { type: Boolean, default: false },
-    screenshots: [String],
-    codeSnippets: [{
-        language: String,
-        code: String,
-        description: String,
-        filename: String,
-    }],
-    technologies: [{
-        name: String,
-        purpose: String,
-    }],
-    teamSize: Number,
-    duration: String,
-    role: String,
-},
+    relatedProjects: [{ type: Schema.Types.ObjectId, ref: 'Project' }],
 }, {
     timestamps: true
 });
