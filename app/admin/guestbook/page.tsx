@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Check, X, Trash2, AlertTriangle } from "lucide-react";
+import { BulkActions, bulkApproveAction, bulkDeleteAction, bulkSpamAction } from "@/components/BulkActions";
 
 interface GuestbookEntry {
     _id: string;
@@ -16,6 +17,7 @@ interface GuestbookEntry {
 
 export default function AdminGuestbookPage() {
     const [pendingEntries, setPendingEntries] = useState<GuestbookEntry[]>([]);
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -28,12 +30,41 @@ export default function AdminGuestbookPage() {
             const data = await response.json();
             if (data.success) {
                 setPendingEntries(data.data);
+                setSelectedIds([]);
             }
         } catch (error) {
             console.error('Error fetching pending entries:', error);
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleBulkAction = async (action: string, ids: string[]) => {
+        const response = await fetch('/api/guestbook/bulk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, ids })
+        });
+
+        if (response.ok) {
+            await fetchPendingEntries();
+        } else {
+            throw new Error('Bulk operation failed');
+        }
+    };
+
+    const toggleSelection = (id: string) => {
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    };
+
+    const selectAll = () => {
+        setSelectedIds(pendingEntries.map(e => e._id));
+    };
+
+    const deselectAll = () => {
+        setSelectedIds([]);
     };
 
     const handleApprove = async (id: string) => {
