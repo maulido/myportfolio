@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Plus, X } from "lucide-react";
 import Link from "next/link";
 import ImageUpload from "@/components/ImageUpload";
 
@@ -10,17 +10,61 @@ export default function NewProjectPage() {
     const router = useRouter();
     const [formData, setFormData] = useState({
         title: "",
+        slug: "",
         description: "",
-        tags: "",
-        image: "",
-        github: "",
-        demo: "",
+        problemStatement: "",
+        solutionApproach: "",
+        imageUrl: "",
+        architectureDiagram: "",
+        screenshots: [] as string[],
+        technologies: "",
+        githubUrl: "",
+        liveUrl: "",
+        demoUrl: "",
+        caseStudyUrl: "",
+        featured: false,
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        const { name, value, type } = e.target;
+        const checked = (e.target as HTMLInputElement).checked;
+
+        setFormData((prev) => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
+    };
+
+    // Auto-generate slug from title
+    const generateSlug = (title: string) => {
+        return title
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '');
+    };
+
+    const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const title = e.target.value;
+        setFormData(prev => ({
+            ...prev,
+            title,
+            slug: generateSlug(title)
+        }));
+    };
+
+    const addScreenshot = (url: string) => {
+        setFormData(prev => ({
+            ...prev,
+            screenshots: [...prev.screenshots, url]
+        }));
+    };
+
+    const removeScreenshot = (index: number) => {
+        setFormData(prev => ({
+            ...prev,
+            screenshots: prev.screenshots.filter((_, i) => i !== index)
+        }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -33,7 +77,7 @@ export default function NewProjectPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     ...formData,
-                    tags: formData.tags.split(",").map((tag) => tag.trim()),
+                    technologies: formData.technologies.split(",").map((tech) => tech.trim()),
                 }),
             });
 
@@ -63,30 +107,39 @@ export default function NewProjectPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-8 rounded-xl border border-primary/10 bg-card/10 backdrop-blur-sm p-8">
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Title</label>
-                            <input
-                                required
-                                name="title"
-                                value={formData.title}
-                                onChange={handleChange}
-                                className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="Project Name"
-                            />
+                    {/* Basic Info */}
+                    <div className="space-y-4">
+                        <h2 className="text-xl font-semibold">Basic Information</h2>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none">Title *</label>
+                                <input
+                                    required
+                                    name="title"
+                                    value={formData.title}
+                                    onChange={handleTitleChange}
+                                    className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="Project Name"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none">Slug *</label>
+                                <input
+                                    required
+                                    name="slug"
+                                    value={formData.slug}
+                                    onChange={handleChange}
+                                    className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="project-slug"
+                                />
+                                <p className="text-xs text-muted-foreground">Auto-generated from title, can be edited</p>
+                            </div>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Project Image</label>
-                            <ImageUpload
-                                value={formData.image}
-                                onChange={(url) => setFormData(prev => ({ ...prev, image: url }))}
-                                endpoint="imageUploader"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Description</label>
+                            <label className="text-sm font-medium leading-none">Description *</label>
                             <textarea
                                 required
                                 name="description"
@@ -94,40 +147,159 @@ export default function NewProjectPage() {
                                 onChange={handleChange}
                                 rows={4}
                                 className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="What did you build?"
+                                placeholder="Brief overview of the project"
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Tags (comma separated)</label>
+                            <label className="text-sm font-medium leading-none">Technologies (comma separated) *</label>
                             <input
-                                name="tags"
-                                value={formData.tags}
+                                required
+                                name="technologies"
+                                value={formData.technologies}
                                 onChange={handleChange}
                                 className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="React, Next.js, MongoDB"
+                                placeholder="React, Next.js, MongoDB, TailwindCSS"
                             />
                         </div>
+
+                        <div className="flex items-center space-x-2">
+                            <input
+                                type="checkbox"
+                                name="featured"
+                                checked={formData.featured}
+                                onChange={handleChange}
+                                className="h-4 w-4 rounded border-input"
+                            />
+                            <label className="text-sm font-medium leading-none">Featured Project</label>
+                        </div>
+                    </div>
+
+                    {/* Images */}
+                    <div className="space-y-4">
+                        <h2 className="text-xl font-semibold">Images</h2>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium leading-none">Cover Image</label>
+                            <ImageUpload
+                                value={formData.imageUrl}
+                                onChange={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
+                                endpoint="imageUploader"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium leading-none">Architecture Diagram</label>
+                            <ImageUpload
+                                value={formData.architectureDiagram}
+                                onChange={(url) => setFormData(prev => ({ ...prev, architectureDiagram: url }))}
+                                endpoint="imageUploader"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium leading-none">Screenshots</label>
+                            <div className="space-y-2">
+                                {formData.screenshots.map((screenshot, index) => (
+                                    <div key={index} className="flex items-center gap-2">
+                                        <input
+                                            value={screenshot}
+                                            readOnly
+                                            className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => removeScreenshot(index)}
+                                            className="p-2 rounded-md border border-input hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                                <ImageUpload
+                                    value=""
+                                    onChange={addScreenshot}
+                                    endpoint="imageUploader"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Case Study */}
+                    <div className="space-y-4">
+                        <h2 className="text-xl font-semibold">Case Study (Optional)</h2>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium leading-none">Problem Statement</label>
+                            <textarea
+                                name="problemStatement"
+                                value={formData.problemStatement}
+                                onChange={handleChange}
+                                rows={4}
+                                className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                placeholder="What problem does this project solve?"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium leading-none">Solution Approach</label>
+                            <textarea
+                                name="solutionApproach"
+                                value={formData.solutionApproach}
+                                onChange={handleChange}
+                                rows={4}
+                                className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                placeholder="How did you solve it?"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Links */}
+                    <div className="space-y-4">
+                        <h2 className="text-xl font-semibold">Links</h2>
 
                         <div className="grid gap-4 md:grid-cols-2">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium leading-none">GitHub URL</label>
                                 <input
-                                    name="github"
-                                    value={formData.github}
+                                    name="githubUrl"
+                                    value={formData.githubUrl}
                                     onChange={handleChange}
                                     className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                     placeholder="https://github.com/..."
                                 />
                             </div>
+
                             <div className="space-y-2">
-                                <label className="text-sm font-medium leading-none">Demo/Live URL</label>
+                                <label className="text-sm font-medium leading-none">Live URL</label>
                                 <input
-                                    name="demo"
-                                    value={formData.demo}
+                                    name="liveUrl"
+                                    value={formData.liveUrl}
                                     onChange={handleChange}
                                     className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                     placeholder="https://example.com"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none">Demo URL</label>
+                                <input
+                                    name="demoUrl"
+                                    value={formData.demoUrl}
+                                    onChange={handleChange}
+                                    className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="https://demo.example.com"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none">Case Study URL</label>
+                                <input
+                                    name="caseStudyUrl"
+                                    value={formData.caseStudyUrl}
+                                    onChange={handleChange}
+                                    className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="https://casestudy.example.com"
                                 />
                             </div>
                         </div>
