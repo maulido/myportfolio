@@ -82,6 +82,17 @@ interface CareerJourney {
     responsibilities?: string[];
 }
 
+interface Skill {
+    _id: string;
+    name: string;
+    level: 'Expert' | 'Advanced' | 'Intermediate' | 'Beginner';
+    years: number;
+    category: string;
+    icon: string;
+    color?: string;
+    order: number;
+}
+
 interface AnalyticsData {
     type: string;
     count: number;
@@ -111,6 +122,7 @@ export default function AdminDashboard() {
     const [newsletter, setNewsletter] = useState<Newsletter[]>([]);
     const [careers, setCareers] = useState<CareerJourney[]>([]);
     const [careerTypeFilter, setCareerTypeFilter] = useState<'all' | 'work' | 'education' | 'achievement'>('all');
+    const [skills, setSkills] = useState<Skill[]>([]);
     const [aboutMe, setAboutMe] = useState({ paragraph1: '', paragraph2: '' });
     const [isEditingAbout, setIsEditingAbout] = useState(false);
     const [aboutMeEdit, setAboutMeEdit] = useState({ paragraph1: '', paragraph2: '' });
@@ -138,7 +150,7 @@ export default function AdminDashboard() {
 
     const fetchData = async () => {
         try {
-            const [postsRes, projectsRes, galleryRes, certsRes, testimonialsRes, newsletterRes, careersRes, analyticsRes, settingsRes, sessionsRes, aboutRes] = await Promise.all([
+            const [postsRes, projectsRes, galleryRes, certsRes, testimonialsRes, newsletterRes, careersRes, skillsRes, analyticsRes, settingsRes, sessionsRes, aboutRes] = await Promise.all([
                 fetch('/api/blog'),
                 fetch('/api/projects'),
                 fetch('/api/gallery'),
@@ -146,13 +158,14 @@ export default function AdminDashboard() {
                 fetch('/api/testimonials'),
                 fetch('/api/newsletter'),
                 fetch('/api/career'),
+                fetch('/api/skills'),
                 fetch('/api/analytics'),
                 fetch('/api/settings?key=isWorking'),
                 fetch('/api/analytics/session/stats'),
                 fetch('/api/about')
             ]);
 
-            const [postsData, projectsData, galleryData, certsData, testimonialsData, newsletterData, careersData, analyticsData, settingsData, sessionsData, aboutData] = await Promise.all([
+            const [postsData, projectsData, galleryData, certsData, testimonialsData, newsletterData, careersData, skillsData, analyticsData, settingsData, sessionsData, aboutData] = await Promise.all([
                 postsRes.json(),
                 projectsRes.json(),
                 galleryRes.json(),
@@ -160,6 +173,7 @@ export default function AdminDashboard() {
                 testimonialsRes.json(),
                 newsletterRes.json(),
                 careersRes.json(),
+                skillsRes.json(),
                 analyticsRes.json(),
                 settingsRes.json(),
                 sessionsRes.json(),
@@ -174,6 +188,11 @@ export default function AdminDashboard() {
             if (newsletterData.success) setNewsletter(newsletterData.data);
             if (careersData.success) {
                 setCareers(careersData.data);
+            }
+            if (skillsData.success) {
+                // Flatten grouped skills into single array
+                const allSkills = skillsData.data.flatMap((group: any) => group.skills);
+                setSkills(allSkills);
             }
             if (aboutData.success) {
                 setAboutMe(aboutData.data);

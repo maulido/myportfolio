@@ -13,22 +13,41 @@ export function Contact() {
         setIsSubmitting(true);
 
         try {
-            // Simulate API call - replace with actual API endpoint
-            await new Promise((resolve) => setTimeout(resolve, 2000));
+            const formData = new FormData(e.target as HTMLFormElement);
+            const data = {
+                name: `${formData.get('firstName')} ${formData.get('lastName')}`,
+                email: formData.get('email') as string,
+                message: formData.get('message') as string,
+            };
 
-            toast.success('Message sent successfully! I\'ll get back to you soon.', {
-                duration: 5000,
-                icon: '✉️',
-                style: {
-                    background: '#10b981',
-                    color: '#fff',
+            const response = await fetch('/api/contact', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
                 },
+                body: JSON.stringify(data),
             });
 
-            // Reset form
-            (e.target as HTMLFormElement).reset();
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                toast.success('Message sent successfully! I\'ll get back to you soon.', {
+                    duration: 5000,
+                    icon: '✉️',
+                    style: {
+                        background: '#10b981',
+                        color: '#fff',
+                    },
+                });
+
+                // Reset form
+                (e.target as HTMLFormElement).reset();
+            } else {
+                throw new Error(result.error || 'Failed to send message');
+            }
         } catch (error) {
-            toast.error('Failed to send message. Please try again.', {
+            console.error('Contact form error:', error);
+            toast.error(error instanceof Error ? error.message : 'Failed to send message. Please try again.', {
                 duration: 4000,
                 icon: '❌',
             });
@@ -90,20 +109,20 @@ export function Contact() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label htmlFor="first-name" className="text-sm font-medium leading-none text-muted-foreground">First name</label>
-                                    <input id="first-name" className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all" required placeholder="John" />
+                                    <input id="first-name" name="firstName" className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all" required placeholder="John" />
                                 </div>
                                 <div className="space-y-2">
                                     <label htmlFor="last-name" className="text-sm font-medium leading-none text-muted-foreground">Last name</label>
-                                    <input id="last-name" className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all" required placeholder="Doe" />
+                                    <input id="last-name" name="lastName" className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all" required placeholder="Doe" />
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <label htmlFor="email" className="text-sm font-medium leading-none text-muted-foreground">Email</label>
-                                <input id="email" type="email" className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all" required placeholder="john@example.com" />
+                                <input id="email" name="email" type="email" className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all" required placeholder="john@example.com" />
                             </div>
                             <div className="space-y-2">
                                 <label htmlFor="message" className="text-sm font-medium leading-none text-muted-foreground">Message</label>
-                                <textarea id="message" className="flex min-h-[120px] w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all" required placeholder="Your message..." />
+                                <textarea id="message" name="message" className="flex min-h-[120px] w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all" required placeholder="Your message..." />
                             </div>
                             <motion.button
                                 whileHover={{ scale: 1.02 }}

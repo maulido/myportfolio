@@ -38,9 +38,12 @@ export async function DELETE(
         await GalleryItem.findByIdAndDelete(id);
 
         return NextResponse.json({ success: true, data: {} });
-    } catch (error) {
+    } catch (error: unknown) {
         console.error('Delete error:', error);
-        return NextResponse.json({ success: false, error: error }, { status: 400 });
+        return NextResponse.json({
+            success: false,
+            error: error instanceof Error ? error.message : "Failed to delete gallery item"
+        }, { status: 500 });
     }
 }
 
@@ -79,9 +82,12 @@ export async function PUT(
             return NextResponse.json({ success: false, error: "Gallery item not found" }, { status: 404 });
         }
         return NextResponse.json({ success: true, data: item });
-    } catch (error) {
+    } catch (error: unknown) {
         console.error('Update error:', error);
-        return NextResponse.json({ success: false, error: error }, { status: 400 });
+        return NextResponse.json({
+            success: false,
+            error: error instanceof Error ? error.message : "Failed to update gallery item"
+        }, { status: 500 });
     }
 }
 
@@ -98,7 +104,11 @@ export async function GET(
             return NextResponse.json({ success: false, error: "Gallery item not found" }, { status: 404 });
         }
         return NextResponse.json({ success: true, data: item });
-    } catch (error) {
-        return NextResponse.json({ success: false, error: error }, { status: 400 });
+    } catch (error: unknown) {
+        console.error('GET Gallery Item Error:', error);
+        return NextResponse.json({
+            success: false,
+            error: error instanceof Error ? error.message : "Failed to fetch gallery item"
+        }, { status: 500 });
     }
 }

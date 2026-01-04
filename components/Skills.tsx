@@ -1,79 +1,80 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Star } from "lucide-react";
-import {
-    Radar,
-    RadarChart,
-    PolarGrid,
-    PolarAngleAxis,
-    PolarRadiusAxis,
-    ResponsiveContainer,
-} from "recharts";
-import { SiNextdotjs, SiReact, SiTypescript, SiTailwindcss, SiNodedotjs, SiMongodb, SiPostgresql, SiPython, SiCisco, SiDocker, SiLinux, SiAmazonwebservices } from "react-icons/si";
-import { Brain, Users, MessageSquare, Zap } from "lucide-react";
+import { Award, Calendar, Code2 } from "lucide-react";
+import { getIcon } from "@/lib/iconMap";
+import { useState, useEffect } from "react";
+
+type SkillLevel = "Expert" | "Advanced" | "Intermediate" | "Beginner";
 
 type Skill = {
+    _id: string;
     name: string;
-    rating: number; // 1-5
-    icon: React.ReactNode;
+    level: SkillLevel;
+    years: number;
+    icon: string;
+    color?: string;
 };
 
 type SkillCategory = {
     category: string;
-    items: Skill[];
+    icon: React.ReactNode;
+    skills: Skill[];
 };
 
-const skills: SkillCategory[] = [
-    {
-        category: "Frontend Development",
-        items: [
-            { name: "Next.js", rating: 5, icon: <SiNextdotjs className="h-6 w-6" /> },
-            { name: "React", rating: 5, icon: <SiReact className="h-6 w-6 text-blue-400" /> },
-            { name: "TypeScript", rating: 4, icon: <SiTypescript className="h-6 w-6 text-blue-600" /> },
-            { name: "Tailwind", rating: 5, icon: <SiTailwindcss className="h-6 w-6 text-cyan-400" /> },
-        ],
-    },
-    {
-        category: "Backend & Database",
-        items: [
-            { name: "Node.js", rating: 4, icon: <SiNodedotjs className="h-6 w-6 text-green-500" /> },
-            { name: "MongoDB", rating: 4, icon: <SiMongodb className="h-6 w-6 text-green-600" /> },
-            { name: "PostgreSQL", rating: 3, icon: <SiPostgresql className="h-6 w-6 text-blue-500" /> },
-            { name: "Python", rating: 3, icon: <SiPython className="h-6 w-6 text-yellow-500" /> },
-        ],
-    },
-    {
-        category: "Network & DevOps",
-        items: [
-            { name: "Cisco", rating: 5, icon: <SiCisco className="h-6 w-6 text-blue-700" /> },
-            { name: "Docker", rating: 4, icon: <SiDocker className="h-6 w-6 text-blue-400" /> },
-            { name: "Linux", rating: 4, icon: <SiLinux className="h-6 w-6" /> },
-            { name: "AWS", rating: 3, icon: <SiAmazonwebservices className="h-6 w-6 text-orange-500" /> },
-        ],
-    },
-    {
-        category: "Soft Skills",
-        items: [
-            { name: "Problem Solving", rating: 5, icon: <Brain className="h-6 w-6 text-purple-500" /> },
-            { name: "Leadership", rating: 4, icon: <Users className="h-6 w-6 text-indigo-500" /> },
-            { name: "Communication", rating: 5, icon: <MessageSquare className="h-6 w-6 text-pink-500" /> },
-            { name: "Agile/Scrum", rating: 4, icon: <Zap className="h-6 w-6 text-yellow-400" /> },
-        ],
-    },
-];
+const getLevelColor = (level: SkillLevel): string => {
+    switch (level) {
+        case "Expert": return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
+        case "Advanced": return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+        case "Intermediate": return "bg-amber-500/10 text-amber-500 border-amber-500/20";
+        case "Beginner": return "bg-slate-500/10 text-slate-500 border-slate-500/20";
+    }
+};
 
-const radarData = [
-    { subject: "Frontend", A: 100, fullMark: 100 },
-    { subject: "Backend", A: 85, fullMark: 100 },
-    { subject: "Networking", A: 95, fullMark: 100 },
-    { subject: "DevOps", A: 80, fullMark: 100 },
-    { subject: "Soft Skills", A: 90, fullMark: 100 },
-];
+const getLevelDot = (level: SkillLevel): string => {
+    switch (level) {
+        case "Expert": return "bg-emerald-500";
+        case "Advanced": return "bg-blue-500";
+        case "Intermediate": return "bg-amber-500";
+        case "Beginner": return "bg-slate-500";
+    }
+};
 
 export function Skills() {
+    const [skills, setSkills] = useState<SkillCategory[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        fetchSkills();
+    }, []);
+
+    const fetchSkills = async () => {
+        try {
+            const response = await fetch('/api/skills');
+            const result = await response.json();
+
+            if (result.success) {
+                // Map API data to component format
+                const mappedSkills = result.data.map((group: any) => ({
+                    category: group.category,
+                    icon: <Code2 className="h-5 w-5" />,
+                    skills: group.skills
+                }));
+                setSkills(mappedSkills);
+            } else {
+                setError('Failed to load skills');
+            }
+        } catch (err) {
+            console.error('Error fetching skills:', err);
+            setError('Failed to load skills');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
-        <section id="skills" className="py-16 md:py-24 bg-card/30 transition-colors duration-500">
+        <section id="skills" className="py-16 md:py-24 bg-gradient-to-b from-background to-card/30 transition-colors duration-500">
             <div className="container mx-auto px-4 md:px-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -83,83 +84,111 @@ export function Skills() {
                     className="text-center mb-16"
                 >
                     <h2 className="text-3xl font-bold tracking-tighter md:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                        Tech Stack Mastery
+                        Technical Skills
                     </h2>
                     <p className="mt-4 text-muted-foreground text-lg max-w-[700px] mx-auto">
-                        An interactive radar visualization and detailed breakdown of my professional capabilities.
+                        A comprehensive overview of my technical expertise and professional experience across various domains.
                     </p>
                 </motion.div>
 
-                {/* Radar Chart Section */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.7 }}
-                    viewport={{ once: true }}
-                    className="mb-20 w-full flex justify-center items-center rounded-3xl bg-card/50 backdrop-blur-xl border border-primary/10 p-4 shadow-2xl relative group"
-                    style={{ minHeight: '450px' }}
-                >
-                    <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 rounded-3xl pointer-events-none" />
-                    <div className="w-full h-[300px] md:h-[400px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                                <PolarGrid stroke="rgba(139, 92, 246, 0.2)" />
-                                <PolarAngleAxis
-                                    dataKey="subject"
-                                    tick={{ fill: "currentColor", fontSize: 12, opacity: 0.7 }}
-                                />
-                                <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                                <Radar
-                                    name="Skills"
-                                    dataKey="A"
-                                    stroke="var(--primary)"
-                                    fill="var(--primary)"
-                                    fillOpacity={0.5}
-                                />
-                            </RadarChart>
-                        </ResponsiveContainer>
+                {isLoading ? (
+                    <div className="flex justify-center items-center py-20">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                     </div>
-                </motion.div>
+                ) : error ? (
+                    <div className="text-center py-20">
+                        <p className="text-muted-foreground">{error}</p>
+                    </div>
+                ) : skills.length === 0 ? (
+                    <div className="text-center py-20">
+                        <p className="text-muted-foreground">No skills found</p>
+                    </div>
+                ) : (
+                    <>
+                        {/* Skills Grid */}
+                        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                            {skills.map((category, categoryIndex) => (
+                                <motion.div
+                                    key={category.category}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5, delay: categoryIndex * 0.1 }}
+                                    viewport={{ once: true }}
+                                    className="group relative overflow-hidden bg-card/50 backdrop-blur-md rounded-2xl border border-primary/10 p-6 shadow-xl hover:shadow-primary/10 transition-all duration-500 hover:-translate-y-1"
+                                >
+                                    {/* Category Header */}
+                                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-primary/10">
+                                        <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                                            {category.icon}
+                                        </div>
+                                        <h3 className="font-bold text-lg">{category.category}</h3>
+                                    </div>
 
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                    {skills.map((cat, index) => (
+                                    {/* Skills List */}
+                                    <div className="space-y-4">
+                                        {category.skills.map((skill: Skill, skillIndex: number) => (
+                                            <motion.div
+                                                key={skill._id}
+                                                initial={{ opacity: 0, x: -10 }}
+                                                whileInView={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: categoryIndex * 0.1 + skillIndex * 0.05 }}
+                                                viewport={{ once: true }}
+                                                className="group/skill"
+                                            >
+                                                {/* Skill Name with Icon */}
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className={skill.color || 'text-foreground'}>
+                                                            {getIcon(skill.icon, "h-4 w-4")}
+                                                        </div>
+                                                        <span className="text-sm font-semibold">{skill.name}</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Level Badge and Years */}
+                                                <div className="flex items-center gap-2 ml-6">
+                                                    {/* Level Badge */}
+                                                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getLevelColor(skill.level)}`}>
+                                                        <div className={`w-1.5 h-1.5 rounded-full ${getLevelDot(skill.level)}`} />
+                                                        {skill.level}
+                                                    </div>
+
+                                                    {/* Years of Experience */}
+                                                    <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium bg-muted/50 text-muted-foreground border border-muted">
+                                                        <Calendar className="h-2.5 w-2.5" />
+                                                        {skill.years}y
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        {/* Legend */}
                         <motion.div
-                            key={cat.category}
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: index * 0.1 }}
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            transition={{ delay: 0.5 }}
                             viewport={{ once: true }}
-                            className="group relative overflow-hidden bg-card/50 backdrop-blur-md rounded-2xl border border-primary/10 p-6 shadow-xl hover:shadow-primary/10 transition-all duration-500 hover:-translate-y-2"
+                            className="mt-12 flex flex-wrap justify-center gap-4 text-xs"
                         >
-                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                                <Star className="h-10 w-10 text-primary" />
-                            </div>
-
-                            <h3 className="font-bold text-lg mb-6 text-primary border-b border-primary/10 pb-2">{cat.category}</h3>
-
-                            <div className="space-y-4">
-                                {cat.items.map((skill) => (
-                                    <div key={skill.name} className="flex flex-col space-y-2">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 rounded-lg bg-primary/5 group-hover:bg-primary/10 transition-colors">
-                                                {skill.icon}
-                                            </div>
-                                            <span className="text-xs font-semibold tracking-wide">{skill.name}</span>
-                                        </div>
-                                        <div className="flex gap-1 items-center pl-10">
-                                            {[1, 2, 3, 4, 5].map((star) => (
-                                                <Star
-                                                    key={star}
-                                                    className={`h-2.5 w-2.5 ${star <= skill.rating ? "fill-accent text-accent" : "text-muted/20"}`}
-                                                />
-                                            ))}
-                                        </div>
+                            <div className="flex items-center gap-6 px-6 py-3 rounded-full bg-card/50 backdrop-blur-md border border-primary/10">
+                                <div className="flex items-center gap-2">
+                                    <Award className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-muted-foreground font-medium">Proficiency Levels:</span>
+                                </div>
+                                {["Expert", "Advanced", "Intermediate", "Beginner"].map((level) => (
+                                    <div key={level} className="flex items-center gap-1.5">
+                                        <div className={`w-2 h-2 rounded-full ${getLevelDot(level as SkillLevel)}`} />
+                                        <span className="text-muted-foreground">{level}</span>
                                     </div>
                                 ))}
                             </div>
                         </motion.div>
-                    ))}
-                </div>
+                    </>
+                )}
             </div>
         </section>
     );
