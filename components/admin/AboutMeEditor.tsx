@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Edit, Save, X } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -15,12 +15,19 @@ interface AboutMeEditorProps {
 export default function AboutMeEditor({ initialData, onSave }: AboutMeEditorProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
-    const [editData, setEditData] = useState(initialData);
+    const [editData, setEditData] = useState(initialData || { paragraph1: '', paragraph2: '' });
     const [error, setError] = useState('');
+
+    // Sync editData when initialData changes
+    useEffect(() => {
+        if (initialData) {
+            setEditData(initialData);
+        }
+    }, [initialData]);
 
     const handleSave = async () => {
         // Validate both paragraphs are filled
-        if (!editData.paragraph1.trim() || !editData.paragraph2.trim()) {
+        if (!editData.paragraph1?.trim() || !editData.paragraph2?.trim()) {
             setError('Both paragraphs are required');
             return;
         }
@@ -114,8 +121,8 @@ export default function AboutMeEditor({ initialData, onSave }: AboutMeEditorProp
                 </div>
             ) : (
                 <div className="space-y-4 text-sm text-muted-foreground">
-                    <p className="leading-relaxed">{initialData.paragraph1}</p>
-                    <p className="leading-relaxed">{initialData.paragraph2}</p>
+                    <p className="leading-relaxed">{initialData?.paragraph1 || 'No content yet'}</p>
+                    <p className="leading-relaxed">{initialData?.paragraph2 || ''}</p>
                 </div>
             )}
         </motion.div>
