@@ -474,7 +474,7 @@ export default function AdminDashboard() {
                         </button>
 
                         <div className="px-4 py-2 mt-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Interactive</div>
-                        <Link href="/admin/uses/new" className="w-full">
+                        <Link href="/admin/uses" className="w-full">
                             <button className="w-full inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start hover:bg-primary/5 hover:text-primary">
                                 <Package className="mr-3 h-4 w-4" />
                                 Uses Page
