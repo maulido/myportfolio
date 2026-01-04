@@ -36,6 +36,7 @@ interface RichTextEditorProps {
 
 export default function RichTextEditor({ content, onChange, placeholder = "Start writing..." }: RichTextEditorProps) {
     const editor = useEditor({
+        immediatelyRender: false, // Fix SSR hydration mismatch
         extensions: [
             StarterKit.configure({
                 codeBlock: false,
