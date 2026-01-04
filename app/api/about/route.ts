@@ -57,17 +57,45 @@ export async function PUT(req: Request) {
         const existing = await Settings.findOne({ key: 'aboutMe' });
         console.log('🔍 Existing document:', existing ? 'Found' : 'Not found');
 
+        // Build update object dynamically to include all fields
+        const updateFields: any = {
+            key: 'aboutMe',
+            value: true,
+            'aboutMe.paragraph1': body.paragraph1,
+            'aboutMe.paragraph2': body.paragraph2
+        };
+
+        // Add optional fields if provided
+        if (body.profilePhotoUrl !== undefined) updateFields['aboutMe.profilePhotoUrl'] = body.profilePhotoUrl;
+        if (body.name !== undefined) updateFields['aboutMe.name'] = body.name;
+        if (body.title !== undefined) updateFields['aboutMe.title'] = body.title;
+        if (body.location !== undefined) updateFields['aboutMe.location'] = body.location;
+        if (body.email !== undefined) updateFields['aboutMe.email'] = body.email;
+        if (body.phone !== undefined) updateFields['aboutMe.phone'] = body.phone;
+
+        // Handle social links
+        if (body.socialLinks) {
+            if (body.socialLinks.github !== undefined) updateFields['aboutMe.socialLinks.github'] = body.socialLinks.github;
+            if (body.socialLinks.linkedin !== undefined) updateFields['aboutMe.socialLinks.linkedin'] = body.socialLinks.linkedin;
+            if (body.socialLinks.twitter !== undefined) updateFields['aboutMe.socialLinks.twitter'] = body.socialLinks.twitter;
+            if (body.socialLinks.website !== undefined) updateFields['aboutMe.socialLinks.website'] = body.socialLinks.website;
+            if (body.socialLinks.instagram !== undefined) updateFields['aboutMe.socialLinks.instagram'] = body.socialLinks.instagram;
+        }
+
+        // Handle stats
+        if (body.stats) {
+            if (body.stats.yearsExperience !== undefined) updateFields['aboutMe.stats.yearsExperience'] = body.stats.yearsExperience;
+            if (body.stats.projectsCompleted !== undefined) updateFields['aboutMe.stats.projectsCompleted'] = body.stats.projectsCompleted;
+            if (body.stats.technologiesMastered !== undefined) updateFields['aboutMe.stats.technologiesMastered'] = body.stats.technologiesMastered;
+            if (body.stats.certificationsEarned !== undefined) updateFields['aboutMe.stats.certificationsEarned'] = body.stats.certificationsEarned;
+        }
+
+        console.log('🔧 Update fields:', Object.keys(updateFields));
+
         // Update or create settings using $set to ensure nested fields are updated
         const settings = await Settings.findOneAndUpdate(
             { key: 'aboutMe' },
-            {
-                $set: {
-                    key: 'aboutMe',
-                    value: true,
-                    'aboutMe.paragraph1': body.paragraph1,
-                    'aboutMe.paragraph2': body.paragraph2
-                }
-            },
+            { $set: updateFields },
             { upsert: true, new: true, runValidators: true }
         );
 
