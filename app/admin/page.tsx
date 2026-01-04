@@ -423,41 +423,36 @@ export default function AdminDashboard() {
                         </button>
 
                         <div className="px-4 py-2 mt-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Other Assets</div>
-                        <button
-                            onClick={() => setActiveTab("gallery")}
-                            className={`inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${activeTab === "gallery" ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}
-                        >
-                            <Image className="mr-3 h-4 w-4" />
-                            Gallery
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("certifications")}
-                            className={`inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${activeTab === "certifications" ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}
-                        >
-                            <Award className="mr-3 h-4 w-4" />
-                            Certifications
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("testimonials")}
-                            className={`inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${activeTab === "testimonials" ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}
-                        >
-                            <MessageCircle className="mr-3 h-4 w-4" />
-                            Testimonials
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("career")}
-                            className={`inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${activeTab === "career" ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}
-                        >
-                            <Briefcase className="mr-3 h-4 w-4" />
-                            Career Journey
-                        </button>
-                        <button
-                            onClick={() => setActiveTab("skills")}
-                            className={`inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${activeTab === "skills" ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}
-                        >
-                            <Award className="mr-3 h-4 w-4" />
-                            Technical Skills
-                        </button>
+                        <Link href="/admin/gallery" className="w-full">
+                            <button className="w-full inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start hover:bg-primary/5 hover:text-primary">
+                                <Image className="mr-3 h-4 w-4" />
+                                Gallery
+                            </button>
+                        </Link>
+                        <Link href="/admin/certifications" className="w-full">
+                            <button className="w-full inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start hover:bg-primary/5 hover:text-primary">
+                                <Award className="mr-3 h-4 w-4" />
+                                Certifications
+                            </button>
+                        </Link>
+                        <Link href="/admin/testimonials" className="w-full">
+                            <button className="w-full inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start hover:bg-primary/5 hover:text-primary">
+                                <MessageCircle className="mr-3 h-4 w-4" />
+                                Testimonials
+                            </button>
+                        </Link>
+                        <Link href="/admin/career" className="w-full">
+                            <button className="w-full inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start hover:bg-primary/5 hover:text-primary">
+                                <Briefcase className="mr-3 h-4 w-4" />
+                                Career Journey
+                            </button>
+                        </Link>
+                        <Link href="/admin/skills" className="w-full">
+                            <button className="w-full inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start hover:bg-primary/5 hover:text-primary">
+                                <Award className="mr-3 h-4 w-4" />
+                                Technical Skills
+                            </button>
+                        </Link>
                         <button
                             onClick={() => setActiveTab("newsletter")}
                             className={`inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${activeTab === "newsletter" ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}
