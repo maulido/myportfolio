@@ -282,6 +282,7 @@ export default function AdminDashboard() {
             if (type === 'career') endpoint = `/api/career/${id}`;
             if (type === 'certification') endpoint = `/api/certifications/${id}`;
             if (type === 'testimonial') endpoint = `/api/testimonials/${id}`;
+            if (type === 'skill') endpoint = `/api/skills/${id}`;
 
             console.log(`Deleting ${type} with ID: ${id} at endpoint: ${endpoint}`);
 
@@ -448,6 +449,13 @@ export default function AdminDashboard() {
                         >
                             <Briefcase className="mr-3 h-4 w-4" />
                             Career Journey
+                        </button>
+                        <button
+                            onClick={() => setActiveTab("skills")}
+                            className={`inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${activeTab === "skills" ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}
+                        >
+                            <Award className="mr-3 h-4 w-4" />
+                            Technical Skills
                         </button>
                         <button
                             onClick={() => setActiveTab("newsletter")}
@@ -1049,6 +1057,84 @@ export default function AdminDashboard() {
                                 )}
                             </motion.div>
                         )}
+
+                        {activeTab === "skills" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="space-y-6"
+                            >
+                                <div className="flex items-center justify-between mb-8">
+                                    <h2 className="text-3xl font-bold tracking-tight">Manage Technical Skills</h2>
+                                    <Link href="/admin/skills/new">
+                                        <button className="inline-flex items-center justify-center rounded-2xl text-sm font-bold bg-primary text-white hover:bg-primary/90 h-11 px-6 shadow-lg shadow-primary/25 transition-all active:scale-95">
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Add Skill
+                                        </button>
+                                    </Link>
+                                </div>
+
+                                {skills.length > 0 ? (
+                                    <div className="space-y-6">
+                                        {Array.from(new Set(skills.map(s => s.category))).map((category) => {
+                                            const categorySkills = skills.filter(s => s.category === category).sort((a, b) => a.order - b.order);
+                                            return (
+                                                <div key={category} className="rounded-3xl border border-primary/10 bg-card/20 backdrop-blur-sm p-6">
+                                                    <h3 className="text-lg font-bold mb-4 text-primary">{category}</h3>
+                                                    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                                                        {categorySkills.map((skill) => (
+                                                            <div
+                                                                key={skill._id}
+                                                                className="flex items-center justify-between p-4 rounded-xl bg-card/50 border border-primary/5 hover:border-primary/20 transition-all group"
+                                                            >
+                                                                <div className="flex-1">
+                                                                    <div className="font-semibold text-sm">{skill.name}</div>
+                                                                    <div className="flex items-center gap-2 mt-1">
+                                                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${skill.level === 'Expert' ? 'bg-emerald-500/10 text-emerald-500' :
+                                                                            skill.level === 'Advanced' ? 'bg-blue-500/10 text-blue-500' :
+                                                                                skill.level === 'Intermediate' ? 'bg-amber-500/10 text-amber-500' :
+                                                                                    'bg-slate-500/10 text-slate-500'
+                                                                            }`}>
+                                                                            {skill.level}
+                                                                        </span>
+                                                                        <span className="text-[10px] text-muted-foreground">{skill.years}y</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <Link href={`/admin/skills/${skill._id}`}>
+                                                                        <button className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
+                                                                            <Pencil className="h-4 w-4" />
+                                                                        </button>
+                                                                    </Link>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault();
+                                                                            e.stopPropagation();
+                                                                            handleDelete('skill', skill._id, skill.name);
+                                                                        }}
+                                                                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="rounded-3xl border-2 border-dashed border-primary/10 bg-card/20 backdrop-blur-sm px-8 py-20 text-center text-muted-foreground">
+                                        <Award className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                                        <p className="font-bold">No skills found</p>
+                                        <p className="text-xs">Add your technical skills and expertise here.</p>
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+
                         {activeTab === "newsletter" && (
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
