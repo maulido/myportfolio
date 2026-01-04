@@ -66,12 +66,12 @@ export default function UsesPage() {
             <Navbar />
             <main className="flex-1 pt-24 pb-16">
                 {/* Hero Section */}
-                <section className="container px-4 md:px-6 mb-16">
+                <section className="container mx-auto px-4 md:px-6 mb-16 max-w-6xl">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
-                        className="max-w-3xl"
+                        className="text-center max-w-3xl mx-auto"
                     >
                         <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gradient">
                             What I Use
@@ -84,7 +84,7 @@ export default function UsesPage() {
                 </section>
 
                 {/* Categories */}
-                <section className="container px-4 md:px-6 space-y-16">
+                <section className="container mx-auto px-4 md:px-6 space-y-16 max-w-6xl">
                     {Object.entries(groupedItems).map(([category, items], categoryIndex) => {
                         const Icon = categoryIcons[category] || Package;
 
@@ -150,10 +150,13 @@ export default function UsesPage() {
                     })}
 
                     {Object.keys(groupedItems).length === 0 && (
-                        <div className="text-center py-16">
-                            <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                            <p className="text-xl text-muted-foreground">
-                                No items added yet. Check back soon!
+                        <div className="text-center py-20">
+                            <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                            <p className="text-xl text-muted-foreground mb-2">
+                                No items added yet
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                                Check back soon to see what tools I use!
                             </p>
                         </div>
                     )}
@@ -161,5 +164,11 @@ export default function UsesPage() {
             </main>
             <Footer />
         </div>
+    );
+}
+                </section >
+            </main >
+    <Footer />
+        </div >
     );
 }

@@ -93,26 +93,26 @@ export default function GuestbookPage() {
             <Navbar />
             <main className="flex-1 pt-24 pb-16">
                 {/* Hero Section */}
-                <section className="container px-4 md:px-6 mb-16">
+                <section className="container mx-auto px-4 md:px-6 mb-12 max-w-4xl">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
-                        className="max-w-3xl"
+                        className="text-center"
                     >
-                        <div className="flex items-center gap-3 mb-4">
+                        <div className="flex items-center justify-center gap-3 mb-4">
                             <MessageSquare className="h-10 w-10 text-primary" />
                             <h1 className="text-4xl md:text-5xl font-bold text-gradient">
                                 Guestbook
                             </h1>
                         </div>
-                        <p className="text-xl text-muted-foreground leading-relaxed">
+                        <p className="text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
                             Leave a message, share your thoughts, or just say hi! All messages are moderated before appearing.
                         </p>
                     </motion.div>
                 </section>
 
-                <div className="container px-4 md:px-6 max-w-4xl mx-auto space-y-12">
+                <div className="container mx-auto px-4 md:px-6 max-w-4xl space-y-12">
                     {/* Message Form */}
                     <motion.section
                         initial={{ opacity: 0, y: 20 }}
@@ -267,10 +267,13 @@ export default function GuestbookPage() {
                                 )}
                             </>
                         ) : (
-                            <div className="text-center py-12 border border-dashed border-border rounded-lg">
-                                <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                                <p className="text-muted-foreground">
-                                    No messages yet. Be the first to leave one!
+                            <div className="text-center py-16 border border-dashed border-border rounded-lg">
+                                <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+                                <p className="text-lg text-muted-foreground mb-1">
+                                    No messages yet
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                    Be the first to leave one!
                                 </p>
                             </div>
                         )}
