@@ -9,6 +9,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Missing fields" }, { status: 400 });
     }
 
+    // Check if email service is configured
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.warn('[CONTACT API] Email service not configured. Set SMTP_HOST, SMTP_USER, and SMTP_PASS environment variables.');
+
+      // Return user-friendly message instead of 500 error
+      return NextResponse.json({
+        success: false,
+        error: "Email service is not configured. Please contact the administrator directly or try again later."
+      }, { status: 503 });
+    }
+
     // Configure nodemailer with environment variables
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
@@ -20,10 +31,21 @@ export async function POST(req: Request) {
       },
     });
 
+    // Verify transporter configuration
+    try {
+      await transporter.verify();
+    } catch (verifyError) {
+      console.error('[CONTACT API] Email transporter verification failed:', verifyError);
+      return NextResponse.json({
+        success: false,
+        error: "Email service is currently unavailable. Please try again later."
+      }, { status: 503 });
+    }
+
     // Send email
     await transporter.sendMail({
       from: `"${name}" <${process.env.SMTP_USER}>`,
-      to: process.env.CONTACT_EMAIL,
+      to: process.env.CONTACT_EMAIL || process.env.SMTP_USER,
       subject: `Portfolio Contact: ${name}`,
       text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
       html: `
@@ -40,12 +62,15 @@ export async function POST(req: Request) {
     });
 
     if (process.env.NODE_ENV === 'development') {
-      console.log(`[EMAIL SENT] From: ${email}, To: ${process.env.CONTACT_EMAIL}`);
+      console.log(`[EMAIL SENT] From: ${email}, To: ${process.env.CONTACT_EMAIL || process.env.SMTP_USER}`);
     }
-    return NextResponse.json({ success: true, message: "Email sent successfully!" });
+    return NextResponse.json({ success: true, message: "Thank you! Your message has been sent successfully." });
   } catch (error) {
     // Log errors in all environments for debugging
-    console.error("Email send error:", error);
-    return NextResponse.json({ success: false, error: "Failed to send email. Please check server logs." }, { status: 500 });
+    console.error("[CONTACT API] Email send error:", error);
+    return NextResponse.json({
+      success: false,
+      error: "Failed to send email. Please try again later or contact us directly."
+    }, { status: 500 });
   }
 }
