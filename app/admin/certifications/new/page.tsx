@@ -18,6 +18,7 @@ export default function NewCertificationPage() {
         imageUrl: "",
         certificateFileUrl: "",
         category: "",
+        description: "",
         skills: "",
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -87,6 +88,10 @@ export default function NewCertificationPage() {
                 skills: selectedSkills
             };
 
+            // Debug: log data being submitted
+            console.log('Submitting certification data:', dataToSubmit);
+            console.log('Certificate File URL:', dataToSubmit.certificateFileUrl);
+
             const res = await fetch("/api/certifications", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -94,8 +99,12 @@ export default function NewCertificationPage() {
             });
 
             if (res.ok) {
+                const result = await res.json();
+                console.log('Certification created:', result);
                 router.push("/admin");
             } else {
+                const error = await res.json();
+                console.error('Failed to create certification:', error);
                 alert("Failed to add certification");
             }
         } catch (error) {
