@@ -195,6 +195,7 @@ export default function AdminGuestbookPage() {
 
                                 <div className="flex items-center gap-2 pt-2">
                                     <button
+                                        type="button"
                                         onClick={() => handleApprove(entry._id)}
                                         className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-green-600 text-white hover:bg-green-700 h-9 px-4"
                                     >
@@ -202,6 +203,7 @@ export default function AdminGuestbookPage() {
                                         Approve
                                     </button>
                                     <button
+                                        type="button"
                                         onClick={() => handleMarkSpam(entry._id)}
                                         className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-yellow-600 text-white hover:bg-yellow-700 h-9 px-4"
                                     >
@@ -209,6 +211,7 @@ export default function AdminGuestbookPage() {
                                         Mark Spam
                                     </button>
                                     <button
+                                        type="button"
                                         onClick={() => handleReject(entry._id)}
                                         className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-destructive text-destructive-foreground hover:bg-destructive/90 h-9 px-4"
                                     >
