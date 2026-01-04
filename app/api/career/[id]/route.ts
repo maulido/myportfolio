@@ -50,7 +50,7 @@ export async function PUT(
         }
 
         await dbConnect();
-        const body = await req.json();
+        const body = await request.json();
 
         const career = await CareerJourney.findByIdAndUpdate(id, body, {
             new: true,
