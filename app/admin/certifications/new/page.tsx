@@ -281,7 +281,7 @@ export default function NewCertificationPage() {
                                 <div className="flex items-center justify-center p-6 border-2 border-dashed border-primary/20 rounded-lg hover:border-primary/40 transition-colors">
                                     <UploadButton
                                         endpoint="certificateUploader"
-                                        onClientUploadComplete={(res) => {
+                                        onClientUploadComplete={(res: any) => {
                                             if (res && res[0]) {
                                                 setFormData(prev => ({ ...prev, certificateFileUrl: res[0].url }));
                                             }
