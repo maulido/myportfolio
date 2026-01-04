@@ -18,17 +18,35 @@ interface GitHubRepo {
 export function GitHubActivity({ username = "maulido" }: { username?: string }) {
     const [repos, setRepos] = useState<GitHubRepo[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
 
     useEffect(() => {
         async function fetchRepos() {
             try {
                 const res = await fetch(
-                    `https://api.github.com/users/${username}/repos?sort=updated&per_page=6`
+                    `https://api.github.com/users/${username}/repos?sort=updated&per_page=6`,
+                    {
+                        // Add timeout and error handling
+                        signal: AbortSignal.timeout(5000), // 5 second timeout
+                    }
                 );
+
+                if (!res.ok) {
+                    throw new Error(`GitHub API returned ${res.status}`);
+                }
+
                 const data = await res.json();
-                setRepos(data);
+
+                // Validate response
+                if (Array.isArray(data)) {
+                    setRepos(data);
+                } else {
+                    console.warn('GitHub API returned unexpected format');
+                    setError(true);
+                }
             } catch (error) {
-                console.error('Failed to fetch GitHub repos', error);
+                console.error('Failed to fetch GitHub repos:', error);
+                setError(true);
             } finally {
                 setLoading(false);
             }
@@ -60,7 +78,8 @@ export function GitHubActivity({ username = "maulido" }: { username?: string }) 
         );
     }
 
-    if (repos.length === 0) return null;
+    // Don't show section if there's an error or no repos
+    if (error || repos.length === 0) return null;
 
     return (
         <section className="py-16 md:py-24 relative overflow-hidden">
