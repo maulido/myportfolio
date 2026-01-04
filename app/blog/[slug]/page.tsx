@@ -27,6 +27,24 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     }
 }
 
+// Generate static params for all blog posts (SSG)
+export async function generateStaticParams() {
+    try {
+        await dbConnect();
+        const posts = await Post.find({ published: true }).select('slug').lean();
+
+        return posts.map((post) => ({
+            slug: post.slug,
+        }));
+    } catch (error) {
+        console.error('Error generating static params:', error);
+        return [];
+    }
+}
+
+// Enable ISR - revalidate every hour
+export const revalidate = 3600;
+
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params; // Await params here
 
