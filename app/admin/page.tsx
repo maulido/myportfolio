@@ -3,7 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LogOut, Plus, LayoutDashboard, FileText, Briefcase, Image, Award, MessageCircle, Pencil, Trash2, Search, Mail } from "lucide-react";
+import { LogOut, Plus, LayoutDashboard, FileText, Briefcase, Image, Award, MessageCircle, Pencil, Trash2, Search, Mail, Package, MessageSquare, FolderOpen, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import AboutMeEditor from "@/components/admin/AboutMeEditor";
@@ -472,6 +472,34 @@ export default function AdminDashboard() {
                             <FileText className="mr-3 h-4 w-4" />
                             Documents (CV)
                         </button>
+
+                        <div className="px-4 py-2 mt-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Interactive</div>
+                        <Link href="/admin/uses/new" className="w-full">
+                            <button className="w-full inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start hover:bg-primary/5 hover:text-primary">
+                                <Package className="mr-3 h-4 w-4" />
+                                Uses Page
+                            </button>
+                        </Link>
+                        <Link href="/admin/guestbook" className="w-full">
+                            <button className="w-full inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start hover:bg-primary/5 hover:text-primary">
+                                <MessageSquare className="mr-3 h-4 w-4" />
+                                Guestbook
+                            </button>
+                        </Link>
+
+                        <div className="px-4 py-2 mt-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Admin Tools</div>
+                        <Link href="/admin/media" className="w-full">
+                            <button className="w-full inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start hover:bg-primary/5 hover:text-primary">
+                                <FolderOpen className="mr-3 h-4 w-4" />
+                                Media Library
+                            </button>
+                        </Link>
+                        <Link href="/admin/analytics" className="w-full">
+                            <button className="w-full inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start hover:bg-primary/5 hover:text-primary">
+                                <BarChart3 className="mr-3 h-4 w-4" />
+                                Analytics
+                            </button>
+                        </Link>
                     </aside>
 
                     {/* Content Area */}
