@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import ReadingProgressBar from "@/components/ReadingProgressBar";
 import dbConnect from "@/lib/db";
 import Post from "@/models/Post";
 import { notFound } from "next/navigation";
@@ -44,6 +45,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
     return (
         <div className="flex min-h-screen flex-col">
+            <ReadingProgressBar />
             <Navbar />
             <main className="flex-1 pt-24 pb-16">
                 <article className="container px-4 md:px-6 max-w-4xl mx-auto">
