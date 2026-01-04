@@ -15,7 +15,7 @@ interface GuestbookEntry {
 }
 
 export default function AdminGuestbookPage() {
-    const [pendingEntries, setP endingEntries] = useState<GuestbookEntry[]>([]);
+    const [pendingEntries, setPendingEntries] = useState<GuestbookEntry[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
