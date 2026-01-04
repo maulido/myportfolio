@@ -152,6 +152,26 @@ export default function RichTextEditor({ content, onChange, placeholder = "Start
 
     return (
         <div className="border border-input/50 rounded-lg overflow-hidden bg-background">
+            {/* Hidden Upload Button */}
+            <div className="hidden">
+                <UploadButton
+                    endpoint="imageUploader"
+                    ref={uploadButtonRef as any}
+                    onClientUploadComplete={(res) => {
+                        if (res && res[0]?.url) {
+                            editor.chain().focus().setImage({ src: res[0].url }).run();
+                        }
+                    }}
+                    onUploadError={(error: Error) => {
+                        console.error("Upload error:", error);
+                        const url = window.prompt("Upload failed. Enter image URL instead:");
+                        if (url) {
+                            editor.chain().focus().setImage({ src: url }).run();
+                        }
+                    }}
+                />
+            </div>
+
             {/* Toolbar */}
             <div className="border-b border-input/50 bg-muted/30 p-2 flex flex-wrap gap-1">
                 {/* Text Formatting */}
