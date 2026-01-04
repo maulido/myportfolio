@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Briefcase, Calendar, MapPin } from "lucide-react";
+import { Briefcase, Calendar, MapPin, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
+import CareerDetailModal from "./CareerDetailModal";
 
 interface CareerEntry {
     _id: string;
@@ -14,11 +15,26 @@ interface CareerEntry {
     endDate?: string;
     current: boolean;
     description: string;
+    skills: string[];
+    achievements?: string[];
+    responsibilities?: string[];
 }
 
 export function Experience() {
     const [experience, setExperience] = useState<CareerEntry[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [selectedCareer, setSelectedCareer] = useState<CareerEntry | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const handleCareerClick = (career: CareerEntry) => {
+        setSelectedCareer(career);
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setTimeout(() => setSelectedCareer(null), 300);
+    };
 
     useEffect(() => {
         const fetchCareerData = async () => {
@@ -98,7 +114,10 @@ export function Experience() {
 
                                 {/* Content Card */}
                                 <div className="w-full md:w-[45%] pl-16 md:pl-0">
-                                    <div className="group bg-card/40 backdrop-blur-md rounded-2xl p-6 border border-white/5 shadow-xl hover:border-primary/40 transition-all duration-300 hover:shadow-primary/5">
+                                    <div
+                                        onClick={() => handleCareerClick(item)}
+                                        className="group bg-card/40 backdrop-blur-md rounded-2xl p-6 border border-white/5 shadow-xl hover:border-primary/40 transition-all duration-300 hover:shadow-primary/5 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                                    >
                                         <div className="flex flex-col gap-2 mb-4">
                                             <div className="flex items-center justify-between">
                                                 <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">{item.title}</h3>
@@ -121,9 +140,15 @@ export function Experience() {
                                                 <MapPin className="mr-1 h-3 w-3" />
                                                 {item.location || 'Remote'}
                                             </div>
-                                            <div className="flex items-center text-[11px] text-muted-foreground/60 sm:hidden">
-                                                <Calendar className="mr-1 h-3 w-3" />
-                                                {formatPeriod(item.startDate, item.endDate, item.current)}
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex items-center text-[11px] text-muted-foreground/60 sm:hidden">
+                                                    <Calendar className="mr-1 h-3 w-3" />
+                                                    {formatPeriod(item.startDate, item.endDate, item.current)}
+                                                </div>
+                                                <div className="flex items-center text-xs text-primary font-medium group-hover:gap-1 transition-all">
+                                                    View Details
+                                                    <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -135,6 +160,13 @@ export function Experience() {
                     </div>
                 </div>
             </div>
+
+            {/* Career Detail Modal */}
+            <CareerDetailModal
+                career={selectedCareer}
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+            />
         </section>
     );
 }
