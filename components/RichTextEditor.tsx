@@ -23,7 +23,8 @@ import {
     ImageIcon,
     Code2,
 } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
+import { UploadButton } from "@/lib/uploadthing";
 
 // Initialize lowlight instance
 const lowlight = createLowlight();
