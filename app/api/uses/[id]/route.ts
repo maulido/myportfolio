@@ -5,12 +5,13 @@ import UsesItem from '@/models/UsesItem';
 // GET - Get single uses item
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         await dbConnect();
 
-        const item = await UsesItem.findById(params.id).lean();
+        const { id } = await params;
+        const item = await UsesItem.findById(id).lean();
 
         if (!item) {
             return NextResponse.json(
@@ -32,14 +33,15 @@ export async function GET(
 // PUT - Update uses item (admin only)
 export async function PUT(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         await dbConnect();
 
+        const { id } = await params;
         const body = await request.json();
         const item = await UsesItem.findByIdAndUpdate(
-            params.id,
+            id,
             body,
             { new: true, runValidators: true }
         );
@@ -64,12 +66,13 @@ export async function PUT(
 // DELETE - Delete uses item (admin only)
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         await dbConnect();
 
-        const item = await UsesItem.findByIdAndDelete(params.id);
+        const { id } = await params;
+        const item = await UsesItem.findByIdAndDelete(id);
 
         if (!item) {
             return NextResponse.json(
