@@ -299,21 +299,6 @@ export default function AdminDashboard() {
         setDeleteConfirm({ show: false, type: '', id: '', name: '' });
     };
 
-    const handleAboutMeSave = async (data: { paragraph1: string; paragraph2: string }) => {
-        const res = await fetch('/api/about', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-        if (res.ok) {
-            const result = await res.json();
-            setAboutMe(result.data);
-            setAboutMeEdit(result.data);
-        } else {
-            throw new Error('Failed to update About Me');
-        }
-    };
-
     const handleCareerFilterChange = (filter: 'all' | 'work' | 'education' | 'achievement') => {
         setCareerTypeFilter(filter);
     };
