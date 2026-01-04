@@ -233,7 +233,7 @@ export default function AdminDashboard() {
         }
     };
 
-    const handleAboutMeSave = async (data: { paragraph1: string; paragraph2: string }) => {
+    const handleAboutMeSave = async (data: any) => {
         try {
             const res = await fetch('/api/about', {
                 method: 'PUT',
@@ -241,18 +241,19 @@ export default function AdminDashboard() {
                 body: JSON.stringify(data)
             });
 
-            const result = await res.json();
-
-            if (res.ok && result.success) {
-                setAboutMe(data);
-                alert('About Me content saved successfully!');
+            if (res.ok) {
+                const result = await res.json();
+                setAboutMe(result.data);
+                setAboutMeEdit(result.data);
+                alert('About Me updated successfully!');
             } else {
-                console.error('Save failed:', result);
-                throw new Error(result.error || 'Failed to save');
+                const error = await res.json();
+                console.error('Failed to update About Me:', error);
+                alert('Failed to update About Me');
             }
         } catch (error) {
-            console.error('Error saving About Me:', error);
-            throw error; // Re-throw to let AboutMeEditor handle it
+            console.error('Error updating About Me:', error);
+            alert('An error occurred while updating About Me');
         }
     };
 
