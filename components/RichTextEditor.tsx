@@ -83,16 +83,67 @@ export default function RichTextEditor({ content, onChange, placeholder = "Start
             return;
         }
 
+
         editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
     }, [editor]);
 
     const addImage = useCallback(() => {
         if (!editor) return;
 
-        const url = window.prompt("Enter image URL:");
-        if (url) {
-            editor.chain().focus().setImage({ src: url }).run();
-        }
+        // Create a file input element
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+
+        input.onchange = async (e) => {
+            const file = (e.target as HTMLInputElement).files?.[0];
+            if (!file) return;
+
+            // Show loading state
+            const loadingToast = document.createElement('div');
+            loadingToast.textContent = 'Uploading image...';
+            loadingToast.style.cssText = 'position:fixed;top:20px;right:20px;background:#333;color:#fff;padding:12px 24px;border-radius:8px;z-index:9999';
+            document.body.appendChild(loadingToast);
+
+            try {
+                // Upload to UploadThing
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch('/api/uploadthing', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error('Upload failed');
+                }
+
+                const data = await response.json();
+                const imageUrl = data.url || data.fileUrl;
+
+                if (imageUrl) {
+                    editor.chain().focus().setImage({ src: imageUrl }).run();
+                    loadingToast.textContent = 'Image uploaded!';
+                    setTimeout(() => loadingToast.remove(), 2000);
+                } else {
+                    throw new Error('No URL returned');
+                }
+            } catch (error) {
+                console.error('Image upload error:', error);
+                loadingToast.textContent = 'Upload failed. Using URL input instead.';
+                setTimeout(() => {
+                    loadingToast.remove();
+                    // Fallback to URL input
+                    const url = window.prompt("Image upload failed. Enter image URL instead:");
+                    if (url) {
+                        editor.chain().focus().setImage({ src: url }).run();
+                    }
+                }, 2000);
+            }
+        };
+
+        input.click();
     }, [editor]);
 
     if (!editor) {
