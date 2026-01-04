@@ -214,6 +214,29 @@ export default function AdminDashboard() {
         }
     };
 
+    const handleAboutMeSave = async (data: { paragraph1: string; paragraph2: string }) => {
+        try {
+            const res = await fetch('/api/about', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await res.json();
+
+            if (res.ok && result.success) {
+                setAboutMe(data);
+                alert('About Me content saved successfully!');
+            } else {
+                console.error('Save failed:', result);
+                throw new Error(result.error || 'Failed to save');
+            }
+        } catch (error) {
+            console.error('Error saving About Me:', error);
+            throw error; // Re-throw to let AboutMeEditor handle it
+        }
+    };
+
     const handleDelete = async (type: string, id: string, name: string = '') => {
         console.log('🗑️ handleDelete called with:', { type, id, name });
 
