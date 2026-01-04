@@ -185,10 +185,10 @@ export default function AdminSkillsListPage() {
                             >
                                 <div className="flex items-start gap-3 mb-3">
                                     <div
-                                        className="h-12 w-12 rounded-lg flex items-center justify-center text-2xl flex-shrink-0"
+                                        className="h-12 w-12 rounded-lg flex items-center justify-center flex-shrink-0"
                                         style={{ backgroundColor: item.color ? `${item.color}20` : 'rgba(var(--primary), 0.1)' }}
                                     >
-                                        {item.icon}
+                                        <Award className="h-6 w-6" style={{ color: item.color || 'var(--primary)' }} />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h4 className="font-bold truncate">{item.name}</h4>
