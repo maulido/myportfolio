@@ -166,9 +166,3 @@ export default function UsesPage() {
         </div>
     );
 }
-                </section >
-            </main >
-    <Footer />
-        </div >
-    );
-}
