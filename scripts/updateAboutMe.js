@@ -1,5 +1,6 @@
 /**
- * Script to update About Me content in database
+ * Script to update About Me content in database (FIXED VERSION)
+ * This script updates the Settings collection with key 'aboutMe'
  * Run with: node scripts/updateAboutMe.js
  */
 
@@ -8,32 +9,36 @@ const mongoose = require('mongoose');
 // MongoDB connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/portfolio_db';
 
-// About Me schema (simplified)
-const aboutMeSchema = new mongoose.Schema({
-    paragraph1: String,
-    paragraph2: String,
-    profilePhotoUrl: String,
-    name: String,
-    title: String,
-    location: String,
-    email: String,
-    phone: String,
-    socialLinks: {
-        github: String,
-        linkedin: String,
-        twitter: String,
-        website: String,
-        instagram: String
-    },
-    stats: {
-        yearsExperience: Number,
-        projectsCompleted: Number,
-        technologiesMastered: Number,
-        certificationsEarned: Number
+// Settings schema (matches the API model)
+const settingsSchema = new mongoose.Schema({
+    key: { type: String, required: true, unique: true },
+    value: mongoose.Schema.Types.Mixed,
+    aboutMe: {
+        paragraph1: String,
+        paragraph2: String,
+        profilePhotoUrl: String,
+        name: String,
+        title: String,
+        location: String,
+        email: String,
+        phone: String,
+        socialLinks: {
+            github: String,
+            linkedin: String,
+            twitter: String,
+            website: String,
+            instagram: String
+        },
+        stats: {
+            yearsExperience: Number,
+            projectsCompleted: Number,
+            technologiesMastered: Number,
+            certificationsEarned: Number
+        }
     }
 }, { timestamps: true });
 
-const AboutMe = mongoose.models.AboutMe || mongoose.model('AboutMe', aboutMeSchema);
+const Settings = mongoose.models.Settings || mongoose.model('Settings', settingsSchema);
 
 async function updateAboutMe() {
     try {
@@ -46,19 +51,29 @@ async function updateAboutMe() {
             paragraph2: "With a strong foundation in both software engineering and network systems, I specialize in creating robust, secure, and high-performance solutions. I'm constantly learning and adapting to new technologies to deliver cutting-edge solutions that meet modern business needs."
         };
 
-        // Update or create About Me entry
-        const result = await AboutMe.findOneAndUpdate(
-            {}, // Find any document
-            professionalContent,
+        // Update Settings document with key 'aboutMe'
+        const result = await Settings.findOneAndUpdate(
+            { key: 'aboutMe' },
+            {
+                $set: {
+                    key: 'aboutMe',
+                    value: true,
+                    'aboutMe.paragraph1': professionalContent.paragraph1,
+                    'aboutMe.paragraph2': professionalContent.paragraph2
+                }
+            },
             {
                 new: true,
-                upsert: true, // Create if doesn't exist
-                setDefaultsOnInsert: true
+                upsert: true,
+                runValidators: true
             }
         );
 
-        console.log('✅ About Me content updated successfully!');
-        console.log('Updated content:', result);
+        console.log('✅ About Me content updated successfully in Settings collection!');
+        console.log('📄 Document ID:', result._id);
+        console.log('🔑 Key:', result.key);
+        console.log('📝 Paragraph 1:', result.aboutMe?.paragraph1?.substring(0, 60) + '...');
+        console.log('📝 Paragraph 2:', result.aboutMe?.paragraph2?.substring(0, 60) + '...');
 
     } catch (error) {
         console.error('❌ Error updating About Me:', error);
