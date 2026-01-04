@@ -42,31 +42,41 @@ export async function PUT(req: Request) {
         await dbConnect();
         const body = await req.json();
 
+        console.log('📝 PUT /api/about - Request body:', body);
+
         // Validate required fields
         if (!body.paragraph1 || !body.paragraph2) {
+            console.log('❌ Validation failed: Missing paragraphs');
             return NextResponse.json({
                 success: false,
                 error: "Both paragraphs are required"
             }, { status: 400 });
         }
 
-        // Update or create settings
+        // Check if document exists
+        const existing = await Settings.findOne({ key: 'aboutMe' });
+        console.log('🔍 Existing document:', existing ? 'Found' : 'Not found');
+
+        // Update or create settings using $set to ensure nested fields are updated
         const settings = await Settings.findOneAndUpdate(
             { key: 'aboutMe' },
             {
-                key: 'aboutMe',
-                value: true,
-                aboutMe: {
-                    paragraph1: body.paragraph1,
-                    paragraph2: body.paragraph2
+                $set: {
+                    key: 'aboutMe',
+                    value: true,
+                    'aboutMe.paragraph1': body.paragraph1,
+                    'aboutMe.paragraph2': body.paragraph2
                 }
             },
-            { upsert: true, new: true }
+            { upsert: true, new: true, runValidators: true }
         );
+
+        console.log('✅ Settings updated:', settings ? 'Success' : 'Failed');
+        console.log('📄 Updated data:', settings?.aboutMe);
 
         return NextResponse.json({ success: true, data: settings.aboutMe });
     } catch (error: unknown) {
-        console.error("API PUT About Error:", error);
+        console.error("❌ API PUT About Error:", error);
         return NextResponse.json({
             success: false,
             error: error instanceof Error ? error.message : "Failed to update About Me content"
