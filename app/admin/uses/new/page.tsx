@@ -43,7 +43,8 @@ export default function NewUsesItemPage() {
             });
 
             if (res.ok) {
-                router.push("/admin/uses");
+                alert("Item created successfully!");
+                router.push("/admin");
             } else {
                 alert("Failed to create item");
             }
@@ -59,7 +60,7 @@ export default function NewUsesItemPage() {
         <div className="min-h-screen bg-background/50 p-8">
             <div className="max-w-4xl mx-auto space-y-8">
                 <div className="flex items-center gap-4">
-                    <Link href="/admin/uses">
+                    <Link href="/admin">
                         <button type="button" className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10">
                             <ArrowLeft className="h-4 w-4" />
                         </button>
