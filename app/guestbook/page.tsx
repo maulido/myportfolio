@@ -78,11 +78,16 @@ export default function GuestbookPage() {
                 setFormData({ name: "", email: "", website: "", message: "" });
                 setCharCount(0);
             } else {
-                alert(data.error || 'Failed to submit message');
+                // Show specific error message from API
+                if (response.status === 429) {
+                    alert(data.error || 'Too many submissions. Please wait before trying again.');
+                } else {
+                    alert(data.error || 'Failed to submit message. Please try again.');
+                }
             }
         } catch (error) {
             console.error('Error submitting:', error);
-            alert('An error occurred. Please try again.');
+            alert('Network error. Please check your connection and try again.');
         } finally {
             setSubmitting(false);
         }

@@ -51,16 +51,16 @@ export async function POST(request: NextRequest) {
         const forwarded = request.headers.get('x-forwarded-for');
         const ip = forwarded ? forwarded.split(',')[0] : request.headers.get('x-real-ip') || 'unknown';
 
-        // Simple rate limiting check - max 3 entries per IP in last hour
+        // Simple rate limiting check - max 5 entries per IP in last hour
         const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
         const recentEntries = await GuestbookEntry.countDocuments({
             ipAddress: ip,
             createdAt: { $gte: oneHourAgo }
         });
 
-        if (recentEntries >= 3) {
+        if (recentEntries >= 5) {
             return NextResponse.json(
-                { success: false, error: 'Too many submissions. Please try again later.' },
+                { success: false, error: 'You have reached the maximum number of submissions (5 per hour). Please try again later.' },
                 { status: 429 }
             );
         }
