@@ -23,7 +23,8 @@ import {
     ImageIcon,
     Code2,
 } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
+import { useUploadThing } from "@/lib/uploadthing";
 
 // Initialize lowlight instance
 const lowlight = createLowlight();
@@ -35,6 +36,26 @@ interface RichTextEditorProps {
 }
 
 export default function RichTextEditor({ content, onChange, placeholder = "Start writing..." }: RichTextEditorProps) {
+    const [isUploading, setIsUploading] = useState(false);
+
+    const { startUpload } = useUploadThing("imageUploader", {
+        onClientUploadComplete: (res) => {
+            if (res && res[0]?.url && editor) {
+                editor.chain().focus().setImage({ src: res[0].url }).run();
+                setIsUploading(false);
+            }
+        },
+        onUploadError: (error: Error) => {
+            console.error("Upload error:", error);
+            setIsUploading(false);
+            // Fallback to URL input
+            const url = window.prompt("Upload failed. Enter image URL instead:");
+            if (url && editor) {
+                editor.chain().focus().setImage({ src: url }).run();
+            }
+        },
+    });
+
     const editor = useEditor({
         immediatelyRender: false, // Fix SSR hydration mismatch
         extensions: [
