@@ -35,6 +35,18 @@ export default function AdminSidebar() {
                     Dashboard
                 </button>
             </Link>
+            <Link href="/admin/posts" className="w-full">
+                <button className={`w-full inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${isActive("/admin/posts") ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}>
+                    <FileText className="mr-3 h-4 w-4" />
+                    Blog Posts
+                </button>
+            </Link>
+            <Link href="/admin/projects" className="w-full">
+                <button className={`w-full inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${isActive("/admin/projects") ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}>
+                    <Briefcase className="mr-3 h-4 w-4" />
+                    Projects
+                </button>
+            </Link>
 
             <div className="px-4 py-2 mt-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Content</div>
             <Link href="/admin/gallery" className="w-full">
