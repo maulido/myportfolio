@@ -4,12 +4,13 @@ import Project from '@/models/Project';
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { slug: string } }
+    { params }: { params: Promise<{ slug: string }> }
 ) {
     try {
         await dbConnect();
 
-        const project = await Project.findOne({ slug: params.slug })
+        const { slug } = await params;
+        const project = await Project.findOne({ slug })
             .populate('relatedProjects')
             .lean();
 
