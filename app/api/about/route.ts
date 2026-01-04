@@ -21,12 +21,11 @@ export async function GET() {
             });
         }
 
+        console.log('📖 GET /api/about - Returning data:', settings.aboutMe);
+
         return NextResponse.json({
             success: true,
-            data: settings.aboutMe || {
-                paragraph1: '',
-                paragraph2: ''
-            }
+            data: settings.aboutMe || {}
         });
     } catch (error: unknown) {
         console.error("API GET About Error:", error);
