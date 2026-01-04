@@ -6,8 +6,17 @@ export async function GET() {
     await dbConnect();
 
     try {
-        const posts = await Post.find({}).sort({ createdAt: -1 });
-        return NextResponse.json({ success: true, data: posts });
+        const posts = await Post.find({}).sort({ createdAt: -1 }).lean();
+
+        return NextResponse.json(
+            { success: true, data: posts },
+            {
+                headers: {
+                    // Cache for 1 hour, revalidate in background for 24 hours
+                    'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+                }
+            }
+        );
     } catch (error) {
         return NextResponse.json({ success: false, error: error }, { status: 400 });
     }

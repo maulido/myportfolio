@@ -51,8 +51,9 @@ const GuestbookEntrySchema = new Schema<IGuestbookEntry>(
     }
 );
 
-// Indexes
-GuestbookEntrySchema.index({ approved: 1, createdAt: -1 });
-GuestbookEntrySchema.index({ spam: 1 });
+// Indexes for query optimization
+GuestbookEntrySchema.index({ approved: 1, spam: 1, createdAt: -1 }); // Compound index for public queries
+GuestbookEntrySchema.index({ ipAddress: 1, createdAt: -1 }); // For rate limiting checks
+GuestbookEntrySchema.index({ spam: 1, approved: 1 }); // For admin filtering
 
 export default mongoose.models.GuestbookEntry || mongoose.model<IGuestbookEntry>('GuestbookEntry', GuestbookEntrySchema);
