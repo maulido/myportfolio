@@ -85,15 +85,15 @@ export function ShareButtons({ title, url, description }: ShareButtonsProps) {
             <button
                 onClick={copyToClipboard}
                 className={`p-2 rounded-lg transition-all ${copied
-                        ? 'bg-green-500 text-white'
-                        : 'bg-muted/30 hover:bg-muted/50'
+                    ? 'bg-green-500 text-white'
+                    : 'bg-muted/30 hover:bg-muted/50'
                     }`}
                 aria-label="Copy link"
             >
                 <Link2 className="h-4 w-4" />
             </button>
 
-            {typeof navigator !== 'undefined' && navigator.share && (
+            {typeof navigator !== 'undefined' && typeof navigator.share === 'function' && (
                 <button
                     onClick={handleNativeShare}
                     className="p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-all"
