@@ -56,6 +56,14 @@ export default function BlogPage() {
         <div className="flex min-h-screen flex-col">
             <Navbar />
             <main className="flex-1 pt-24 pb-16">
+                {/* Breadcrumbs */}
+                <div className="container mx-auto px-4 md:px-6 pb-4">
+                    <nav className="text-sm text-muted-foreground">
+                        <a href="/" className="hover:text-primary transition-colors">Home</a>
+                        <span className="mx-2">/</span>
+                        <span className="text-foreground">Blog</span>
+                    </nav>
+                </div>
                 <div className="container mx-auto px-4 md:px-6">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -90,8 +98,8 @@ export default function BlogPage() {
                             <button
                                 onClick={() => setSelectedTag(null)}
                                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${selectedTag === null
-                                        ? "bg-primary text-white shadow-lg shadow-primary/25"
-                                        : "bg-card/50 text-muted-foreground hover:bg-card hover:text-primary border border-primary/10"
+                                    ? "bg-primary text-white shadow-lg shadow-primary/25"
+                                    : "bg-card/50 text-muted-foreground hover:bg-card hover:text-primary border border-primary/10"
                                     }`}
                             >
                                 All Topics
@@ -101,8 +109,8 @@ export default function BlogPage() {
                                     key={tag}
                                     onClick={() => setSelectedTag(tag)}
                                     className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${selectedTag === tag
-                                            ? "bg-primary text-white shadow-lg shadow-primary/25"
-                                            : "bg-card/50 text-muted-foreground hover:bg-card hover:text-primary border border-primary/10"
+                                        ? "bg-primary text-white shadow-lg shadow-primary/25"
+                                        : "bg-card/50 text-muted-foreground hover:bg-card hover:text-primary border border-primary/10"
                                         }`}
                                 >
                                     {tag}

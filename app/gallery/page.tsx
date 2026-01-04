@@ -50,6 +50,14 @@ export default function GalleryPage() {
         <div className="flex min-h-screen flex-col bg-background">
             <Navbar />
             <main className="flex-1 pt-24 pb-16">
+                {/* Breadcrumbs */}
+                <div className="container mx-auto px-4 md:px-6 pb-4">
+                    <nav className="text-sm text-muted-foreground">
+                        <a href="/" className="hover:text-primary transition-colors">Home</a>
+                        <span className="mx-2">/</span>
+                        <span className="text-foreground">Gallery</span>
+                    </nav>
+                </div>
                 <div className="container mx-auto px-4 md:px-6">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
