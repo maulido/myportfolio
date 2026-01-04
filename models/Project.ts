@@ -35,39 +35,36 @@ export interface IProject extends Document {
     };
 }
 
-const ProjectSchema: Schema = new Schema({
+const ProjectSchema = new Schema({
     title: { type: String, required: true },
+    slug: { type: String, required: true, unique: true },
     description: { type: String, required: true },
-    tags: { type: [String], default: [] },
-    github: { type: String, required: true },
-    demo: { type: String },
-    image: { type: String },
+    problemStatement: { type: String },
+    solutionApproach: { type: String },
+    imageUrl: { type: String },
+    architectureDiagram: { type: String },
+    screenshots: [{ type: String }],
+    technologies: [{ type: String }],
+    githubUrl: { type: String },
+    liveUrl: { type: String },
+    demoUrl: { type: String },
+    caseStudyUrl: { type: String },
     featured: { type: Boolean, default: false },
-    status: { type: String, default: 'completed' },
-    caseStudy: {
-        problem: String,
-        solution: String,
-        challenges: [String],
-        results: [{
-            metric: String,
-            value: String,
-            description: String,
-        }],
-        screenshots: [String],
-        codeSnippets: [{
-            language: String,
-            code: String,
-            description: String,
-            filename: String,
-        }],
-        technologies: [{
-            name: String,
-            purpose: String,
-        }],
-        teamSize: Number,
-        duration: String,
-        role: String,
-    },
+    screenshots: [String],
+    codeSnippets: [{
+        language: String,
+        code: String,
+        description: String,
+        filename: String,
+    }],
+    technologies: [{
+        name: String,
+        purpose: String,
+    }],
+    teamSize: Number,
+    duration: String,
+    role: String,
+},
 }, {
     timestamps: true
 });
