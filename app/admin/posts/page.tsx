@@ -232,7 +232,7 @@ export default function AdminBlogPostsListPage() {
                                     </div>
                                 )}
                                 <div className="flex items-center gap-2">
-                                    <Link href={`/admin/blog/${item._id}/view`}>
+                                    <Link href={`/admin/posts/${item._id}/view`}>
                                         <button
                                             type="button"
                                             className="p-2 text-sm text-primary hover:bg-primary/10 rounded-lg transition-colors flex items-center gap-1"
@@ -241,7 +241,7 @@ export default function AdminBlogPostsListPage() {
                                             View
                                         </button>
                                     </Link>
-                                    <Link href={`/admin/blog/${item._id}`}>
+                                    <Link href={`/admin/posts/${item._id}`}>
                                         <button
                                             type="button"
                                             className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
