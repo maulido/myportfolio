@@ -1,10 +1,8 @@
 // Seed script to populate skills database with initial data
 // Run with: node --loader ts-node/esm scripts/seedSkills.ts
+// Note: Next.js automatically loads .env.local, no need for dotenv
 
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-
-dotenv.config({ path: '.env.local' });
 
 const SkillSchema = new mongoose.Schema({
     name: String,

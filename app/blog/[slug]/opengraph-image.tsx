@@ -1,6 +1,4 @@
 import { ImageResponse } from 'next/og';
-import dbConnect from '@/lib/db';
-import Post from '@/models/Post';
 
 export const runtime = 'edge';
 export const alt = 'Blog Post';
@@ -14,8 +12,18 @@ export default async function Image({ params }: { params: Promise<{ slug: string
     const { slug } = await params;
 
     try {
-        await dbConnect();
-        const post = await Post.findOne({ slug }).lean();
+        // Use API route instead of direct DB connection (edge runtime doesn't support MongoDB)
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        const response = await fetch(`${baseUrl}/api/blog?slug=${slug}`, {
+            next: { revalidate: 3600 } // Cache for 1 hour
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch post');
+        }
+
+        const data = await response.json();
+        const post = data.data?.[0];
 
         if (!post) {
             return new ImageResponse(
@@ -144,3 +152,4 @@ export default async function Image({ params }: { params: Promise<{ slug: string
         );
     }
 }
+
