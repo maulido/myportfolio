@@ -23,8 +23,8 @@ async function createAdmin() {
             process.exit(0);
         }
 
-        // Get password from environment or use default
-        const password = process.env.ADMIN_PASSWORD || 'admin123';
+        // Use default password
+        const password = 'admin123';
 
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
