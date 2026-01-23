@@ -1,0 +1,373 @@
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\about\page.tsx[24m[0m
+[0m  [2m17:25[22m  [31merror[39m  Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  [2m@next/next/no-html-link-for-pages[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\analytics\page.tsx[24m[0m
+[0m  [2m21:8[22m  [33mwarning[39m  React Hook useEffect has a missing dependency: 'fetchStats'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\career\[id]\view\page.tsx[24m[0m
+[0m  [2m118:77[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m118:90[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\career\page.tsx[24m[0m
+[0m  [2m107:77[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m107:99[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m155:78[22m  [31merror[39m  Unexpected any. Specify a different type                         [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\certifications\[id]\view\page.tsx[24m[0m
+[0m  [2m108:77[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m108:90[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\certifications\new\page.tsx[24m[0m
+[0m    [2m5:40[22m  [33mwarning[39m  'Upload' is defined but never used        [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m41:60[22m  [31merror[39m    Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m   [2m56:69[22m  [31merror[39m    Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m293:71[22m  [31merror[39m    Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\certifications\page.tsx[24m[0m
+[0m  [2m99:77[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m99:99[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\gallery\[id]\page.tsx[24m[0m
+[0m  [2m50:73[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\gallery\[id]\view\page.tsx[24m[0m
+[0m  [2m105:77[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m105:90[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\gallery\new\page.tsx[24m[0m
+[0m  [2m5:27[22m  [33mwarning[39m  'Upload' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\gallery\page.tsx[24m[0m
+[0m  [2m96:77[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m96:99[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\guestbook\page.tsx[24m[0m
+[0m   [2m4:17[22m  [33mwarning[39m  'X' is defined but never used                          [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m5:10[22m  [33mwarning[39m  'BulkActions' is defined but never used                [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m5:23[22m  [33mwarning[39m  'bulkApproveAction' is defined but never used          [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m5:42[22m  [33mwarning[39m  'bulkDeleteAction' is defined but never used           [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m5:60[22m  [33mwarning[39m  'bulkSpamAction' is defined but never used             [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m20:12[22m  [33mwarning[39m  'selectedIds' is assigned a value but never used       [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m42:11[22m  [33mwarning[39m  'handleBulkAction' is assigned a value but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m56:11[22m  [33mwarning[39m  'toggleSelection' is assigned a value but never used   [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m62:11[22m  [33mwarning[39m  'selectAll' is assigned a value but never used         [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m66:11[22m  [33mwarning[39m  'deselectAll' is assigned a value but never used       [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\page.tsx[24m[0m
+[0m    [2m3:22[22m   [33mwarning[39m  'signOut' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m    [2m4:10[22m   [33mwarning[39m  'useRouter' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m    [2m6:24[22m   [33mwarning[39m  'LayoutDashboard' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m    [2m6:121[22m  [33mwarning[39m  'Package' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m    [2m6:130[22m  [33mwarning[39m  'MessageSquare' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m    [2m6:145[22m  [33mwarning[39m  'FolderOpen' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m    [2m6:157[22m  [33mwarning[39m  'BarChart3' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m96:11[22m   [33mwarning[39m  'AnalyticsData' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m113:23[22m   [33mwarning[39m  'setActiveTab' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m127:12[22m   [33mwarning[39m  'isEditingAbout' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m127:28[22m   [33mwarning[39m  'setIsEditingAbout' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m128:12[22m   [33mwarning[39m  'aboutMeEdit' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m144:8[22m    [33mwarning[39m  React Hook useEffect has missing dependencies: 'session' and 'status'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     [2mreact-hooks/exhaustive-deps[22m[0m
+[0m  [2m168:128[22m  [33mwarning[39m  'analyticsData' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m194:67[22m   [31merror[39m    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m236:44[22m   [31merror[39m    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m329:13[22m   [31merror[39m    Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mD:\Apps\portfolio-website\app\admin\page.tsx:329:13[0m
+[0m  327 |     useEffect(() => {[0m
+[0m  328 |         if (status === "authenticated") {[0m
+[0m> 329 |             fetchData();[0m
+[0m      |             ^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  330 |         }[0m
+[0m  331 |     }, [status]);[0m
+[0m  332 |  [2mreact-hooks/set-state-in-effect[22m[0m
+[0m  [2m334:9[22m    [31merror[39m    Error: Calling setState synchronously within an effect can trigger cascading renders[0m
+[0m[0m
+[0mEffects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:[0m
+[0m* Update external systems with the latest state from React.[0m
+[0m* Subscribe for updates from some external system, calling setState in a callback function when external state changes.[0m
+[0m[0m
+[0mCalling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).[0m
+[0m[0m
+[0mD:\Apps\portfolio-website\app\admin\page.tsx:334:9[0m
+[0m  332 |[0m
+[0m  333 |     useEffect(() => {[0m
+[0m> 334 |         setSearchTerm("");[0m
+[0m      |         ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect[0m
+[0m  335 |     }, [activeTab]);[0m
+[0m  336 |[0m
+[0m  337 |     if (status === "loading") {                  [2mreact-hooks/set-state-in-effect[22m[0m
+[0m  [2m352:108[22m  [31merror[39m    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m352:129[22m  [31merror[39m    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m404:110[22m  [33mwarning[39m  Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   [2mjsx-a11y/alt-text[22m[0m
+[0m  [2m628:70[22m   [33mwarning[39m  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       [2m@next/next/no-img-element[22m[0m
+[0m  [2m698:70[22m   [33mwarning[39m  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       [2m@next/next/no-img-element[22m[0m
+[0m  [2m728:37[22m   [33mwarning[39m  Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   [2mjsx-a11y/alt-text[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\posts\[id]\view\page.tsx[24m[0m
+[0m  [2m110:77[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m110:90[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\posts\page.tsx[24m[0m
+[0m  [2m105:77[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m105:99[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m162:80[22m  [31merror[39m  Unexpected any. Specify a different type                         [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\projects\[id]\view\page.tsx[24m[0m
+[0m  [2m122:77[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m122:90[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\projects\new\page.tsx[24m[0m
+[0m  [2m5:27[22m  [33mwarning[39m  'Plus' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\projects\page.tsx[24m[0m
+[0m    [2m4:67[22m  [33mwarning[39m  'ExternalLink' is defined but never used                         [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m115:77[22m  [31merror[39m    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m115:99[22m  [31merror[39m    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m172:80[22m  [31merror[39m    Unexpected any. Specify a different type                         [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\skills\[id]\page.tsx[24m[0m
+[0m  [2m32:8[22m  [33mwarning[39m  React Hook useEffect has missing dependencies: 'fetchSkill' and 'params'. Either include them or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\skills\[id]\view\page.tsx[24m[0m
+[0m  [2m115:77[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m115:89[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\skills\page.tsx[24m[0m
+[0m   [2m41:43[22m  [31merror[39m  Unexpected any. Specify a different type                         [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m110:77[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m110:98[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\testimonials\[id]\view\page.tsx[24m[0m
+[0m  [2m189:29[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m189:48[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\testimonials\page.tsx[24m[0m
+[0m  [2m200:45[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m200:64[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\admin\uses\page.tsx[24m[0m
+[0m   [2m21:11[22m  [33mwarning[39m  'router' is assigned a value but never used                                                                                                                                                                                                                                              [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m42:66[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m100:77[22m  [31merror[39m    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                          [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m100:98[22m  [31merror[39m    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`                                                                                                                                                                                                                          [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m168:45[22m  [33mwarning[39m  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  [2m@next/next/no-img-element[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\api\about\route.ts[24m[0m
+[0m  [2m60:29[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\api\admin\setup\route.ts[24m[0m
+[0m  [2m18:15[22m  [33mwarning[39m  'newAdmin' is assigned a value but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\api\analytics\route.ts[24m[0m
+[0m   [2m8:14[22m  [33mwarning[39m  'dbError' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m28:14[22m  [33mwarning[39m  'dbError' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\api\analytics\session\route.ts[24m[0m
+[0m  [2m14:14[22m  [33mwarning[39m  'e' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\api\analytics\session\stats\route.ts[24m[0m
+[0m  [2m8:14[22m  [33mwarning[39m  'e' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\api\analytics\track\route.ts[24m[0m
+[0m  [2m56:22[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m65:46[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\api\auth\[...nextauth]\route.ts[24m[0m
+[0m   [2m1:26[22m  [33mwarning[39m  'Account' is defined but never used       [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m1:35[22m  [33mwarning[39m  'Profile' is defined but never used       [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m47:54[22m  [31merror[39m    Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m49:34[22m  [31merror[39m    Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\api\chat\route.ts[24m[0m
+[0m  [2m43:21[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\api\endorsements\route.ts[24m[0m
+[0m  [2m26:58[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\api\guestbook\[id]\route.ts[24m[0m
+[0m  [2m31:21[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\api\guestbook\bulk\route.ts[24m[0m
+[0m  [2m54:21[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\api\guestbook\pending\route.ts[24m[0m
+[0m  [2m1:10[22m  [33mwarning[39m  'NextRequest' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\api\guestbook\route.ts[24m[0m
+[0m  [2m79:21[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\api\media\route.ts[24m[0m
+[0m  [2m40:21[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\api\newsletter\route.ts[24m[0m
+[0m  [2m1:10[22m  [33mwarning[39m  'NextRequest' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\api\skills\route.ts[24m[0m
+[0m  [2m12:51[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\api\uploadthing\core.ts[24m[0m
+[0m  [2m9:21[22m  [33mwarning[39m  'req' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\api\uses\[id]\route.ts[24m[0m
+[0m  [2m57:21[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\api\uses\route.ts[24m[0m
+[0m  [2m15:49[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m46:21[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\blog\[slug]\page.tsx[24m[0m
+[0m  [2m49:14[22m  [33mwarning[39m  'e' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\blog\page.tsx[24m[0m
+[0m  [2m62:25[22m  [31merror[39m  Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  [2m@next/next/no-html-link-for-pages[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\certifications\page.tsx[24m[0m
+[0m    [2m7:74[22m  [33mwarning[39m  'FileCheck' is defined but never used                                                                                                                                                                                                                                                    [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m101:25[22m  [31merror[39m    Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages                                                                                                                                    [2m@next/next/no-html-link-for-pages[22m[0m
+[0m  [2m249:49[22m  [33mwarning[39m  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  [2m@next/next/no-img-element[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\contact\page.tsx[24m[0m
+[0m  [2m13:25[22m  [31merror[39m  Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  [2m@next/next/no-html-link-for-pages[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\gallery\page.tsx[24m[0m
+[0m    [2m7:8[22m   [33mwarning[39m  'Image' is defined but never used                                                                                                                                                                                                                                                        [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m   [2m56:25[22m  [31merror[39m    Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages                                                                                                                                    [2m@next/next/no-html-link-for-pages[22m[0m
+[0m  [2m108:45[22m  [33mwarning[39m  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  [2m@next/next/no-img-element[22m[0m
+[0m  [2m163:37[22m  [33mwarning[39m  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  [2m@next/next/no-img-element[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\guestbook\page.tsx[24m[0m
+[0m  [2m34:8[22m  [33mwarning[39m  React Hook useEffect has a missing dependency: 'fetchEntries'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\layout.tsx[24m[0m
+[0m  [2m4:8[22m  [33mwarning[39m  'FloatingActionButton' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\projects\[slug]\page.tsx[24m[0m
+[0m  [2m46:8[22m  [33mwarning[39m  React Hook useEffect has a missing dependency: 'fetchProject'. Either include it or remove the dependency array  [2mreact-hooks/exhaustive-deps[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\projects\page.tsx[24m[0m
+[0m  [2m13:25[22m  [31merror[39m  Do not use an `<a>` element to navigate to `/`. Use `<Link />` from `next/link` instead. See: https://nextjs.org/docs/messages/no-html-link-for-pages  [2m@next/next/no-html-link-for-pages[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\app\uses\page.tsx[24m[0m
+[0m   [2m9:8[22m   [33mwarning[39m  'Link' is defined but never used                                 [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m22:37[22m  [31merror[39m    Unexpected any. Specify a different type                         [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m81:67[22m  [31merror[39m    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\components\About.tsx[24m[0m
+[0m  [2m121:37[22m  [33mwarning[39m  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  [2m@next/next/no-img-element[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\components\AnalyticsTracker.tsx[24m[0m
+[0m  [2m62:22[22m  [33mwarning[39m  'e' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\components\CertificationDetailModal.tsx[24m[0m
+[0m  [2m96:37[22m  [33mwarning[39m  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  [2m@next/next/no-img-element[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\components\Certifications.tsx[24m[0m
+[0m  [2m124:37[22m  [33mwarning[39m  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  [2m@next/next/no-img-element[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\components\DownloadCVModal.tsx[24m[0m
+[0m   [2m5:10[22m  [33mwarning[39m  'Download' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m35:18[22m  [33mwarning[39m  'err' is defined but never used       [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m59:18[22m  [33mwarning[39m  'err' is defined but never used       [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\components\ImageUpload.tsx[24m[0m
+[0m  [2m103:87[22m   [31merror[39m  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m103:131[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m103:147[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\components\Projects.tsx[24m[0m
+[0m  [2m78:30[22m  [31merror[39m  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\components\RichTextEditor.tsx[24m[0m
+[0m  [2m38:61[22m  [33mwarning[39m  'placeholder' is assigned a value but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m39:12[22m  [33mwarning[39m  'isUploading' is assigned a value but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\components\SkillEndorsement.tsx[24m[0m
+[0m  [2m53:18[22m  [33mwarning[39m  'error' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\components\Skills.tsx[24m[0m
+[0m  [2m59:62[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\components\Timeline.tsx[24m[0m
+[0m  [2m91:37[22m  [33mwarning[39m  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  [2m@next/next/no-img-element[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\components\admin\AboutMeEditor.tsx[24m[0m
+[0m    [2m4:25[22m  [33mwarning[39m  'Upload' is defined but never used                                                                                                                                                                                                                                                       [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m155:33[22m  [33mwarning[39m  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  [2m@next/next/no-img-element[22m[0m
+[0m  [2m182:67[22m  [31merror[39m    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m448:29[22m  [33mwarning[39m  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  [2m@next/next/no-img-element[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\components\admin\AdminSidebar.tsx[24m[0m
+[0m  [2m12:5[22m   [33mwarning[39m  'Mail' is defined but never used                                                                             [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m54:21[22m  [33mwarning[39m  Image elements must have an alt prop, either with meaningful text, or an empty string for decorative images  [2mjsx-a11y/alt-text[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\components\blog\BlogSearch.tsx[24m[0m
+[0m  [2m79:37[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m  [2m79:51[22m  [31merror[39m  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  [2mreact/no-unescaped-entities[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\components\blog\ShareButtons.tsx[24m[0m
+[0m  [2m32:18[22m  [33mwarning[39m  'error' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m45:22[22m  [33mwarning[39m  'error' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\components\project\CaseStudy.tsx[24m[0m
+[0m  [2m201:33[22m  [33mwarning[39m  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  [2m@next/next/no-img-element[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\lib\analytics.ts[24m[0m
+[0m  [2m6:33[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m9:71[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\lib\iconMap.tsx[24m[0m
+[0m  [2m50:5[22m  [33mwarning[39m  'SiRabbitmq' is defined but never used           [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m52:5[22m  [33mwarning[39m  'SiGrafana' is defined but never used            [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m53:5[22m  [33mwarning[39m  'SiPrometheus' is defined but never used         [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m56:5[22m  [33mwarning[39m  'SiVagrant' is defined but never used            [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m57:5[22m  [33mwarning[39m  'SiVirtualbox' is defined but never used         [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m58:5[22m  [33mwarning[39m  'SiVmware' is defined but never used             [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m78:5[22m  [33mwarning[39m  'SiSpring' is defined but never used             [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m79:5[22m  [33mwarning[39m  'SiDotnet' is defined but never used             [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m80:5[22m  [33mwarning[39m  'SiUnity' is defined but never used              [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m81:5[22m  [33mwarning[39m  'SiUnrealengine' is defined but never used       [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m82:5[22m  [33mwarning[39m  'SiGodotengine' is defined but never used        [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m83:5[22m  [33mwarning[39m  'SiBlender' is defined but never used            [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m86:5[22m  [33mwarning[39m  'SiAdobepremierepro' is defined but never used   [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m87:5[22m  [33mwarning[39m  'SiAdobeaftereffects' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\lib\rate-limit.ts[24m[0m
+[0m  [2m94:5[22m  [33mwarning[39m  'windowMs' is assigned a value but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\middleware.ts[24m[0m
+[0m  [2m10:25[22m  [33mwarning[39m  'request' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\models\Settings.ts[24m[0m
+[0m  [2m5:12[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\scripts\create-admin.js[24m[0m
+[0m   [2m5:18[22m  [31merror[39m    A `require()` style import is forbidden     [2m@typescript-eslint/no-require-imports[22m[0m
+[0m   [2m6:16[22m  [31merror[39m    A `require()` style import is forbidden     [2m@typescript-eslint/no-require-imports[22m[0m
+[0m  [2m16:23[22m  [31merror[39m    A `require()` style import is forbidden     [2m@typescript-eslint/no-require-imports[22m[0m
+[0m  [2m33:15[22m  [33mwarning[39m  'admin' is assigned a value but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\scripts\migrateAboutMe.js[24m[0m
+[0m  [2m4:18[22m  [31merror[39m  A `require()` style import is forbidden  [2m@typescript-eslint/no-require-imports[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\scripts\seed-api.js[24m[0m
+[0m  [2m108:11[22m  [33mwarning[39m  'baseUrl' is assigned a value but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\scripts\seed.js[24m[0m
+[0m   [2m5:18[22m  [31merror[39m    A `require()` style import is forbidden           [2m@typescript-eslint/no-require-imports[22m[0m
+[0m  [2m76:25[22m  [31merror[39m    A `require()` style import is forbidden           [2m@typescript-eslint/no-require-imports[22m[0m
+[0m  [2m77:25[22m  [31merror[39m    A `require()` style import is forbidden           [2m@typescript-eslint/no-require-imports[22m[0m
+[0m  [2m78:29[22m  [31merror[39m    A `require()` style import is forbidden           [2m@typescript-eslint/no-require-imports[22m[0m
+[0m  [2m95:15[22m  [33mwarning[39m  'testimonial' is assigned a value but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4mD:\Apps\portfolio-website\scripts\updateAboutMe.js[24m[0m
+[0m  [2m7:18[22m  [31merror[39m  A `require()` style import is forbidden  [2m@typescript-eslint/no-require-imports[22m[0m
+[0m[0m
+[0m[31m[1m✖ 182 problems (88 errors, 94 warnings)[22m[39m[0m
+[0m[31m[1m[22m[39m[0m
