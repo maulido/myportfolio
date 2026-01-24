@@ -37,6 +37,10 @@ git commit -m "test: verify auto-sync to depportfolio"
 git push origin main
 ```
 
+> [!IMPORTANT]
+> **If you see "repository not found" error**, this means the Personal Access Token hasn't been set up yet. 
+> See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for detailed step-by-step instructions.
+
 ### Step 4: Verify Deployment
 
 1. **Check GitHub Actions**:
