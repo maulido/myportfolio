@@ -155,25 +155,29 @@ export default function EditCareerPage({ params }: { params: Promise<{ id: strin
                     {/* Title and Organization */}
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Title / Position</label>
+                            <label className="text-sm font-medium leading-none">
+                                {formData.type === 'education' ? "Degree / Certificate" : formData.type === 'achievement' ? "Award / Achievement Name" : "Title / Position"}
+                            </label>
                             <input
                                 required
                                 name="title"
                                 value={formData.title}
                                 onChange={handleChange}
                                 className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="Senior Software Engineer"
+                                placeholder={formData.type === 'education' ? "Bachelor of Science in Computer Science" : formData.type === 'achievement' ? "Best Developer Award" : "Senior Software Engineer"}
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Organization / Company</label>
+                            <label className="text-sm font-medium leading-none">
+                                {formData.type === 'education' ? "University / School" : formData.type === 'achievement' ? "Issuing Organization / Event" : "Organization / Company"}
+                            </label>
                             <input
                                 required
                                 name="organization"
                                 value={formData.organization}
                                 onChange={handleChange}
                                 className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="Tech Company Inc."
+                                placeholder={formData.type === 'education' ? "University of Technology" : formData.type === 'achievement' ? "Tech Conference 2024" : "Tech Company Inc."}
                             />
                         </div>
                     </div>
@@ -283,7 +287,9 @@ export default function EditCareerPage({ params }: { params: Promise<{ id: strin
 
                     {/* Responsibilities */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium leading-none">Key Responsibilities</label>
+                        <label className="text-sm font-medium leading-none">
+                            {formData.type === 'education' ? "Key Courses / Research" : formData.type === 'achievement' ? "Key Details / Criteria" : "Key Responsibilities"}
+                        </label>
                         <div className="flex gap-2">
                             <input
                                 value={responsibilityInput}
@@ -295,7 +301,7 @@ export default function EditCareerPage({ params }: { params: Promise<{ id: strin
                                     }
                                 }}
                                 className="flex h-10 flex-1 rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="Add a responsibility..."
+                                placeholder={formData.type === 'education' ? "Data Structures, Algorithms..." : formData.type === 'achievement' ? "judged by industry experts..." : "Add a responsibility..."}
                             />
                             <button
                                 type="button"
@@ -319,7 +325,9 @@ export default function EditCareerPage({ params }: { params: Promise<{ id: strin
 
                     {/* Achievements */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium leading-none">Key Achievements</label>
+                        <label className="text-sm font-medium leading-none">
+                            {formData.type === 'education' ? "Honors / Awards" : formData.type === 'achievement' ? "Additional Highlights" : "Key Achievements"}
+                        </label>
                         <div className="flex gap-2">
                             <input
                                 value={achievementInput}

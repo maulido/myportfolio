@@ -84,7 +84,14 @@ import {
     SiAdobephotoshop,
     SiAdobeillustrator,
     SiAdobepremierepro,
-    SiAdobeaftereffects
+    SiAdobeaftereffects,
+    SiMikrotik,
+    SiJunipernetworks,
+    SiFortinet,
+    SiHuawei,
+    SiPaloaltonetworks,
+    SiUbiquiti,
+    SiWireshark
 } from "react-icons/si";
 import { Code2, Database, Server, Cloud, Terminal, Smartphone, Palette, Package } from "lucide-react";
 import React from "react";
@@ -151,6 +158,13 @@ export const iconMap: Record<string, React.ComponentType<{ className?: string }>
     "SiRedhat": SiRedhat,
     "SiAlpinelinux": SiAlpinelinux,
     "SiMacos": SiMacos,
+    "SiMikrotik": SiMikrotik,
+    "SiJunipernetworks": SiJunipernetworks,
+    "SiFortinet": SiFortinet,
+    "SiHuawei": SiHuawei,
+    "SiPaloaltonetworks": SiPaloaltonetworks,
+    "SiUbiquiti": SiUbiquiti,
+    "SiWireshark": SiWireshark,
 
     // Tools
     "SiGit": SiGit,
@@ -216,7 +230,7 @@ export const getIconsByCategory = () => {
         "Database": ["SiMongodb", "SiPostgresql", "SiMysql", "SiRedis", "SiFirebase", "SiSupabase", "SiPrisma"],
         "DevOps": ["SiDocker", "SiKubernetes", "SiJenkins", "SiGithubactions", "SiTerraform", "SiAnsible"],
         "Cloud": ["SiAmazonwebservices", "SiVercel", "SiNetlify", "SiHeroku", "SiDigitalocean"],
-        "Networking": ["SiCisco", "SiLinux", "SiUbuntu", "SiNginx", "SiApache"],
+        "Networking": ["SiCisco", "SiMikrotik", "SiJunipernetworks", "SiFortinet", "SiHuawei", "SiPaloaltonetworks", "SiUbiquiti", "SiWireshark", "SiLinux", "SiUbuntu", "SiNginx", "SiApache"],
         "Tools": ["SiGit", "SiWebpack", "SiVite", "SiPostman", "SiJest", "SiCypress"],
         "Mobile": ["SiAndroid", "SiIos", "SiFlutter", "SiSwift", "SiKotlin"],
         "Design": ["SiFigma", "SiAdobexd", "SiSketch", "SiAdobephotoshop"],
