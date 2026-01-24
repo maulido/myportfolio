@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
 import Post from "@/models/Post";
+import { rateLimit } from "@/lib/rate-limit";
+
+const limiter = rateLimit({
+    interval: 60 * 1000, // 60 seconds
+    uniqueTokenPerInterval: 500, // Max 500 unique IPs per minute
+});
 
 export async function GET(
     request: NextRequest,
@@ -42,6 +48,14 @@ export async function POST(
     try {
         const { id: slug } = await params;
         const { action } = await request.json();
+
+        // Rate Limiting
+        try {
+            const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+            await limiter.check(10, ip); // 10 requests per minute per IP
+        } catch {
+            return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 });
+        }
 
         if (!['view', 'like'].includes(action)) {
             return NextResponse.json(
