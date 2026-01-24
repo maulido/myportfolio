@@ -22,6 +22,9 @@ NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
 # AI Chat (Optional)
 GEMINI_API_KEY=your-gemini-api-key-here
 
+# GitHub Activity (Optional - increases rate limit from 60 to 5000/hour)
+NEXT_PUBLIC_GITHUB_TOKEN=your-github-personal-access-token
+
 # Base URL (for OG images and absolute URLs)
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 

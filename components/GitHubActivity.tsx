@@ -23,34 +23,70 @@ export function GitHubActivity({ username = "maulido" }: { username?: string }) 
     useEffect(() => {
         async function fetchRepos() {
             try {
+                // Prepare headers with optional GitHub token
+                const headers: HeadersInit = {
+                    'Accept': 'application/vnd.github.v3+json',
+                };
+
+                // Add token if available (increases rate limit from 60 to 5000/hour)
+                const token = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+
                 const res = await fetch(
                     `https://api.github.com/users/${username}/repos?sort=updated&per_page=6`,
                     {
-                        // Add timeout and error handling
-                        signal: AbortSignal.timeout(5000), // 5 second timeout
+                        headers,
+                        signal: controller.signal,
+                        cache: 'force-cache', // Cache the response
+                        next: { revalidate: 3600 } // Revalidate every hour
                     }
                 );
 
+                clearTimeout(timeoutId);
+
                 if (!res.ok) {
-                    throw new Error(`GitHub API returned ${res.status}`);
+                    // Handle rate limiting gracefully
+                    if (res.status === 403) {
+                        console.warn('GitHub API rate limit exceeded');
+                    } else {
+                        console.warn(`GitHub API returned ${res.status}`);
+                    }
+                    setError(true);
+                    return;
                 }
 
                 const data = await res.json();
 
                 // Validate response
-                if (Array.isArray(data)) {
+                if (Array.isArray(data) && data.length > 0) {
                     setRepos(data);
+                } else if (Array.isArray(data) && data.length === 0) {
+                    console.info('No GitHub repositories found');
+                    setError(true);
                 } else {
                     console.warn('GitHub API returned unexpected format');
                     setError(true);
                 }
             } catch (error) {
-                console.error('Failed to fetch GitHub repos:', error);
+                // Silently handle errors - component will just not render
+                if (error instanceof Error) {
+                    if (error.name === 'AbortError') {
+                        console.warn('GitHub API request timed out');
+                    } else {
+                        console.warn('Failed to fetch GitHub repos:', error.message);
+                    }
+                }
                 setError(true);
             } finally {
                 setLoading(false);
             }
         }
+
         fetchRepos();
     }, [username]);
 
