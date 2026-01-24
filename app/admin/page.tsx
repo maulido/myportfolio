@@ -3,7 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LogOut, Plus, LayoutDashboard, FileText, Briefcase, Image, Award, MessageCircle, Pencil, Trash2, Search, Mail, Package, MessageSquare, FolderOpen, BarChart3 } from "lucide-react";
+import { LogOut, Plus, LayoutDashboard, FileText, Briefcase, Image, Award, MessageCircle, Pencil, Trash2, Search, Mail, Package, MessageSquare, FolderOpen, BarChart3, Eye } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import AboutMeEditor from "@/components/admin/AboutMeEditor";
@@ -17,8 +17,8 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
-    AreaChart,
-    Area
+    BarChart,
+    Bar
 } from "recharts";
 
 // Type definitions
@@ -27,6 +27,8 @@ interface Post {
     title: string;
     category: string;
     createdAt: string;
+    views?: number;
+    likes?: number;
 }
 
 interface Project {
@@ -135,6 +137,32 @@ export default function AdminDashboard() {
         id: '',
         name: ''
     });
+
+    const [selectedPosts, setSelectedPosts] = useState<Set<string>>(new Set());
+
+    const handleBulkDelete = async (type: 'post' | 'project') => {
+        const ids = type === 'post' ? Array.from(selectedPosts) : []; // Extend for projects later
+
+        if (!confirm(`Are you sure you want to delete ${ids.length} items?`)) return;
+
+        try {
+            const res = await fetch('/api/admin/bulk-delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids, type })
+            });
+
+            if (res.ok) {
+                alert('Bulk delete successful');
+                fetchData();
+                setSelectedPosts(new Set());
+            } else {
+                alert('Failed to delete items');
+            }
+        } catch (error) {
+            console.error('Bulk delete failed', error);
+        }
+    };
 
     // Debug: Log component mount
     useEffect(() => {
@@ -418,20 +446,15 @@ export default function AdminDashboard() {
                             {/* Analytics Charts */}
                             <div className="grid gap-8 lg:grid-cols-2">
                                 <div className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-3xl p-6 shadow-xl">
-                                    <h3 className="font-bold mb-6 text-sm uppercase tracking-widest text-muted-foreground">Traffic Analytics</h3>
+                                    <h3 className="font-bold mb-6 text-sm uppercase tracking-widest text-muted-foreground">Top Content</h3>
                                     <div className="w-full h-[320px]">
                                         <ResponsiveContainer width="100%" height="100%">
-                                            <AreaChart data={analyticsData}>
-                                                <defs>
-                                                    <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                                                        <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                                                    </linearGradient>
-                                                </defs>
+                                            <BarChart data={posts.sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5)}>
                                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(139, 92, 246, 0.1)" />
-                                                <XAxis dataKey="name" fontSize={10} axisLine={false} tickLine={false} />
+                                                <XAxis dataKey="title" fontSize={10} axisLine={false} tickLine={false} tickFormatter={(val) => val.length > 10 ? val.substring(0, 10) + '...' : val} />
                                                 <YAxis fontSize={10} axisLine={false} tickLine={false} />
                                                 <Tooltip
+                                                    cursor={{ fill: 'rgba(139, 92, 246, 0.1)' }}
                                                     contentStyle={{
                                                         background: "var(--card)",
                                                         color: "var(--foreground)",
@@ -440,8 +463,9 @@ export default function AdminDashboard() {
                                                         fontSize: "12px"
                                                     }}
                                                 />
-                                                <Area type="monotone" dataKey="views" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorViews)" />
-                                            </AreaChart>
+                                                <Bar dataKey="views" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="Views" />
+                                                <Bar dataKey="likes" fill="#ec4899" radius={[4, 4, 0, 0]} name="Likes" />
+                                            </BarChart>
                                         </ResponsiveContainer>
                                     </div>
                                 </div>
@@ -485,7 +509,17 @@ export default function AdminDashboard() {
                             className="space-y-6"
                         >
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                                <h2 className="text-3xl font-bold tracking-tight">Manage Posts</h2>
+                                <div className="flex items-center gap-4">
+                                    <h2 className="text-3xl font-bold tracking-tight">Manage Posts</h2>
+                                    {selectedPosts.size > 0 && (
+                                        <button
+                                            onClick={() => handleBulkDelete('post')}
+                                            className="px-3 py-1 text-xs font-bold bg-red-500/10 text-red-500 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-colors animate-in fade-in slide-in-from-left-4"
+                                        >
+                                            Delete {selectedPosts.size} Selected
+                                        </button>
+                                    )}
+                                </div>
                                 <div className="flex items-center gap-4">
                                     <div className="relative">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -508,15 +542,53 @@ export default function AdminDashboard() {
 
                             {posts.filter((p: Post) => p.title.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
                                 <div className="grid gap-4">
+                                    <div className="flex items-center gap-2 px-4 pb-2 text-sm text-muted-foreground">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedPosts.size === posts.length && posts.length > 0}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setSelectedPosts(new Set(posts.map(p => p._id)));
+                                                } else {
+                                                    setSelectedPosts(new Set());
+                                                }
+                                            }}
+                                            className="rounded border-primary/20 bg-card data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                                        />
+                                        <span>Select All</span>
+                                    </div>
                                     {posts.filter((p: Post) => p.title.toLowerCase().includes(searchTerm.toLowerCase())).map((post: Post) => (
-                                        <div key={post._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
+                                        <div key={post._id} className={`bg-card/40 backdrop-blur-md border ${selectedPosts.has(post._id) ? 'border-primary' : 'border-primary/10'} rounded-2xl p-4 flex items-center justify-between transition-colors`}>
                                             <div className="flex items-center gap-4">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedPosts.has(post._id)}
+                                                    onChange={(e) => {
+                                                        const newSelected = new Set(selectedPosts);
+                                                        if (e.target.checked) {
+                                                            newSelected.add(post._id);
+                                                        } else {
+                                                            newSelected.delete(post._id);
+                                                        }
+                                                        setSelectedPosts(newSelected);
+                                                    }}
+                                                    className="rounded border-primary/20 bg-card"
+                                                />
                                                 <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
                                                     {post.title.charAt(0)}
                                                 </div>
                                                 <div>
                                                     <h4 className="font-bold">{post.title}</h4>
-                                                    <p className="text-xs text-muted-foreground">{post.category} • {new Date(post.createdAt).toLocaleDateString()}</p>
+                                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                        <span>{post.category}</span>
+                                                        <span>•</span>
+                                                        <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                                                        <span>•</span>
+                                                        <span className="flex items-center gap-1">
+                                                            <Eye className="h-3 w-3" />
+                                                            {post.views || 0}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2">
