@@ -470,7 +470,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👤 Author
 
-**Syahnan Nur Hidayat**
+**Maulido Syahbani**
 - Website: [syoverly.my.id](https://syoverly.my.id)
 - GitHub: [@maulido](https://github.com/maulido)
 
@@ -489,7 +489,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 If you have any questions or need help, please:
 - Open an issue on GitHub
 - Contact via website contact form
-- Email: admin@syoverly.my.id
+- Email: maulido.syahbani01@gmail.com
 
 ## 🌟 Show Your Support
 
