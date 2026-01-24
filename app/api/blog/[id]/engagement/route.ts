@@ -4,10 +4,10 @@ import Post from "@/models/Post";
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: Promise<{ slug: string }> }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { slug } = await params;
+        const { id: slug } = await params;
         await dbConnect();
 
         const post = await Post.findOne({ slug }).select("views likes");
@@ -37,10 +37,10 @@ export async function GET(
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: Promise<{ slug: string }> }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { slug } = await params;
+        const { id: slug } = await params;
         const { action } = await request.json();
 
         if (!['view', 'like'].includes(action)) {
