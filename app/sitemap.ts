@@ -16,7 +16,7 @@ interface PostDoc {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const baseUrl = 'https://example.com' // Replace with actual domain
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
 
     // Static routes
     const routes = [

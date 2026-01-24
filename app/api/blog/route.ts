@@ -2,11 +2,19 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Post from '@/models/Post';
 
-export async function GET() {
+export async function GET(req: Request) {
     await dbConnect();
 
     try {
-        const posts = await Post.find({}).sort({ createdAt: -1 }).lean();
+        const { searchParams } = new URL(req.url);
+        const slug = searchParams.get('slug');
+
+        let posts;
+        if (slug) {
+            posts = await Post.find({ slug }).lean();
+        } else {
+            posts = await Post.find({}).sort({ createdAt: -1 }).lean();
+        }
 
         return NextResponse.json(
             { success: true, data: posts },
