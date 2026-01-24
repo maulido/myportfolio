@@ -4,12 +4,15 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { User, Lock, Mail, UserCircle, Save, Key, Calendar, Shield, CheckCircle2 } from "lucide-react";
+import { User, Lock, Mail, UserCircle, Save, Key, Calendar, Shield, CheckCircle2, MapPin, Phone } from "lucide-react";
 
 interface ProfileData {
     username: string;
     name: string;
     email: string;
+    contactEmail?: string;
+    contactPhone?: string;
+    contactLocation?: string;
     createdAt: string;
     updatedAt: string;
 }
@@ -27,6 +30,12 @@ export default function ProfilePage() {
     const [username, setUsername] = useState("");
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
+
+    // Contact info form state
+    const [contactEmail, setContactEmail] = useState("");
+    const [contactPhone, setContactPhone] = useState("");
+    const [contactLocation, setContactLocation] = useState("");
+    const [updatingContact, setUpdatingContact] = useState(false);
 
     // Password form state
     const [currentPassword, setCurrentPassword] = useState("");
@@ -51,6 +60,9 @@ export default function ProfilePage() {
                 setUsername(data.data.username);
                 setName(data.data.name);
                 setEmail(data.data.email);
+                setContactEmail(data.data.contactEmail || "");
+                setContactPhone(data.data.contactPhone || "");
+                setContactLocation(data.data.contactLocation || "");
             } else {
                 toast.error(data.error || "Failed to fetch profile");
             }
@@ -121,6 +133,40 @@ export default function ProfilePage() {
             toast.error("Failed to change password");
         } finally {
             setChangingPassword(false);
+        }
+    };
+
+    const handleUpdateContactInfo = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setUpdatingContact(true);
+
+        try {
+            const res = await fetch("/api/admin/profile", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username,
+                    name,
+                    email,
+                    contactEmail,
+                    contactPhone,
+                    contactLocation
+                })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                setProfile(data.data);
+                toast.success("Contact information updated successfully!");
+            } else {
+                toast.error(data.error || "Failed to update contact information");
+            }
+        } catch (error) {
+            console.error("Error updating contact info:", error);
+            toast.error("Failed to update contact information");
+        } finally {
+            setUpdatingContact(false);
         }
     };
 
@@ -309,6 +355,81 @@ export default function ProfilePage() {
                                     >
                                         <Key className="h-4 w-4" />
                                         {changingPassword ? "Changing..." : "Change Password"}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        {/* Contact Information Card */}
+                        <div className="bg-card border border-border/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+                            <div className="bg-gradient-to-r from-green-500/10 via-green-500/5 to-transparent p-6 border-b border-border/50">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2.5 bg-green-500/10 rounded-lg ring-2 ring-green-500/20">
+                                        <Mail className="h-5 w-5 text-green-500" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-bold">Contact Information</h2>
+                                        <p className="text-sm text-muted-foreground">Public contact details displayed on your website</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <form onSubmit={handleUpdateContactInfo} className="p-6">
+                                <div className="space-y-5">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
+                                            <Mail className="h-4 w-4 text-green-500" />
+                                            Contact Email
+                                        </label>
+                                        <input
+                                            type="email"
+                                            value={contactEmail}
+                                            onChange={(e) => setContactEmail(e.target.value)}
+                                            className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all"
+                                            placeholder="your-email@domain.com"
+                                        />
+                                        <p className="text-xs text-muted-foreground">Email displayed in the "Get in Touch" section</p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
+                                            <Phone className="h-4 w-4 text-green-500" />
+                                            Contact Phone
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={contactPhone}
+                                            onChange={(e) => setContactPhone(e.target.value)}
+                                            className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all"
+                                            placeholder="+62 812 3456 7890"
+                                        />
+                                        <p className="text-xs text-muted-foreground">Phone number displayed publicly</p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
+                                            <MapPin className="h-4 w-4 text-green-500" />
+                                            Location
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={contactLocation}
+                                            onChange={(e) => setContactLocation(e.target.value)}
+                                            className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all"
+                                            placeholder="Jakarta, Indonesia"
+                                        />
+                                        <p className="text-xs text-muted-foreground">Your location or city</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-end mt-6 pt-6 border-t border-border/50">
+                                    <button
+                                        type="submit"
+                                        disabled={updatingContact}
+                                        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold rounded-xl hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-200"
+                                    >
+                                        <Save className="h-4 w-4" />
+                                        {updatingContact ? "Updating..." : "Update Contact Info"}
                                     </button>
                                 </div>
                             </form>

@@ -2,11 +2,28 @@
 
 import { motion } from "framer-motion";
 import { Mail, MapPin, Phone } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast, { Toaster } from 'react-hot-toast';
 
 export function Contact() {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [contactInfo, setContactInfo] = useState({
+        email: "email@example.com",
+        phone: "+1 (555) 123-4567",
+        location: "Jakarta, Indonesia"
+    });
+
+    useEffect(() => {
+        // Fetch contact info from API
+        fetch('/api/contact-info')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    setContactInfo(data.data);
+                }
+            })
+            .catch(err => console.error('Failed to fetch contact info:', err));
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -81,9 +98,9 @@ export function Contact() {
 
                         <div className="space-y-6">
                             {[
-                                { icon: <Mail className="h-6 w-6" />, label: "Email", value: "email@example.com", href: "mailto:email@example.com" },
-                                { icon: <Phone className="h-6 w-6" />, label: "Phone", value: "+1 (555) 123-4567", href: "tel:+15551234567" },
-                                { icon: <MapPin className="h-6 w-6" />, label: "Location", value: "Jakarta, Indonesia", href: "#" }
+                                { icon: <Mail className="h-6 w-6" />, label: "Email", value: contactInfo.email, href: `mailto:${contactInfo.email}` },
+                                { icon: <Phone className="h-6 w-6" />, label: "Phone", value: contactInfo.phone, href: `tel:${contactInfo.phone.replace(/[^0-9+]/g, '')}` },
+                                { icon: <MapPin className="h-6 w-6" />, label: "Location", value: contactInfo.location, href: "#" }
                             ].map((item, i) => (
                                 <motion.a
                                     key={i}

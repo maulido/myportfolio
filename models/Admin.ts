@@ -5,6 +5,9 @@ export interface IAdmin extends Document {
     password: string;
     name: string;
     email: string;
+    contactEmail?: string;
+    contactPhone?: string;
+    contactLocation?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -14,6 +17,9 @@ const AdminSchema: Schema = new Schema({
     password: { type: String, required: true },
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
+    contactEmail: { type: String },
+    contactPhone: { type: String },
+    contactLocation: { type: String },
 }, {
     timestamps: true
 });

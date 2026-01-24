@@ -31,6 +31,9 @@ export async function GET() {
                 username: admin.username,
                 name: admin.name,
                 email: admin.email,
+                contactEmail: admin.contactEmail,
+                contactPhone: admin.contactPhone,
+                contactLocation: admin.contactLocation,
                 createdAt: admin.createdAt,
                 updatedAt: admin.updatedAt
             }
@@ -55,7 +58,7 @@ export async function PUT(req: NextRequest) {
     try {
         await dbConnect();
         const session = authResult as any;
-        const { username, name, email } = await req.json();
+        const { username, name, email, contactEmail, contactPhone, contactLocation } = await req.json();
 
         // Validate input
         if (!username || !name || !email) {
@@ -89,7 +92,7 @@ export async function PUT(req: NextRequest) {
         // Update admin profile
         const admin = await Admin.findByIdAndUpdate(
             session.user.id,
-            { username, name, email },
+            { username, name, email, contactEmail, contactPhone, contactLocation },
             { new: true, runValidators: true }
         ).select('-password');
 
@@ -108,6 +111,9 @@ export async function PUT(req: NextRequest) {
                 username: admin.username,
                 name: admin.name,
                 email: admin.email,
+                contactEmail: admin.contactEmail,
+                contactPhone: admin.contactPhone,
+                contactLocation: admin.contactLocation,
                 updatedAt: admin.updatedAt
             }
         });
