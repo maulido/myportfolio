@@ -117,6 +117,12 @@ export default function AdminSidebar() {
                     Profile
                 </button>
             </Link>
+            <Link href="/admin/settings" className="w-full">
+                <button className={`w-full inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${isActive("/admin/settings") ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}>
+                    <Settings className="mr-3 h-4 w-4" />
+                    Site Settings
+                </button>
+            </Link>
         </aside>
     );
 }

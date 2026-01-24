@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import FloatingActionButton from "@/components/FAB";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { getGlobalSettings } from "@/lib/settings";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,45 +16,55 @@ const geistMono = Geist_Mono({
 });
 
 import ClientLayout from "@/components/ClientLayout";
-
-export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'),
-  title: "Professional Portfolio | Network & Software Engineer",
-  description: "Explore the portfolio of a dedicated Network and Software Engineer specializing in modern web apps and robust network solutions.",
-  keywords: ["Software Engineer", "Network Engineer", "Portfolio", "Next.js", "React", "Cisco"],
-  authors: [{ name: "John Doe" }],
-  openGraph: {
-    title: "Professional Portfolio | John Doe",
-    description: "Digital Creator: Building robust network infrastructures and scalable web applications.",
-    url: "https://your-domain.com",
-    siteName: "John Doe Portfolio",
-    images: [
-      {
-        url: "/og-image.png", // Make sure this exists in public/
-        width: 1200,
-        height: 630,
-      },
-    ],
-    locale: "en_US",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "John Doe | Network & Software Engineer",
-    description: "Building robust network infrastructures and scalable web applications.",
-    images: ["/og-image.png"],
-  },
-};
-
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { ScrollProgress } from "@/components/Widgets";
 import { ScrollToTop } from "@/components/ScrollToTop";
 
-export default function RootLayout({
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getGlobalSettings();
+  const title = settings.siteTitle || "Professional Portfolio | Network & Software Engineer";
+  const description = settings.siteDescription || "Explore the portfolio of a dedicated Network and Software Engineer specializing in modern web apps and robust network solutions.";
+
+  return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'),
+    title: {
+      default: title,
+      template: `%s | ${title.split('|')[0].trim()}`
+    },
+    description: description,
+    keywords: ["Software Engineer", "Network Engineer", "Portfolio", "Next.js", "React", "Cisco"],
+    authors: [{ name: "John Doe" }], // Ideally also dynamic
+    openGraph: {
+      title: title,
+      description: description,
+      url: process.env.NEXT_PUBLIC_BASE_URL,
+      siteName: title,
+      images: [
+        {
+          url: "/og-image.png",
+          width: 1200,
+          height: 630,
+        },
+      ],
+      locale: "en_US",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: title,
+      description: description,
+      images: ["/og-image.png"],
+    },
+  };
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await getGlobalSettings();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -66,7 +76,7 @@ export default function RootLayout({
           <div className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/5 via-background to-background" />
           <AnalyticsTracker />
           <ScrollProgress />
-          <ClientLayout>
+          <ClientLayout settings={settings}>
             {children}
           </ClientLayout>
           <ScrollToTop />

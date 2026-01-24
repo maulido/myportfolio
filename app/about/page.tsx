@@ -4,7 +4,6 @@ import { Skills } from "@/components/Skills";
 import { Certifications } from "@/components/Certifications";
 import { Testimonials } from "@/components/Testimonials";
 import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 
 export default function AboutPage() {
     return (
@@ -26,7 +25,6 @@ export default function AboutPage() {
                 <Certifications />
                 <Testimonials />
             </main>
-            <Footer />
         </div>
     );
 }

@@ -5,7 +5,9 @@ import FloatingActionButton from "@/components/FAB";
 import ChatWidget from "@/components/ChatWidget";
 import DownloadCVModal from "@/components/DownloadCVModal";
 
-export default function ClientLayout({ children }: { children: React.ReactNode }) {
+import { Footer } from "@/components/Footer";
+
+export default function ClientLayout({ children, settings }: { children: React.ReactNode, settings: any }) {
     const [isCVOpen, setIsCVOpen] = useState(false);
 
     useEffect(() => {
@@ -17,6 +19,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
     return (
         <>
             {children}
+            <Footer settings={settings} />
             <FloatingActionButton />
             <ChatWidget />
             <DownloadCVModal isOpen={isCVOpen} onClose={() => setIsCVOpen(false)} />

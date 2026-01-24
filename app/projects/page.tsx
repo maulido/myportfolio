@@ -1,5 +1,4 @@
 import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { ProjectsPageContent } from "@/components/ProjectsPageContent";
 
 export default function ProjectsPage() {
@@ -18,7 +17,6 @@ export default function ProjectsPage() {
 
                 <ProjectsPageContent />
             </main>
-            <Footer />
         </div>
     );
 }

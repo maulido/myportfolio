@@ -1,5 +1,4 @@
 import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import ReadingProgressBar from "@/components/ReadingProgressBar";
 import dbConnect from "@/lib/db";
 import Post from "@/models/Post";
@@ -127,7 +126,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
                 </article>
             </main>
-            <Footer />
         </div>
     );
 }

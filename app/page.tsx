@@ -6,7 +6,6 @@ import { Experience } from "@/components/Experience";
 import { Certifications } from "@/components/Certifications";
 import { Projects } from "@/components/Projects";
 import { Contact } from "@/components/Contact";
-import { Footer } from "@/components/Footer";
 import { Testimonials } from "@/components/Testimonials";
 import { GitHubActivity } from "@/components/GitHubActivity";
 import Separator from "@/components/Separator";
@@ -38,7 +37,6 @@ export default function Home() {
         <GitHubActivity username="maulido" />
         <Contact />
       </main>
-      <Footer />
     </div>
   );
 }

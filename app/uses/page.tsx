@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { motion } from "framer-motion";
 import { ExternalLink, Laptop, Code, Server, Armchair, Package } from "lucide-react";
 import Image from "next/image";
@@ -19,7 +18,7 @@ interface UsesItem {
     order: number;
 }
 
-const categoryIcons: Record<string, any> = {
+const categoryIcons: Record<string, React.ElementType> = {
     Hardware: Laptop,
     Software: Code,
     Services: Server,
@@ -56,7 +55,6 @@ export default function UsesPage() {
                 <main className="flex-1 flex items-center justify-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                 </main>
-                <Footer />
             </div>
         );
     }
@@ -78,7 +76,7 @@ export default function UsesPage() {
                         </h1>
                         <p className="text-xl text-muted-foreground leading-relaxed">
                             A collection of tools, software, and hardware that power my daily workflow.
-                            From development to productivity, here's what I use to get things done.
+                            From development to productivity, here&apos;s what I use to get things done.
                         </p>
                     </motion.div>
                 </section>
@@ -162,7 +160,6 @@ export default function UsesPage() {
                     )}
                 </section>
             </main>
-            <Footer />
         </div>
     );
 }

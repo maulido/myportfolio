@@ -3,7 +3,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import Image from "next/image";
 import { X, ZoomIn, Calendar } from "lucide-react";
 import { GallerySkeleton } from "@/components/Skeleton";
@@ -131,7 +130,6 @@ export default function GalleryPage() {
                     )}
                 </div>
             </main>
-            <Footer />
 
             {/* Lightbox Modal */}
             <AnimatePresence>

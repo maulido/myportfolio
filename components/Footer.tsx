@@ -3,9 +3,15 @@
 import { Github, Linkedin, Mail } from "lucide-react";
 import { useState } from "react";
 
-export function Footer() {
+export function Footer({ settings }: { settings: any }) {
     const [email, setEmail] = useState("");
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+    const githubUrl = settings?.socialGithub || "https://github.com";
+    const linkedinUrl = settings?.socialLinkedin || "https://linkedin.com";
+    const contactEmail = settings?.contactEmail || "mailto:example@example.com";
+    const twitterUrl = settings?.socialTwitter;
+    const instagramUrl = settings?.socialInstagram;
 
     const handleSubscribe = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -35,31 +41,37 @@ export function Footer() {
 
             <div className="container mx-auto px-4 text-center">
                 <div className="mb-8 flex justify-center space-x-8">
-                    <a
-                        href="https://github.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group relative p-3 rounded-full bg-white/5 hover:bg-white/10 transition-all duration-300 ring-1 ring-white/10 hover:ring-primary/50"
-                    >
-                        <Github className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                        <span className="sr-only">GitHub</span>
-                    </a>
-                    <a
-                        href="https://linkedin.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group relative p-3 rounded-full bg-white/5 hover:bg-white/10 transition-all duration-300 ring-1 ring-white/10 hover:ring-primary/50"
-                    >
-                        <Linkedin className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                        <span className="sr-only">LinkedIn</span>
-                    </a>
-                    <a
-                        href="mailto:example@example.com"
-                        className="group relative p-3 rounded-full bg-white/5 hover:bg-white/10 transition-all duration-300 ring-1 ring-white/10 hover:ring-primary/50"
-                    >
-                        <Mail className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                        <span className="sr-only">Email</span>
-                    </a>
+                    {githubUrl && (
+                        <a
+                            href={githubUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group relative p-3 rounded-full bg-white/5 hover:bg-white/10 transition-all duration-300 ring-1 ring-white/10 hover:ring-primary/50"
+                        >
+                            <Github className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                            <span className="sr-only">GitHub</span>
+                        </a>
+                    )}
+                    {linkedinUrl && (
+                        <a
+                            href={linkedinUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group relative p-3 rounded-full bg-white/5 hover:bg-white/10 transition-all duration-300 ring-1 ring-white/10 hover:ring-primary/50"
+                        >
+                            <Linkedin className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                            <span className="sr-only">LinkedIn</span>
+                        </a>
+                    )}
+                    {contactEmail && (
+                        <a
+                            href={`mailto:${contactEmail}`}
+                            className="group relative p-3 rounded-full bg-white/5 hover:bg-white/10 transition-all duration-300 ring-1 ring-white/10 hover:ring-primary/50"
+                        >
+                            <Mail className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                            <span className="sr-only">Email</span>
+                        </a>
+                    )}
                 </div>
                 <div className="space-y-6 max-w-sm mx-auto mb-16">
                     <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">Subscribe to Newsletter</h4>

@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { Award, Calendar, ExternalLink, CheckCircle, Search, TrendingUp, FileCheck, Clock } from "lucide-react";
 import CertificationDetailModal from "@/components/CertificationDetailModal";
 
@@ -330,16 +329,17 @@ export default function CertificationsPage() {
                     )}
                 </div>
             </main>
-            <Footer />
 
             {/* Detail Modal */}
-            {selectedCert && (
-                <CertificationDetailModal
-                    certification={selectedCert}
-                    isOpen={isModalOpen}
-                    onClose={handleCloseModal}
-                />
-            )}
+            {
+                selectedCert && (
+                    <CertificationDetailModal
+                        certification={selectedCert}
+                        isOpen={isModalOpen}
+                        onClose={handleCloseModal}
+                    />
+                )
+            }
         </div>
     );
 }

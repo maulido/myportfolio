@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
 
 import { Skeleton } from "@/components/Skeleton";
@@ -193,7 +192,6 @@ export default function BlogPage() {
                     )}
                 </div>
             </main>
-            <Footer />
         </div>
     );
 }
