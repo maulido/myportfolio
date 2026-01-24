@@ -17,7 +17,8 @@ import {
     Tooltip,
     ResponsiveContainer,
     BarChart,
-    Bar
+    Bar,
+    PieChart, Pie, Cell, Legend
 } from "recharts";
 
 // Type definitions
@@ -137,8 +138,11 @@ export default function AdminDashboard() {
     const [skills, setSkills] = useState<Skill[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [recentGuestbook, setRecentGuestbook] = useState<GuestbookEntry[]>([]);
+    const [deviceStats, setDeviceStats] = useState({ mobile: 0, desktop: 0 });
+    const [topPages, setTopPages] = useState<{ _id: string; count: number }[]>([]);
 
-    // Delete confirmation state
+    // ... delete confirm state
+
     const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; type: string; id: string; name: string }>({
         show: false,
         type: '',
@@ -148,29 +152,7 @@ export default function AdminDashboard() {
 
     const [selectedPosts, setSelectedPosts] = useState<Set<string>>(new Set());
 
-    const handleBulkDelete = async (type: 'post' | 'project') => {
-        const ids = type === 'post' ? Array.from(selectedPosts) : []; // Extend for projects later
-
-        if (!confirm(`Are you sure you want to delete ${ids.length} items?`)) return;
-
-        try {
-            const res = await fetch('/api/admin/bulk-delete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ids, type })
-            });
-
-            if (res.ok) {
-                alert('Bulk delete successful');
-                fetchData();
-                setSelectedPosts(new Set());
-            } else {
-                alert('Failed to delete items');
-            }
-        } catch (error) {
-            console.error('Bulk delete failed', error);
-        }
-    };
+    // ...
 
     // Debug: Log component mount
     useEffect(() => {
@@ -233,13 +215,6 @@ export default function AdminDashboard() {
             }
             if (settingsData.success && settingsData.data !== undefined) setIsWorking(settingsData.data);
 
-            // Calculate aggregate stats (for future use)
-            // const totalViews = analyticsData.data
-            //     ?.filter((a: AnalyticsData) => a.type === 'page_view')
-            //     ?.reduce((acc: number, curr: AnalyticsData) => acc + curr.count, 0) || 0;
-            // const totalDownloads = analyticsData.data
-            //     ?.find((a: AnalyticsData) => a.type === 'cv_download')?.count || 0;
-
             setStats({
                 totalPosts: postsData.data?.length || 0,
                 totalProjects: projectsData.data?.length || 0,
@@ -247,9 +222,41 @@ export default function AdminDashboard() {
                 visitors: sessionsData.data?.totalVisitors || 0,
                 avgDuration: sessionsData.data?.avgDuration || 0
             });
+
+            if (sessionsData.success && sessionsData.data?.devices) {
+                setDeviceStats(sessionsData.data.devices);
+            }
+            if (sessionsData.success && sessionsData.data?.topPages) {
+                setTopPages(sessionsData.data.topPages);
+            }
+
         } catch (error) {
             // Keep error logging for admin debugging
             console.error("Failed to fetch admin data", error);
+        }
+    };
+
+    const handleBulkDelete = async (type: 'post' | 'project') => {
+        const ids = type === 'post' ? Array.from(selectedPosts) : []; // Extend for projects later
+
+        if (!confirm(`Are you sure you want to delete ${ids.length} items?`)) return;
+
+        try {
+            const res = await fetch('/api/admin/bulk-delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids, type })
+            });
+
+            if (res.ok) {
+                alert('Bulk delete successful');
+                fetchData();
+                setSelectedPosts(new Set());
+            } else {
+                alert('Failed to delete items');
+            }
+        } catch (error) {
+            console.error('Bulk delete failed', error);
         }
     };
 
@@ -624,6 +631,73 @@ export default function AdminDashboard() {
                                                 </div>
                                             </Link>
                                         ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Audience Analytics Row */}
+                            <div className="grid gap-8 lg:grid-cols-2 mt-8">
+                                <div className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-3xl p-6 shadow-xl h-[400px]">
+                                    <h3 className="font-bold mb-6 text-sm uppercase tracking-widest text-muted-foreground">Device Breakdown</h3>
+                                    <div className="w-full h-full flex items-center justify-center">
+                                        <ResponsiveContainer width="100%" height={300}>
+                                            <PieChart>
+                                                <Pie
+                                                    data={[
+                                                        { name: 'Mobile', value: deviceStats.mobile },
+                                                        { name: 'Desktop', value: deviceStats.desktop }
+                                                    ]}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    innerRadius={60}
+                                                    outerRadius={100}
+                                                    paddingAngle={5}
+                                                    dataKey="value"
+                                                    stroke="none"
+                                                >
+                                                    <Cell fill="#ec4899" /> {/* Mobile - Pink */}
+                                                    <Cell fill="#8b5cf6" /> {/* Desktop - Purple */}
+                                                </Pie>
+                                                <Tooltip
+                                                    contentStyle={{
+                                                        background: "var(--card)",
+                                                        border: "1px solid var(--border)",
+                                                        borderRadius: "12px",
+                                                        fontSize: "12px"
+                                                    }}
+                                                />
+                                                <Legend verticalAlign="bottom" height={36} />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+
+                                <div className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-3xl p-6 shadow-xl h-[400px] flex flex-col">
+                                    <h3 className="font-bold mb-6 text-sm uppercase tracking-widest text-muted-foreground">Most Visited Pages</h3>
+                                    <div className="space-y-4 overflow-y-auto flex-1 pr-2">
+                                        {topPages.length > 0 ? (
+                                            topPages.map((page, idx) => (
+                                                <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-background/50 border border-primary/5">
+                                                    <div className="flex items-center gap-3 overflow-hidden">
+                                                        <div className="h-8 w-8 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                                                            #{idx + 1}
+                                                        </div>
+                                                        <span className="text-sm font-medium truncate" title={page._id}>
+                                                            {page._id === '/' ? 'Home' : page._id}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        <Eye className="h-3 w-3 text-muted-foreground" />
+                                                        <span className="font-bold text-sm">{page.count}</span>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50">
+                                                <FileText className="h-10 w-10 mb-2" />
+                                                <p className="text-sm">No page views yet</p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
