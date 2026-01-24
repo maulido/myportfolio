@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { User, Lock, Mail, UserCircle, Save, Key } from "lucide-react";
+import { User, Lock, Mail, UserCircle, Save, Key, Calendar, Shield, CheckCircle2 } from "lucide-react";
 
 interface ProfileData {
     username: string;
@@ -127,179 +127,261 @@ export default function ProfilePage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-muted-foreground">Loading profile...</p>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold mb-2">Profile Settings</h1>
-                <p className="text-muted-foreground">Manage your account settings and preferences</p>
-            </div>
-
-            <div className="grid gap-6">
-                {/* Profile Information */}
-                <div className="bg-card border rounded-lg p-6">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="p-2 bg-primary/10 rounded-lg">
-                            <UserCircle className="h-5 w-5 text-primary" />
+        <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+            <div className="container mx-auto px-4 py-8 max-w-6xl">
+                {/* Header */}
+                <div className="mb-8">
+                    <div className="flex items-center gap-4 mb-2">
+                        <div className="p-3 bg-gradient-to-br from-primary to-primary/80 rounded-xl shadow-lg">
+                            <UserCircle className="h-8 w-8 text-white" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-semibold">Profile Information</h2>
-                            <p className="text-sm text-muted-foreground">Update your account details</p>
+                            <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                                Profile Settings
+                            </h1>
+                            <p className="text-muted-foreground mt-1">Manage your account settings and security</p>
                         </div>
                     </div>
-
-                    <form onSubmit={handleUpdateProfile} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-2">
-                                <User className="inline h-4 w-4 mr-2" />
-                                Username
-                            </label>
-                            <input
-                                type="text"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium mb-2">
-                                <UserCircle className="inline h-4 w-4 mr-2" />
-                                Full Name
-                            </label>
-                            <input
-                                type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium mb-2">
-                                <Mail className="inline h-4 w-4 mr-2" />
-                                Email Address
-                            </label>
-                            <input
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                                required
-                            />
-                        </div>
-
-                        <div className="flex items-center justify-between pt-4 border-t">
-                            <div className="text-sm text-muted-foreground">
-                                Last updated: {profile ? new Date(profile.updatedAt).toLocaleDateString() : "-"}
-                            </div>
-                            <button
-                                type="submit"
-                                disabled={updating}
-                                className="inline-flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                <Save className="h-4 w-4" />
-                                {updating ? "Updating..." : "Update Profile"}
-                            </button>
-                        </div>
-                    </form>
                 </div>
 
-                {/* Change Password */}
-                <div className="bg-card border rounded-lg p-6">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="p-2 bg-primary/10 rounded-lg">
-                            <Lock className="h-5 w-5 text-primary" />
+                <div className="grid lg:grid-cols-3 gap-6">
+                    {/* Left Column - Profile Info & Password */}
+                    <div className="lg:col-span-2 space-y-6">
+                        {/* Profile Information Card */}
+                        <div className="bg-card border border-border/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+                            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 border-b border-border/50">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2.5 bg-primary/10 rounded-lg ring-2 ring-primary/20">
+                                        <User className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-bold">Profile Information</h2>
+                                        <p className="text-sm text-muted-foreground">Update your personal details</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <form onSubmit={handleUpdateProfile} className="p-6">
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
+                                            <User className="h-4 w-4 text-primary" />
+                                            Username
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={username}
+                                            onChange={(e) => setUsername(e.target.value)}
+                                            className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                            placeholder="Enter username"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
+                                            <UserCircle className="h-4 w-4 text-primary" />
+                                            Full Name
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
+                                            className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                            placeholder="Enter full name"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="md:col-span-2 space-y-2">
+                                        <label className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
+                                            <Mail className="h-4 w-4 text-primary" />
+                                            Email Address
+                                        </label>
+                                        <input
+                                            type="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                            placeholder="Enter email address"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between mt-6 pt-6 border-t border-border/50">
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <CheckCircle2 className="h-4 w-4" />
+                                        Last updated: {profile ? new Date(profile.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "-"}
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        disabled={updating}
+                                        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary to-primary/90 text-white font-semibold rounded-xl hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-200"
+                                    >
+                                        <Save className="h-4 w-4" />
+                                        {updating ? "Updating..." : "Update Profile"}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
-                        <div>
-                            <h2 className="text-xl font-semibold">Change Password</h2>
-                            <p className="text-sm text-muted-foreground">Update your password to keep your account secure</p>
+
+                        {/* Change Password Card */}
+                        <div className="bg-card border border-border/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+                            <div className="bg-gradient-to-r from-orange-500/10 via-orange-500/5 to-transparent p-6 border-b border-border/50">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2.5 bg-orange-500/10 rounded-lg ring-2 ring-orange-500/20">
+                                        <Shield className="h-5 w-5 text-orange-500" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-bold">Security Settings</h2>
+                                        <p className="text-sm text-muted-foreground">Update your password to keep your account secure</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <form onSubmit={handleChangePassword} className="p-6">
+                                <div className="space-y-5">
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
+                                            <Key className="h-4 w-4 text-orange-500" />
+                                            Current Password
+                                        </label>
+                                        <input
+                                            type="password"
+                                            value={currentPassword}
+                                            onChange={(e) => setCurrentPassword(e.target.value)}
+                                            className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all"
+                                            placeholder="Enter your current password"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="grid md:grid-cols-2 gap-5">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
+                                                <Lock className="h-4 w-4 text-orange-500" />
+                                                New Password
+                                            </label>
+                                            <input
+                                                type="password"
+                                                value={newPassword}
+                                                onChange={(e) => setNewPassword(e.target.value)}
+                                                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all"
+                                                placeholder="Min. 8 characters"
+                                                required
+                                                minLength={8}
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-semibold text-foreground/90 flex items-center gap-2">
+                                                <Lock className="h-4 w-4 text-orange-500" />
+                                                Confirm Password
+                                            </label>
+                                            <input
+                                                type="password"
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                                className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500 transition-all"
+                                                placeholder="Confirm new password"
+                                                required
+                                                minLength={8}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-end mt-6 pt-6 border-t border-border/50">
+                                    <button
+                                        type="submit"
+                                        disabled={changingPassword}
+                                        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-xl hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-200"
+                                    >
+                                        <Key className="h-4 w-4" />
+                                        {changingPassword ? "Changing..." : "Change Password"}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
 
-                    <form onSubmit={handleChangePassword} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium mb-2">
-                                <Key className="inline h-4 w-4 mr-2" />
-                                Current Password
-                            </label>
-                            <input
-                                type="password"
-                                value={currentPassword}
-                                onChange={(e) => setCurrentPassword(e.target.value)}
-                                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                                required
-                                placeholder="Enter your current password"
-                            />
-                        </div>
+                    {/* Right Column - Account Info */}
+                    <div className="space-y-6">
+                        {/* Account Information Card */}
+                        {profile && (
+                            <div className="bg-card border border-border/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden sticky top-6">
+                                <div className="bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent p-6 border-b border-border/50">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2.5 bg-blue-500/10 rounded-lg ring-2 ring-blue-500/20">
+                                            <Calendar className="h-5 w-5 text-blue-500" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-bold">Account Details</h3>
+                                            <p className="text-sm text-muted-foreground">Your account information</p>
+                                        </div>
+                                    </div>
+                                </div>
 
-                        <div>
-                            <label className="block text-sm font-medium mb-2">
-                                <Lock className="inline h-4 w-4 mr-2" />
-                                New Password
-                            </label>
-                            <input
-                                type="password"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                                required
-                                placeholder="Enter new password (min. 8 characters)"
-                                minLength={8}
-                            />
-                        </div>
+                                <div className="p-6 space-y-4">
+                                    <div className="flex items-start gap-3 p-4 bg-gradient-to-br from-background to-primary/5 rounded-xl border border-border/30">
+                                        <div className="p-2 bg-primary/10 rounded-lg">
+                                            <Calendar className="h-4 w-4 text-primary" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Account Created</p>
+                                            <p className="text-sm font-semibold mt-1">
+                                                {new Date(profile.createdAt).toLocaleDateString('en-US', {
+                                                    month: 'long',
+                                                    day: 'numeric',
+                                                    year: 'numeric'
+                                                })}
+                                            </p>
+                                        </div>
+                                    </div>
 
-                        <div>
-                            <label className="block text-sm font-medium mb-2">
-                                <Lock className="inline h-4 w-4 mr-2" />
-                                Confirm New Password
-                            </label>
-                            <input
-                                type="password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                                required
-                                placeholder="Confirm your new password"
-                                minLength={8}
-                            />
-                        </div>
+                                    <div className="flex items-start gap-3 p-4 bg-gradient-to-br from-background to-blue-500/5 rounded-xl border border-border/30">
+                                        <div className="p-2 bg-blue-500/10 rounded-lg">
+                                            <CheckCircle2 className="h-4 w-4 text-blue-500" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Last Modified</p>
+                                            <p className="text-sm font-semibold mt-1">
+                                                {new Date(profile.updatedAt).toLocaleDateString('en-US', {
+                                                    month: 'long',
+                                                    day: 'numeric',
+                                                    year: 'numeric'
+                                                })}
+                                            </p>
+                                        </div>
+                                    </div>
 
-                        <div className="flex items-center justify-end pt-4 border-t">
-                            <button
-                                type="submit"
-                                disabled={changingPassword}
-                                className="inline-flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                <Key className="h-4 w-4" />
-                                {changingPassword ? "Changing..." : "Change Password"}
-                            </button>
-                        </div>
-                    </form>
+                                    <div className="flex items-start gap-3 p-4 bg-gradient-to-br from-background to-green-500/5 rounded-xl border border-border/30">
+                                        <div className="p-2 bg-green-500/10 rounded-lg">
+                                            <Shield className="h-4 w-4 text-green-500" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Account Status</p>
+                                            <p className="text-sm font-semibold mt-1 flex items-center gap-2">
+                                                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                                Active
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
-
-                {/* Account Info */}
-                {profile && (
-                    <div className="bg-card border rounded-lg p-6">
-                        <h3 className="font-semibold mb-4">Account Information</h3>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                                <span className="text-muted-foreground">Account Created:</span>
-                                <p className="font-medium">{new Date(profile.createdAt).toLocaleDateString()}</p>
-                            </div>
-                            <div>
-                                <span className="text-muted-foreground">Last Modified:</span>
-                                <p className="font-medium">{new Date(profile.updatedAt).toLocaleDateString()}</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );
