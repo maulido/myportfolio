@@ -1,0 +1,23 @@
+name: Sync to depportfolio
+
+on:
+  push:
+    branches:
+      - main  # Trigger on push to main branch
+      - fix/build-and-quality-issues  # Also sync from current branch
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout myportfolio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for proper sync
+
+      - name: Push to depportfolio
+        env:
+          PAT: ${{ secrets.DEPPORTFOLIO_PAT }}
+        run: |
+          git remote add depportfolio https://${PAT}@github.com/maulido/depportfolio.git
+          git push depportfolio ${{ github.ref_name }}:main --force
