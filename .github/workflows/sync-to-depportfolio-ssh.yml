@@ -1,4 +1,4 @@
-name: Sync to depportfolio
+name: Sync to depportfolio (SSH Deploy Key)
 
 on:
   push:
