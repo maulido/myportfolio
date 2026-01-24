@@ -13,7 +13,9 @@ import {
     Package,
     MessageSquare,
     FolderOpen,
-    BarChart3
+    BarChart3,
+    Settings,
+    User
 } from "lucide-react";
 
 export default function AdminSidebar() {
@@ -105,6 +107,14 @@ export default function AdminSidebar() {
                 <button className={`w-full inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${isActive("/admin/analytics") ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}>
                     <BarChart3 className="mr-3 h-4 w-4" />
                     Analytics
+                </button>
+            </Link>
+
+            <div className="px-4 py-2 mt-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Settings</div>
+            <Link href="/admin/profile" className="w-full">
+                <button className={`w-full inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${isActive("/admin/profile") ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}>
+                    <User className="mr-3 h-4 w-4" />
+                    Profile
                 </button>
             </Link>
         </aside>
