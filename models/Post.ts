@@ -9,6 +9,8 @@ export interface IPost extends Document {
     tags: string[];
     published: boolean;
     coverImage?: string;
+    views: number;
+    likes: number;
     createdAt: Date;
 }
 
@@ -21,6 +23,8 @@ const PostSchema: Schema = new Schema({
     tags: { type: [String], default: [] },
     published: { type: Boolean, default: true },
     coverImage: { type: String },
+    views: { type: Number, default: 0 },
+    likes: { type: Number, default: 0 },
     createdAt: { type: Date, default: Date.now },
 });
 

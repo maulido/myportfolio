@@ -47,7 +47,8 @@ export const metadata: Metadata = {
 };
 
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
-import { ScrollProgress, BackToTop } from "@/components/Widgets";
+import { ScrollProgress } from "@/components/Widgets";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 export default function RootLayout({
   children,
@@ -68,7 +69,7 @@ export default function RootLayout({
           <ClientLayout>
             {children}
           </ClientLayout>
-          <BackToTop />
+          <ScrollToTop />
         </ThemeProvider>
       </body>
     </html>

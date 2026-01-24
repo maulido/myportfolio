@@ -6,6 +6,8 @@ import Post from "@/models/Post";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Calendar, Tag as TagIcon } from "lucide-react";
+import { ShareButtons } from "@/components/ShareButtons";
+import { EngagementButtons } from "@/components/EngagementButtons";
 import { Metadata } from 'next';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -109,6 +111,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                         </div>
                         <h1 className="text-3xl font-extrabold tracking-tight lg:text-5xl lg:leading-[1.1] text-gradient">{post.title}</h1>
                         <p className="text-xl text-muted-foreground leading-relaxed">{post.excerpt}</p>
+                        <div className="pt-4 flex flex-col gap-4">
+                            <EngagementButtons slug={post.slug} />
+                            <ShareButtons title={post.title} />
+                        </div>
                     </header>
 
                     <div className="prose prose-invert prose-lg max-w-none border-t border-primary/10 pt-10">

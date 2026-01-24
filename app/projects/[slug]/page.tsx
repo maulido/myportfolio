@@ -13,6 +13,7 @@ import {
     Code2,
     Image as ImageIcon
 } from "lucide-react";
+import { ShareButtons } from "@/components/ShareButtons";
 
 interface Project {
     _id: string;
@@ -134,6 +135,11 @@ export default function ProjectDetailPage() {
                             />
                         </div>
                     )}
+
+
+                    <div className="mb-8">
+                        <ShareButtons title={project.title} />
+                    </div>
                 </motion.div>
             </section>
 
@@ -192,135 +198,145 @@ export default function ProjectDetailPage() {
             </section>
 
             {/* Problem Statement */}
-            {project.problemStatement && (
-                <section className="container mx-auto px-4 py-12 bg-muted/30 rounded-lg">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5 }}
-                    >
-                        <h2 className="text-3xl font-bold mb-6">The Problem</h2>
-                        <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                            {project.problemStatement}
-                        </p>
-                    </motion.div>
-                </section>
-            )}
+            {
+                project.problemStatement && (
+                    <section className="container mx-auto px-4 py-12 bg-muted/30 rounded-lg">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5 }}
+                        >
+                            <h2 className="text-3xl font-bold mb-6">The Problem</h2>
+                            <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                                {project.problemStatement}
+                            </p>
+                        </motion.div>
+                    </section>
+                )
+            }
 
             {/* Solution */}
-            {project.solutionApproach && (
-                <section className="container mx-auto px-4 py-12">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5 }}
-                    >
-                        <h2 className="text-3xl font-bold mb-6">The Solution</h2>
-                        <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                            {project.solutionApproach}
-                        </p>
-                    </motion.div>
-                </section>
-            )}
+            {
+                project.solutionApproach && (
+                    <section className="container mx-auto px-4 py-12">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5 }}
+                        >
+                            <h2 className="text-3xl font-bold mb-6">The Solution</h2>
+                            <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                                {project.solutionApproach}
+                            </p>
+                        </motion.div>
+                    </section>
+                )
+            }
 
             {/* Architecture */}
-            {project.architectureDiagram && (
-                <section className="container mx-auto px-4 py-12 bg-muted/30 rounded-lg">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5 }}
-                    >
-                        <h2 className="text-3xl font-bold mb-6 flex items-center gap-2">
-                            <Code2 className="h-8 w-8" />
-                            Architecture
-                        </h2>
-                        <div className="relative w-full h-[400px] md:h-[600px] rounded-lg overflow-hidden">
-                            <Image
-                                src={project.architectureDiagram}
-                                alt="Architecture Diagram"
-                                fill
-                                className="object-contain bg-background"
-                            />
-                        </div>
-                    </motion.div>
-                </section>
-            )}
+            {
+                project.architectureDiagram && (
+                    <section className="container mx-auto px-4 py-12 bg-muted/30 rounded-lg">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5 }}
+                        >
+                            <h2 className="text-3xl font-bold mb-6 flex items-center gap-2">
+                                <Code2 className="h-8 w-8" />
+                                Architecture
+                            </h2>
+                            <div className="relative w-full h-[400px] md:h-[600px] rounded-lg overflow-hidden">
+                                <Image
+                                    src={project.architectureDiagram}
+                                    alt="Architecture Diagram"
+                                    fill
+                                    className="object-contain bg-background"
+                                />
+                            </div>
+                        </motion.div>
+                    </section>
+                )
+            }
 
             {/* Screenshots */}
-            {project.screenshots && project.screenshots.length > 0 && (
-                <section className="container mx-auto px-4 py-12">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5 }}
-                    >
-                        <h2 className="text-3xl font-bold mb-6 flex items-center gap-2">
-                            <ImageIcon className="h-8 w-8" />
-                            Screenshots
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {project.screenshots.map((screenshot, index) => (
-                                <div
-                                    key={index}
-                                    className="relative w-full h-[300px] rounded-lg overflow-hidden border border-border hover:border-primary transition-colors"
-                                >
-                                    <Image
-                                        src={screenshot}
-                                        alt={`Screenshot ${index + 1}`}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    </motion.div>
-                </section>
-            )}
+            {
+                project.screenshots && project.screenshots.length > 0 && (
+                    <section className="container mx-auto px-4 py-12">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5 }}
+                        >
+                            <h2 className="text-3xl font-bold mb-6 flex items-center gap-2">
+                                <ImageIcon className="h-8 w-8" />
+                                Screenshots
+                            </h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {project.screenshots.map((screenshot, index) => (
+                                    <div
+                                        key={index}
+                                        className="relative w-full h-[300px] rounded-lg overflow-hidden border border-border hover:border-primary transition-colors"
+                                    >
+                                        <Image
+                                            src={screenshot}
+                                            alt={`Screenshot ${index + 1}`}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </section>
+                )
+            }
 
             {/* Related Projects */}
-            {project.relatedProjects && project.relatedProjects.length > 0 && (
-                <section className="container mx-auto px-4 py-12">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5 }}
-                    >
-                        <h2 className="text-3xl font-bold mb-6">Related Projects</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {project.relatedProjects.map((relatedProject) => (
-                                <Link
-                                    key={relatedProject._id}
-                                    href={`/projects/${relatedProject.slug}`}
-                                    className="group border border-border rounded-lg p-6 hover:border-primary transition-colors"
-                                >
-                                    {relatedProject.imageUrl && (
-                                        <div className="relative w-full h-40 mb-4 rounded-lg overflow-hidden">
-                                            <Image
-                                                src={relatedProject.imageUrl}
-                                                alt={relatedProject.title}
-                                                fill
-                                                className="object-cover group-hover:scale-105 transition-transform"
-                                            />
-                                        </div>
-                                    )}
-                                    <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
-                                        {relatedProject.title}
-                                    </h3>
-                                    <p className="text-muted-foreground line-clamp-2">
-                                        {relatedProject.description}
-                                    </p>
-                                </Link>
-                            ))}
-                        </div>
-                    </motion.div>
-                </section>
-            )}
-        </div>
+            {
+                project.relatedProjects && project.relatedProjects.length > 0 && (
+                    <section className="container mx-auto px-4 py-12">
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5 }}
+                        >
+                            <h2 className="text-3xl font-bold mb-6">Related Projects</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {project.relatedProjects.map((relatedProject) => (
+                                    <Link
+                                        key={relatedProject._id}
+                                        href={`/projects/${relatedProject.slug}`}
+                                        className="group border border-border rounded-lg p-6 hover:border-primary transition-colors"
+                                    >
+                                        {relatedProject.imageUrl && (
+                                            <div className="relative w-full h-40 mb-4 rounded-lg overflow-hidden">
+                                                <Image
+                                                    src={relatedProject.imageUrl}
+                                                    alt={relatedProject.title}
+                                                    fill
+                                                    className="object-cover group-hover:scale-105 transition-transform"
+                                                />
+                                            </div>
+                                        )}
+                                        <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
+                                            {relatedProject.title}
+                                        </h3>
+                                        <p className="text-muted-foreground line-clamp-2">
+                                            {relatedProject.description}
+                                        </p>
+                                    </Link>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </section>
+                )
+            }
+        </div >
     );
 }
