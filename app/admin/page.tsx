@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { LogOut, Plus, LayoutDashboard, FileText, Briefcase, Image, Award, MessageCircle, Pencil, Trash2, Search, Mail, Package, MessageSquare, FolderOpen, BarChart3, Eye } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import AboutMeEditor from "@/components/admin/AboutMeEditor";
 import CareerFilter from "@/components/admin/CareerFilter";
 
 import {
@@ -110,6 +109,17 @@ const analyticsData = [
     { name: "Sun", views: 349, downloads: 43, messages: 25 },
 ];
 
+// ... types
+interface GuestbookEntry {
+    _id: string;
+    name: string;
+    message: string;
+    createdAt: string;
+    approved: boolean;
+}
+
+// ... existing types ...
+
 export default function AdminDashboard() {
     const { data: session, status } = useSession();
     const [activeTab, setActiveTab] = useState("overview");
@@ -125,10 +135,8 @@ export default function AdminDashboard() {
     const [careers, setCareers] = useState<CareerJourney[]>([]);
     const [careerTypeFilter, setCareerTypeFilter] = useState<'all' | 'work' | 'education' | 'achievement'>('all');
     const [skills, setSkills] = useState<Skill[]>([]);
-    const [aboutMe, setAboutMe] = useState({ paragraph1: '', paragraph2: '' });
-    const [isEditingAbout, setIsEditingAbout] = useState(false);
-    const [aboutMeEdit, setAboutMeEdit] = useState({ paragraph1: '', paragraph2: '' });
     const [searchTerm, setSearchTerm] = useState("");
+    const [recentGuestbook, setRecentGuestbook] = useState<GuestbookEntry[]>([]);
 
     // Delete confirmation state
     const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; type: string; id: string; name: string }>({
@@ -178,7 +186,7 @@ export default function AdminDashboard() {
 
     const fetchData = async () => {
         try {
-            const [postsRes, projectsRes, galleryRes, certsRes, testimonialsRes, newsletterRes, careersRes, skillsRes, analyticsRes, settingsRes, sessionsRes, aboutRes] = await Promise.all([
+            const [postsRes, projectsRes, galleryRes, certsRes, testimonialsRes, newsletterRes, careersRes, skillsRes, analyticsRes, settingsRes, sessionsRes, guestbookRes] = await Promise.all([
                 fetch('/api/blog'),
                 fetch('/api/projects'),
                 fetch('/api/gallery'),
@@ -190,10 +198,10 @@ export default function AdminDashboard() {
                 fetch('/api/analytics'),
                 fetch('/api/settings?key=isWorking'),
                 fetch('/api/analytics/session/stats'),
-                fetch('/api/about')
+                fetch('/api/guestbook?limit=5')
             ]);
 
-            const [postsData, projectsData, galleryData, certsData, testimonialsData, newsletterData, careersData, skillsData, analyticsData, settingsData, sessionsData, aboutData] = await Promise.all([
+            const [postsData, projectsData, galleryData, certsData, testimonialsData, newsletterData, careersData, skillsData, analyticsData, settingsData, sessionsData, guestbookData] = await Promise.all([
                 postsRes.json(),
                 projectsRes.json(),
                 galleryRes.json(),
@@ -205,7 +213,7 @@ export default function AdminDashboard() {
                 analyticsRes.json(),
                 settingsRes.json(),
                 sessionsRes.json(),
-                aboutRes.json()
+                guestbookRes.json()
             ]);
 
             if (postsData.success) setPosts(postsData.data);
@@ -214,6 +222,7 @@ export default function AdminDashboard() {
             if (certsData.success) setCerts(certsData.data);
             if (testimonialsData.success) setTestimonials(testimonialsData.data);
             if (newsletterData.success) setNewsletter(newsletterData.data);
+            if (guestbookData.success) setRecentGuestbook(guestbookData.data);
             if (careersData.success) {
                 setCareers(careersData.data);
             }
@@ -222,10 +231,7 @@ export default function AdminDashboard() {
                 const allSkills = skillsData.data.flatMap((group: any) => group.skills);
                 setSkills(allSkills);
             }
-            if (aboutData.success) {
-                setAboutMe(aboutData.data);
-                setAboutMeEdit(aboutData.data);
-            } if (settingsData.success && settingsData.data !== undefined) setIsWorking(settingsData.data);
+            if (settingsData.success && settingsData.data !== undefined) setIsWorking(settingsData.data);
 
             // Calculate aggregate stats (for future use)
             // const totalViews = analyticsData.data
@@ -261,29 +267,7 @@ export default function AdminDashboard() {
         }
     };
 
-    const handleAboutMeSave = async (data: any) => {
-        try {
-            const res = await fetch('/api/about', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
 
-            if (res.ok) {
-                const result = await res.json();
-                setAboutMe(result.data);
-                setAboutMeEdit(result.data);
-                alert('About Me updated successfully!');
-            } else {
-                const error = await res.json();
-                console.error('Failed to update About Me:', error);
-                alert('Failed to update About Me');
-            }
-        } catch (error) {
-            console.error('Error updating About Me:', error);
-            alert('An error occurred while updating About Me');
-        }
-    };
 
     const handleDelete = async (type: string, id: string, name: string = '') => {
         console.log('🗑️ handleDelete called with:', { type, id, name });
@@ -443,30 +427,101 @@ export default function AdminDashboard() {
                                 ))}
                             </div>
 
-                            {/* Analytics Charts */}
+                            {/* Quick Actions / Shortcuts */}
+                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                                <Link href="/admin/posts/new">
+                                    <button className="w-full bg-gradient-to-br from-purple-500/10 to-purple-600/10 hover:from-purple-500/20 hover:to-purple-600/20 border border-purple-500/20 hover:border-purple-500/40 p-4 rounded-2xl flex items-center gap-4 transition-all group">
+                                        <div className="h-12 w-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500 group-hover:scale-110 transition-transform">
+                                            <FileText className="h-6 w-6" />
+                                        </div>
+                                        <div className="text-left">
+                                            <div className="font-bold text-foreground">New Post</div>
+                                            <div className="text-xs text-muted-foreground">Write a blog post</div>
+                                        </div>
+                                    </button>
+                                </Link>
+
+                                <Link href="/admin/projects/new">
+                                    <button className="w-full bg-gradient-to-br from-blue-500/10 to-blue-600/10 hover:from-blue-500/20 hover:to-blue-600/20 border border-blue-500/20 hover:border-blue-500/40 p-4 rounded-2xl flex items-center gap-4 transition-all group">
+                                        <div className="h-12 w-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
+                                            <Briefcase className="h-6 w-6" />
+                                        </div>
+                                        <div className="text-left">
+                                            <div className="font-bold text-foreground">New Project</div>
+                                            <div className="text-xs text-muted-foreground">Add to portfolio</div>
+                                        </div>
+                                    </button>
+                                </Link>
+
+                                <Link href="/admin/gallery/new">
+                                    <button className="w-full bg-gradient-to-br from-pink-500/10 to-pink-600/10 hover:from-pink-500/20 hover:to-pink-600/20 border border-pink-500/20 hover:border-pink-500/40 p-4 rounded-2xl flex items-center gap-4 transition-all group">
+                                        <div className="h-12 w-12 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-500 group-hover:scale-110 transition-transform">
+                                            <Image className="h-6 w-6" />
+                                        </div>
+                                        <div className="text-left">
+                                            <div className="font-bold text-foreground">Upload Image</div>
+                                            <div className="text-xs text-muted-foreground">Add to gallery</div>
+                                        </div>
+                                    </button>
+                                </Link>
+
+                                <Link href="/admin/profile">
+                                    <button className="w-full bg-gradient-to-br from-green-500/10 to-green-600/10 hover:from-green-500/20 hover:to-green-600/20 border border-green-500/20 hover:border-green-500/40 p-4 rounded-2xl flex items-center gap-4 transition-all group">
+                                        <div className="h-12 w-12 rounded-xl bg-green-500/10 flex items-center justify-center text-green-500 group-hover:scale-110 transition-transform">
+                                            <Pencil className="h-6 w-6" />
+                                        </div>
+                                        <div className="text-left">
+                                            <div className="font-bold text-foreground">Edit Profile</div>
+                                            <div className="text-xs text-muted-foreground">Update bio & info</div>
+                                        </div>
+                                    </button>
+                                </Link>
+                            </div>
                             <div className="grid gap-8 lg:grid-cols-2">
                                 <div className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-3xl p-6 shadow-xl">
                                     <h3 className="font-bold mb-6 text-sm uppercase tracking-widest text-muted-foreground">Top Content</h3>
                                     <div className="w-full h-[320px]">
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={posts.sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5)}>
-                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(139, 92, 246, 0.1)" />
-                                                <XAxis dataKey="title" fontSize={10} axisLine={false} tickLine={false} tickFormatter={(val) => val.length > 10 ? val.substring(0, 10) + '...' : val} />
-                                                <YAxis fontSize={10} axisLine={false} tickLine={false} />
-                                                <Tooltip
-                                                    cursor={{ fill: 'rgba(139, 92, 246, 0.1)' }}
-                                                    contentStyle={{
-                                                        background: "var(--card)",
-                                                        color: "var(--foreground)",
-                                                        border: "1px solid var(--border)",
-                                                        borderRadius: "12px",
-                                                        fontSize: "12px"
-                                                    }}
-                                                />
-                                                <Bar dataKey="views" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="Views" />
-                                                <Bar dataKey="likes" fill="#ec4899" radius={[4, 4, 0, 0]} name="Likes" />
-                                            </BarChart>
-                                        </ResponsiveContainer>
+                                        {posts.length > 0 ? (
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <BarChart data={posts.map(p => ({
+                                                    ...p,
+                                                    views: p.views || 0,
+                                                    likes: p.likes || 0
+                                                })).sort((a, b) => b.views - a.views).slice(0, 5)}>
+                                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(139, 92, 246, 0.1)" />
+                                                    <XAxis
+                                                        dataKey="title"
+                                                        fontSize={10}
+                                                        axisLine={false}
+                                                        tickLine={false}
+                                                        tickFormatter={(val) => val.length > 10 ? val.substring(0, 10) + '...' : val}
+                                                    />
+                                                    <YAxis
+                                                        fontSize={10}
+                                                        axisLine={false}
+                                                        tickLine={false}
+                                                        allowDecimals={false}
+                                                    />
+                                                    <Tooltip
+                                                        cursor={{ fill: 'rgba(139, 92, 246, 0.1)' }}
+                                                        contentStyle={{
+                                                            background: "var(--card)",
+                                                            color: "var(--foreground)",
+                                                            border: "1px solid var(--border)",
+                                                            borderRadius: "12px",
+                                                            fontSize: "12px"
+                                                        }}
+                                                    />
+                                                    <Bar dataKey="views" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="Views" />
+                                                    <Bar dataKey="likes" fill="#ec4899" radius={[4, 4, 0, 0]} name="Likes" />
+                                                </BarChart>
+                                            </ResponsiveContainer>
+                                        ) : (
+                                            <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50">
+                                                <BarChart3 className="h-12 w-12 mb-2" />
+                                                <p className="text-sm">No data available</p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
@@ -495,11 +550,84 @@ export default function AdminDashboard() {
                                 </div>
                             </div>
 
-                            {/* About Me Editor */}
-                            <AboutMeEditor
-                                initialData={aboutMe}
-                                onSave={handleAboutMeSave}
-                            />
+                            {/* Activity & Health Row */}
+                            <div className="grid gap-8 lg:grid-cols-2">
+                                {/* Recent Guestbook Activity */}
+                                <div className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-3xl p-6 shadow-xl flex flex-col">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h3 className="font-bold text-sm uppercase tracking-widest text-muted-foreground">Recent Activity</h3>
+                                        <Link href="/admin/guestbook">
+                                            <button className="text-xs text-primary font-bold hover:underline">View All</button>
+                                        </Link>
+                                    </div>
+                                    <div className="space-y-4 flex-1">
+                                        {recentGuestbook.length > 0 ? (
+                                            recentGuestbook.map((entry) => (
+                                                <div key={entry._id} className="flex gap-4 p-3 rounded-xl bg-background/50 hover:bg-background/80 transition-colors border border-primary/5">
+                                                    <div className="h-10 w-10 shrink-0 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
+                                                        {entry.name.charAt(0)}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center justify-between mb-1">
+                                                            <div className="font-bold text-sm truncate">{entry.name}</div>
+                                                            <div className="text-[10px] text-muted-foreground">{new Date(entry.createdAt).toLocaleDateString()}</div>
+                                                        </div>
+                                                        <p className="text-xs text-muted-foreground line-clamp-2 italic">"{entry.message}"</p>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-50">
+                                                <MessageSquare className="h-10 w-10 mb-2" />
+                                                <p className="text-sm">No recent messages</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Content Health Audit */}
+                                <div className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-3xl p-6 shadow-xl">
+                                    <h3 className="font-bold mb-6 text-sm uppercase tracking-widest text-muted-foreground">Content Health</h3>
+                                    <div className="space-y-4">
+                                        {[
+                                            {
+                                                label: "Projects without Images",
+                                                count: projects.filter(p => !p.image).length,
+                                                status: projects.filter(p => !p.image).length === 0 ? "good" : "warning",
+                                                link: "/admin/projects"
+                                            },
+                                            {
+                                                label: "Posts with < 50 views",
+                                                count: posts.filter(p => (p.views || 0) < 50).length,
+                                                status: "info",
+                                                link: "/admin/posts"
+                                            },
+                                            {
+                                                label: "Gallery items without categories",
+                                                count: gallery.filter(g => !g.category).length,
+                                                status: gallery.filter(g => !g.category).length === 0 ? "good" : "warning",
+                                                link: "/admin/gallery"
+                                            }
+                                        ].map((item, idx) => (
+                                            <Link key={idx} href={item.link}>
+                                                <div className="flex items-center justify-between p-4 rounded-xl bg-background/50 hover:bg-background/80 transition-all border border-primary/5 group cursor-pointer hover:border-primary/20">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`h-2 w-2 rounded-full ${item.status === 'good' ? 'bg-green-500' : item.status === 'warning' ? 'bg-orange-500' : 'bg-blue-500'}`} />
+                                                        <span className="text-sm font-medium">{item.label}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="font-bold text-sm">{item.count}</span>
+                                                        <div className="text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            →
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
                         </motion.div>
                     )}
                     {activeTab === "posts" && (

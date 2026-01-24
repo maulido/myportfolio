@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { User, Lock, Mail, UserCircle, Save, Key, Calendar, Shield, CheckCircle2, MapPin, Phone } from "lucide-react";
+import { User, Lock, Mail, UserCircle, Save, Key, Calendar, Shield, CheckCircle2, MapPin, Phone, FileText } from "lucide-react";
+import AboutMeEditor from "@/components/admin/AboutMeEditor";
 
 interface ProfileData {
     username: string;
@@ -42,11 +43,48 @@ export default function ProfilePage() {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
+    // About Me state
+    const [aboutMe, setAboutMe] = useState({ paragraph1: '', paragraph2: '' });
+
+    const fetchAboutMe = async () => {
+        try {
+            const res = await fetch('/api/about');
+            const data = await res.json();
+            if (data.success) {
+                setAboutMe(data.data);
+            }
+        } catch (error) {
+            console.error("Error fetching About Me:", error);
+        }
+    };
+
+    const handleAboutMeSave = async (data: any) => {
+        try {
+            const res = await fetch('/api/about', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (res.ok) {
+                const result = await res.json();
+                setAboutMe(result.data);
+                toast.success('About Me updated successfully!');
+            } else {
+                toast.error('Failed to update About Me');
+            }
+        } catch (error) {
+            console.error('Error updating About Me:', error);
+            toast.error('An error occurred while updating About Me');
+        }
+    };
+
     useEffect(() => {
         if (status === "unauthenticated") {
             router.push("/login");
         } else if (status === "authenticated") {
             fetchProfile();
+            fetchAboutMe();
         }
     }, [status, router]);
 
@@ -433,6 +471,26 @@ export default function ProfilePage() {
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                        {/* About Me Editor Card */}
+                        <div className="bg-card border border-border/50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+                            <div className="bg-gradient-to-r from-purple-500/10 via-purple-500/5 to-transparent p-6 border-b border-border/50">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2.5 bg-purple-500/10 rounded-lg ring-2 ring-purple-500/20">
+                                        <FileText className="h-5 w-5 text-purple-500" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-bold">About Me Content</h2>
+                                        <p className="text-sm text-muted-foreground">Edit your biography and introduction</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="p-6">
+                                <AboutMeEditor
+                                    initialData={aboutMe}
+                                    onSave={handleAboutMeSave}
+                                />
+                            </div>
                         </div>
                     </div>
 

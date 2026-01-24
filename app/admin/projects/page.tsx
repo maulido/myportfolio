@@ -75,7 +75,7 @@ export default function AdminProjectsListPage() {
         }
     };
 
-    const categories = ["all", ...Array.from(new Set(items.map(item => item.category)))];
+    const categories = Array.from(new Set(["all", ...items.map(item => item.category).filter(Boolean)]));
 
     const filteredItems = items.filter((item) => {
         const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

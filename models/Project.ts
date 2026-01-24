@@ -4,6 +4,7 @@ export interface IProject extends Document {
     title: string;
     slug: string;
     description: string;
+    category: string;
     problemStatement?: string;
     solutionApproach?: string;
     imageUrl?: string;
@@ -24,6 +25,7 @@ const ProjectSchema = new Schema({
     title: { type: String, required: true },
     slug: { type: String, required: true, unique: true },
     description: { type: String, required: true },
+    category: { type: String, required: true, default: "Uncategorized" },
     problemStatement: { type: String },
     solutionApproach: { type: String },
     imageUrl: { type: String },
