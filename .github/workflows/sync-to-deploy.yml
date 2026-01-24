@@ -1,0 +1,31 @@
+name: Sync to Deployment Repository
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Push to deployment repository
+        env:
+          DEPLOY_REPO_TOKEN: ${{ secrets.DEPLOY_REPO_TOKEN }}
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          
+          # Add deployment repo as remote
+          git remote add deploy https://${DEPLOY_REPO_TOKEN}@github.com/maulido/myportfoliodep.git
+          
+          # Push to deployment repo
+          git push deploy main --force
+          
+          echo "✅ Successfully synced to deployment repository"
