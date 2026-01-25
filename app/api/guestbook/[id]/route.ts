@@ -28,10 +28,10 @@ export async function PUT(
         }
 
         return NextResponse.json({ success: true, data: entry });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error updating entry:', error);
         return NextResponse.json(
-            { success: false, error: error.message || 'Failed to update entry' },
+            { success: false, error: error instanceof Error ? error.message : 'Failed to update entry' },
             { status: 500 }
         );
     }

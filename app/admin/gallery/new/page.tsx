@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, Upload } from "lucide-react";
+import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import ImageUpload from "@/components/ImageUpload";
 

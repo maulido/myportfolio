@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -52,7 +53,8 @@ export default function GalleryPage() {
                 {/* Breadcrumbs */}
                 <div className="container mx-auto px-4 md:px-6 pb-4">
                     <nav className="text-sm text-muted-foreground">
-                        <a href="/" className="hover:text-primary transition-colors">Home</a>
+
+                        <Link href="/" className="hover:text-primary transition-colors">Home</Link>
                         <span className="mx-2">/</span>
                         <span className="text-foreground">Gallery</span>
                     </nav>
@@ -104,9 +106,11 @@ export default function GalleryPage() {
                                         {/* Background pattern for placeholder */}
                                         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5"></div>
                                         {item.imageUrl && (
-                                            <img
+                                            <Image
                                                 src={item.imageUrl}
                                                 alt={item.title}
+                                                width={400}
+                                                height={300}
                                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                             />
                                         )}
@@ -158,9 +162,11 @@ export default function GalleryPage() {
                             <div className="w-full md:w-2/3 aspect-video md:aspect-auto md:h-[70vh] bg-muted/20 flex items-center justify-center relative overflow-hidden">
                                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
                                 {selectedImage.imageUrl ? (
-                                    <img
+                                    <Image
                                         src={selectedImage.imageUrl}
                                         alt={selectedImage.title}
+                                        width={1200}
+                                        height={800}
                                         className="w-full h-full object-contain relative z-10"
                                     />
                                 ) : (

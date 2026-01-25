@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, X, FileText, Upload } from "lucide-react";
+import { ArrowLeft, Save, X, FileText } from "lucide-react";
 import Link from "next/link";
 import { UploadButton } from "@/lib/uploadthing";
 
@@ -38,7 +38,7 @@ export default function NewCertificationPage() {
             const data = await res.json();
             if (data.success) {
                 // Extract all unique skills from all certifications
-                const allSkills = data.data.flatMap((cert: any) => cert.skills || []);
+                const allSkills = data.data.flatMap((cert: { skills: string[] }) => cert.skills || []);
                 const uniqueSkills = [...new Set(allSkills)].filter(Boolean).sort();
                 setExistingSkills(uniqueSkills as string[]);
             }
@@ -53,7 +53,7 @@ export default function NewCertificationPage() {
             const data = await res.json();
             if (data.success) {
                 // Extract unique categories
-                const categories = [...new Set(data.data.map((cert: any) => cert.category).filter(Boolean))].sort();
+                const categories = [...new Set(data.data.map((cert: { category: string }) => cert.category).filter(Boolean))].sort();
                 setExistingCategories(categories as string[]);
             }
         } catch (error) {
@@ -290,7 +290,7 @@ export default function NewCertificationPage() {
                                 <div className="flex items-center justify-center p-6 border-2 border-dashed border-primary/20 rounded-lg hover:border-primary/40 transition-colors">
                                     <UploadButton
                                         endpoint="certificateUploader"
-                                        onClientUploadComplete={(res: any) => {
+                                        onClientUploadComplete={(res: { url: string }[]) => {
                                             if (res && res[0]) {
                                                 setFormData(prev => ({ ...prev, certificateFileUrl: res[0].url }));
                                             }

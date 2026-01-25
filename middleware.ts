@@ -1,13 +1,12 @@
 import { withAuth } from "next-auth/middleware"
 import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
 
 // NOTE: Next.js 16 shows deprecation warning for middleware.ts
 // Future migration: rename to proxy.ts when ready to migrate
 // For now, this pattern still works and is widely used
 
 export default withAuth(
-    function middleware(request: NextRequest) {
+    function middleware() {
         const response = NextResponse.next();
 
         // Security Headers

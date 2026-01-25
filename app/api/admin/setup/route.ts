@@ -15,7 +15,7 @@ export async function GET() {
 
         // Create default admin
         const hashedPassword = await bcrypt.hash("admin123", 10);
-        const newAdmin = await Admin.create({
+        await Admin.create({
             username: "admin",
             password: hashedPassword,
             name: "Default Admin",

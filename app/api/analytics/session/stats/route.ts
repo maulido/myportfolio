@@ -5,7 +5,7 @@ import Session from '@/models/Session';
 export async function GET() {
     try {
         await dbConnect();
-    } catch (e) {
+    } catch {
         return NextResponse.json({ success: false, error: "Database connection failed" }, { status: 500 });
     }
 

@@ -76,10 +76,10 @@ export async function POST(request: NextRequest) {
             data: entry,
             message: 'Thank you! Your message will appear after approval.'
         }, { status: 201 });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error creating guestbook entry:', error);
         return NextResponse.json(
-            { success: false, error: error.message || 'Failed to submit entry' },
+            { success: false, error: error instanceof Error ? error.message : 'Failed to submit entry' },
             { status: 500 }
         );
     }

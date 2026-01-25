@@ -59,8 +59,8 @@ export function BlogSearch({
                                 key={tag}
                                 onClick={() => toggleTag(tag)}
                                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${selectedTags.includes(tag)
-                                        ? 'bg-primary text-white shadow-lg shadow-primary/25'
-                                        : 'bg-muted/30 hover:bg-muted/50 text-muted-foreground'
+                                    ? 'bg-primary text-white shadow-lg shadow-primary/25'
+                                    : 'bg-muted/30 hover:bg-muted/50 text-muted-foreground'
                                     }`}
                             >
                                 {tag}
@@ -76,7 +76,7 @@ export function BlogSearch({
                     <span className="text-muted-foreground">Active filters:</span>
                     {searchQuery && (
                         <span className="px-2 py-1 bg-primary/10 text-primary rounded">
-                            Search: "{searchQuery}"
+                            Search: &quot;{searchQuery}&quot;
                         </span>
                     )}
                     {selectedTags.length > 0 && (

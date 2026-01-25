@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
                 images: [`${baseUrl}/blog/${slug}/opengraph-image`],
             },
         }
-    } catch (e) {
+    } catch {
         return { title: 'Blog | John Doe' };
     }
 }

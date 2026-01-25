@@ -31,6 +31,6 @@ const PostSchema: Schema = new Schema({
 // Indexes for query optimization
 PostSchema.index({ published: 1, createdAt: -1 }); // For listing published posts
 PostSchema.index({ category: 1, published: 1 }); // For category filtering
-PostSchema.index({ slug: 1 }); // Already unique, but explicit for clarity
+// PostSchema.index({ slug: 1 }); // Removed: Duplicate index
 
 export default mongoose.models.Post || mongoose.model<IPost>('Post', PostSchema);

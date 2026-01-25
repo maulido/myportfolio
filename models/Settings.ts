@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ISettings extends Document {
     key: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     value: any;
     aboutMe?: {
         paragraph1: string;

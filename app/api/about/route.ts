@@ -57,7 +57,7 @@ export async function PUT(req: Request) {
         console.log('🔍 Existing document:', existing ? 'Found' : 'Not found');
 
         // Build update object dynamically to include all fields
-        const updateFields: any = {
+        const updateFields: Record<string, string | number | boolean> = {
             key: 'aboutMe',
             value: true,
             'aboutMe.paragraph1': body.paragraph1,

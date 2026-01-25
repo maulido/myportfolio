@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Plus, Pencil, Trash2, Search, ArrowLeft, Briefcase, Eye } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -31,11 +31,7 @@ export default function AdminCareerListPage() {
         title: ""
     });
 
-    useEffect(() => {
-        fetchItems();
-    }, []);
-
-    const fetchItems = async () => {
+    const fetchItems = useCallback(async () => {
         try {
             const response = await fetch("/api/career");
             const data = await response.json();
@@ -47,7 +43,11 @@ export default function AdminCareerListPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        fetchItems();
+    }, [fetchItems]);
 
     const handleDelete = async () => {
         const { id } = deleteConfirm;
@@ -104,7 +104,7 @@ export default function AdminCareerListPage() {
                         <p className="text-muted-foreground mb-6">
                             Are you sure you want to delete this career entry?
                             <br />
-                            <span className="font-semibold text-foreground">"{deleteConfirm.title}"</span>
+                            <span className="font-semibold text-foreground">&quot;{deleteConfirm.title}&quot;</span>
                             <br /><br />
                             This action cannot be undone.
                         </p>
@@ -152,7 +152,7 @@ export default function AdminCareerListPage() {
                         </div>
                         <select
                             value={typeFilter}
-                            onChange={(e) => setTypeFilter(e.target.value as any)}
+                            onChange={(e) => setTypeFilter(e.target.value as 'all' | 'work' | 'education' | 'achievement')}
                             className="px-4 py-2 rounded-xl bg-card border border-primary/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                         >
                             <option value="all">All Types</option>
@@ -239,7 +239,7 @@ export default function AdminCareerListPage() {
                         <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-20" />
                         <p className="font-bold">No career entries found</p>
                         <p className="text-xs">
-                            {searchTerm || typeFilter !== 'all' ? "Try a different search or filter" : "Add your first career entry to see it here"}
+                            {searchTerm || typeFilter !== 'all' ? 'Try a different search or filter' : 'Add your first career entry to see it here'}
                         </p>
                     </div>
                 )}

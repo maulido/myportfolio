@@ -23,7 +23,7 @@ export async function GET() {
             }
         ]);
 
-        const endorsementMap = endorsements.reduce((acc: any, item) => {
+        const endorsementMap = endorsements.reduce((acc: Record<string, number>, item) => {
             acc[item.skill] = item.count;
             return acc;
         }, {});

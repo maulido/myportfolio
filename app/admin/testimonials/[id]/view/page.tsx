@@ -186,7 +186,7 @@ export default function TestimonialDetailViewPage({ params }: PageProps) {
                     <div>
                         <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-3">Testimonial</h3>
                         <blockquote className="text-foreground leading-relaxed text-lg italic border-l-4 border-primary/20 pl-4">
-                            "{item.testimonial}"
+                            &quot;{item.testimonial}&quot;
                         </blockquote>
                     </div>
 

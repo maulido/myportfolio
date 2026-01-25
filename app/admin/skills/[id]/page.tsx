@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -8,7 +8,7 @@ import { getIcon, getIconsByCategory } from "@/lib/iconMap";
 
 export default function EditSkillPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter();
-    const [skillId, setSkillId] = useState<string>("");
+    const { id: skillId } = use(params);
     const [formData, setFormData] = useState({
         name: "",
         level: "Intermediate" as "Expert" | "Advanced" | "Intermediate" | "Beginner",
@@ -25,39 +25,38 @@ export default function EditSkillPage({ params }: { params: Promise<{ id: string
     const iconsByCategory = getIconsByCategory();
 
     useEffect(() => {
-        params.then(({ id }) => {
-            setSkillId(id);
-            fetchSkill(id);
-        });
-    }, []);
+        const fetchSkill = async (id: string) => {
+            try {
+                const res = await fetch(`/api/skills/${id}`);
+                const result = await res.json();
 
-    const fetchSkill = async (id: string) => {
-        try {
-            const res = await fetch(`/api/skills/${id}`);
-            const result = await res.json();
-
-            if (result.success) {
-                setFormData({
-                    name: result.data.name,
-                    level: result.data.level,
-                    years: result.data.years,
-                    category: result.data.category,
-                    icon: result.data.icon,
-                    color: result.data.color || "",
-                    order: result.data.order || 0,
-                });
-            } else {
-                alert("Failed to load skill");
+                if (result.success) {
+                    setFormData({
+                        name: result.data.name,
+                        level: result.data.level,
+                        years: result.data.years,
+                        category: result.data.category,
+                        icon: result.data.icon,
+                        color: result.data.color || "",
+                        order: result.data.order || 0,
+                    });
+                } else {
+                    alert("Failed to load skill");
+                    router.push("/admin");
+                }
+            } catch (error) {
+                console.error(error);
+                alert("An error occurred");
                 router.push("/admin");
+            } finally {
+                setIsLoading(false);
             }
-        } catch (error) {
-            console.error(error);
-            alert("An error occurred");
-            router.push("/admin");
-        } finally {
-            setIsLoading(false);
+        };
+
+        if (skillId) {
+            fetchSkill(skillId);
         }
-    };
+    }, [skillId, router]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;

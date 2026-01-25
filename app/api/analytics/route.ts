@@ -5,7 +5,7 @@ import Analytics from '@/models/Analytics';
 export async function GET(request: Request) {
     try {
         await dbConnect();
-    } catch (dbError) {
+    } catch {
         return NextResponse.json({ success: false, error: "Database connection failed" }, { status: 500 });
     }
     const { searchParams } = new URL(request.url);
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         await dbConnect();
-    } catch (dbError) {
+    } catch {
         return NextResponse.json({ success: false, error: "Database connection failed" }, { status: 500 });
     }
 

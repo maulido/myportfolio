@@ -6,8 +6,9 @@ import ChatWidget from "@/components/ChatWidget";
 import DownloadCVModal from "@/components/DownloadCVModal";
 
 import { Footer } from "@/components/Footer";
+import { GlobalSettings } from "@/lib/settings";
 
-export default function ClientLayout({ children, settings }: { children: React.ReactNode, settings: any }) {
+export default function ClientLayout({ children, settings }: { children: React.ReactNode, settings: GlobalSettings }) {
     const [isCVOpen, setIsCVOpen] = useState(false);
 
     useEffect(() => {

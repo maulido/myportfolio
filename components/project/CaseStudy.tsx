@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { AlertCircle, CheckCircle2, Code2, Users, Clock, Briefcase } from 'lucide-react';
+import Image from 'next/image';
 import Prism from 'prismjs';
 import { useEffect } from 'react';
 import 'prismjs/themes/prism-tomorrow.css';
@@ -198,7 +199,7 @@ export function CaseStudy({ caseStudy }: CaseStudyProps) {
                     <div className="grid gap-4 md:grid-cols-2">
                         {caseStudy.screenshots.map((screenshot, i) => (
                             <div key={i} className="aspect-video relative rounded-lg overflow-hidden border border-primary/20">
-                                <img src={screenshot} alt={`Screenshot ${i + 1}`} className="w-full h-full object-cover" />
+                                <Image src={screenshot} alt={`Screenshot ${i + 1}`} fill className="object-cover" unoptimized />
                             </div>
                         ))}
                     </div>

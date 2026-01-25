@@ -9,7 +9,7 @@ export async function GET() {
         const skills = await Skill.find({}).sort({ category: 1, order: 1 });
 
         // Group skills by category
-        const groupedSkills = skills.reduce((acc: any, skill) => {
+        const groupedSkills = skills.reduce((acc: Record<string, typeof skill[]>, skill) => {
             const category = skill.category;
             if (!acc[category]) {
                 acc[category] = [];

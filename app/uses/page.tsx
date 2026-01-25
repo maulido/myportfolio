@@ -5,7 +5,6 @@ import { Navbar } from "@/components/Navbar";
 import { motion } from "framer-motion";
 import { ExternalLink, Laptop, Code, Server, Armchair, Package } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 
 interface UsesItem {
     _id: string;

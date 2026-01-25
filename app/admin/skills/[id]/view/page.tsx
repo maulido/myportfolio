@@ -112,7 +112,7 @@ export default function SkillDetailViewPage({ params }: PageProps) {
                         <p className="text-muted-foreground mb-6">
                             Are you sure you want to delete this skill?
                             <br />
-                            <span className="font-semibold text-foreground">"{item.name}"</span>
+                            <span className="font-semibold text-foreground">&quot;{item.name}&quot;</span>
                             <br /><br />
                             This action cannot be undone.
                         </p>

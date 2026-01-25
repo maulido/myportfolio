@@ -23,7 +23,7 @@ import {
     ImageIcon,
     Code2,
 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useUploadThing } from "@/lib/uploadthing";
 
 // Initialize lowlight instance
@@ -35,19 +35,19 @@ interface RichTextEditorProps {
     placeholder?: string;
 }
 
-export default function RichTextEditor({ content, onChange, placeholder = "Start writing..." }: RichTextEditorProps) {
-    const [isUploading, setIsUploading] = useState(false);
+export default function RichTextEditor({ content, onChange }: RichTextEditorProps) {
+    // const [isUploading, setIsUploading] = useState(false);
 
     const { startUpload } = useUploadThing("imageUploader", {
         onClientUploadComplete: (res) => {
             if (res && res[0]?.url && editor) {
                 editor.chain().focus().setImage({ src: res[0].url }).run();
-                setIsUploading(false);
+                // setIsUploading(false);
             }
         },
         onUploadError: (error: Error) => {
             console.error("Upload error:", error);
-            setIsUploading(false);
+            // setIsUploading(false);
             // Fallback to URL input
             const url = window.prompt("Upload failed. Enter image URL instead:");
             if (url && editor) {
@@ -121,13 +121,13 @@ export default function RichTextEditor({ content, onChange, placeholder = "Start
             const file = (e.target as HTMLInputElement).files?.[0];
             if (!file) return;
 
-            setIsUploading(true);
+            // setIsUploading(true);
 
             try {
                 await startUpload([file]);
             } catch (error) {
                 console.error("Upload error:", error);
-                setIsUploading(false);
+                // setIsUploading(false);
                 // Fallback to URL input
                 const url = window.prompt("Upload failed. Enter image URL instead:");
                 if (url) {

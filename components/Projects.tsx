@@ -75,7 +75,7 @@ export function Projects() {
                         </div>
                         <h3 className="text-xl font-bold mb-2">No Projects Yet</h3>
                         <p className="text-muted-foreground max-w-md mb-6">
-                            I'm currently working on exciting projects. Check out my GitHub for the latest work!
+                            I&apos;m currently working on exciting projects. Check out my GitHub for the latest work!
                         </p>
                         <a
                             href="https://github.com/maulido"

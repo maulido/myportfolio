@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Download, ShieldCheck, Bot, MapPin, Mail, Phone, Github, Linkedin, Twitter, Globe, Instagram, TrendingUp, Award, Code, Briefcase } from "lucide-react";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 
 interface AboutMeContent {
     paragraph1: string;
@@ -118,10 +119,12 @@ export function About() {
                             <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
                             <div className="relative h-64 w-64 md:h-96 md:w-96 overflow-hidden rounded-full border-4 border-primary/20 shadow-2xl bg-gradient-to-b from-primary/5 to-accent/5 flex items-center justify-center">
                                 {aboutMe.profilePhotoUrl ? (
-                                    <img
+                                    <Image
                                         src={aboutMe.profilePhotoUrl}
                                         alt={aboutMe.name || "Profile"}
-                                        className="h-full w-full object-cover"
+                                        className="object-cover"
+                                        fill
+                                        unoptimized
                                     />
                                 ) : (
                                     <>

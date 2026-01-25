@@ -6,7 +6,7 @@ import { authOptions } from "../auth/[...nextauth]/route";
 const f = createUploadthing();
 
 // Real authentication using NextAuth
-const auth = async (req: Request) => {
+const auth = async () => {
     const session = await getServerSession(authOptions);
     return session?.user ? { id: session.user.email || "user" } : null;
 };
@@ -25,9 +25,9 @@ export const ourFileRouter = {
     // Define as many FileRoutes as you like, each with a unique routeSlug
     imageUploader: f({ image: { maxFileSize: "4MB", maxFileCount: 1 } })
         // Set permissions and file types for this FileRoute
-        .middleware(async ({ req, files }) => {
+        .middleware(async ({ files }) => {
             // This code runs on your server before upload
-            const user = await auth(req);
+            const user = await auth();
 
             // If you throw, the user will not be able to upload
             if (!user) throw new UploadThingError("Unauthorized");
@@ -58,8 +58,8 @@ export const ourFileRouter = {
 
     // Multiple image uploader for gallery
     galleryUploader: f({ image: { maxFileSize: "4MB", maxFileCount: 10 } })
-        .middleware(async ({ req, files }) => {
-            const user = await auth(req);
+        .middleware(async ({ files }) => {
+            const user = await auth();
             if (!user) throw new UploadThingError("Unauthorized");
 
             // Generate custom filenames for all uploaded files
@@ -80,8 +80,8 @@ export const ourFileRouter = {
 
     // Certificate PDF uploader
     certificateUploader: f({ pdf: { maxFileSize: "8MB", maxFileCount: 1 } })
-        .middleware(async ({ req, files }) => {
-            const user = await auth(req);
+        .middleware(async ({ files }) => {
+            const user = await auth();
             if (!user) throw new UploadThingError("Unauthorized");
 
             // Generate custom filenames for uploaded certificate

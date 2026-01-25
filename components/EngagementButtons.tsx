@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Eye, Heart } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -104,8 +104,8 @@ export function EngagementButtons({ slug }: EngagementButtonsProps) {
                 onClick={handleLike}
                 disabled={hasLiked}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${hasLiked
-                        ? "bg-red-500/10 text-red-500 border border-red-500/20"
-                        : "hover:bg-red-500/5 hover:text-red-500 border border-transparent"
+                    ? "bg-red-500/10 text-red-500 border border-red-500/20"
+                    : "hover:bg-red-500/5 hover:text-red-500 border border-transparent"
                     }`}
                 title="Like this post"
             >

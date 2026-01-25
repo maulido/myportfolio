@@ -58,7 +58,7 @@ export default function BlogPage() {
                 {/* Breadcrumbs */}
                 <div className="container mx-auto px-4 md:px-6 pb-4">
                     <nav className="text-sm text-muted-foreground">
-                        <a href="/" className="hover:text-primary transition-colors">Home</a>
+                        <Link href="/" className="hover:text-primary transition-colors">Home</Link>
                         <span className="mx-2">/</span>
                         <span className="text-foreground">Blog</span>
                     </nav>

@@ -3,15 +3,15 @@
 import { Github, Linkedin, Mail } from "lucide-react";
 import { useState } from "react";
 
-export function Footer({ settings }: { settings: any }) {
+export function Footer({ settings }: { settings: Record<string, string | undefined> }) {
     const [email, setEmail] = useState("");
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
     const githubUrl = settings?.socialGithub || "https://github.com";
     const linkedinUrl = settings?.socialLinkedin || "https://linkedin.com";
     const contactEmail = settings?.contactEmail || "mailto:example@example.com";
-    const twitterUrl = settings?.socialTwitter;
-    const instagramUrl = settings?.socialInstagram;
+    // const twitterUrl = settings?.socialTwitter;
+    // const instagramUrl = settings?.socialInstagram;
 
     const handleSubscribe = async (e: React.FormEvent) => {
         e.preventDefault();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Eye, Users, FileText, TrendingUp } from "lucide-react";
 
@@ -16,11 +16,7 @@ export default function AdminAnalyticsPage() {
     const [loading, setLoading] = useState(true);
     const [timeRange, setTimeRange] = useState('30');
 
-    useEffect(() => {
-        fetchStats();
-    }, [timeRange]);
-
-    const fetchStats = async () => {
+    const fetchStats = useCallback(async () => {
         try {
             const response = await fetch(`/api/analytics/stats?days=${timeRange}`);
             const data = await response.json();
@@ -32,7 +28,11 @@ export default function AdminAnalyticsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [timeRange]);
+
+    useEffect(() => {
+        fetchStats();
+    }, [fetchStats]);
 
     if (loading) {
         return (

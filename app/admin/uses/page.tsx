@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import Image from "next/image";
+// import { useRouter } from "next/navigation";
 import { Plus, Pencil, Trash2, Search, ArrowLeft, Package } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -18,7 +19,7 @@ interface UsesItem {
 }
 
 export default function AdminUsesListPage() {
-    const router = useRouter();
+    // const router = useRouter();
     const [items, setItems] = useState<UsesItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -39,8 +40,8 @@ export default function AdminUsesListPage() {
             if (data.success) {
                 // Flatten grouped items into single array
                 const allItems: UsesItem[] = [];
-                Object.values(data.data).forEach((categoryItems: any) => {
-                    allItems.push(...categoryItems);
+                Object.values(data.data).forEach((categoryItems: unknown) => {
+                    allItems.push(...(categoryItems as UsesItem[]));
                 });
                 // Sort by order
                 allItems.sort((a, b) => a.order - b.order);
@@ -97,7 +98,7 @@ export default function AdminUsesListPage() {
                         <p className="text-muted-foreground mb-6">
                             Are you sure you want to delete this item?
                             <br />
-                            <span className="font-semibold text-foreground">"{deleteConfirm.name}"</span>
+                            <span className="font-semibold text-foreground">&quot;{deleteConfirm.name}&quot;</span>
                             <br /><br />
                             This action cannot be undone.
                         </p>
@@ -164,11 +165,13 @@ export default function AdminUsesListPage() {
                             >
                                 <div className="flex items-center gap-4 flex-1">
                                     {item.imageUrl ? (
-                                        <div className="h-12 w-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                                            <img
+                                        <div className="h-12 w-12 rounded-lg overflow-hidden bg-muted flex-shrink-0 relative">
+                                            <Image
                                                 src={item.imageUrl}
                                                 alt={item.name}
-                                                className="w-full h-full object-cover"
+                                                fill
+                                                className="object-cover"
+                                                unoptimized
                                             />
                                         </div>
                                     ) : (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Search, ArrowLeft, Briefcase, Eye, ExternalLink } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, ArrowLeft, Briefcase, Eye } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import Image from "next/image";
@@ -112,7 +112,7 @@ export default function AdminProjectsListPage() {
                         <p className="text-muted-foreground mb-6">
                             Are you sure you want to delete this project?
                             <br />
-                            <span className="font-semibold text-foreground">"{deleteConfirm.title}"</span>
+                            <span className="font-semibold text-foreground">&quot;{deleteConfirm.title}&quot;</span>
                             <br /><br />
                             This action cannot be undone.
                         </p>
@@ -169,7 +169,7 @@ export default function AdminProjectsListPage() {
                         </select>
                         <select
                             value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value as any)}
+                            onChange={(e) => setStatusFilter(e.target.value as 'all' | 'completed' | 'in-progress' | 'planned')}
                             className="px-4 py-2 rounded-xl bg-card border border-primary/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                         >
                             <option value="all">All Status</option>

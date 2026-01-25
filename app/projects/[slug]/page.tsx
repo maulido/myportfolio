@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -40,13 +40,7 @@ export default function ProjectDetailPage() {
     const [project, setProject] = useState<Project | null>(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (params.slug) {
-            fetchProject(params.slug as string);
-        }
-    }, [params.slug]);
-
-    const fetchProject = async (slug: string) => {
+    const fetchProject = useCallback(async (slug: string) => {
         try {
             const response = await fetch(`/api/projects/${slug}`);
             const data = await response.json();
@@ -62,7 +56,13 @@ export default function ProjectDetailPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [router]);
+
+    useEffect(() => {
+        if (params.slug) {
+            fetchProject(params.slug as string);
+        }
+    }, [params.slug, fetchProject]);
 
     if (loading) {
         return (

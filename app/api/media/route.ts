@@ -37,10 +37,10 @@ export async function POST(request: NextRequest) {
         const file = await Media.create(body);
 
         return NextResponse.json({ success: true, data: file }, { status: 201 });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error creating media:', error);
         return NextResponse.json(
-            { success: false, error: error.message || 'Failed to create media' },
+            { success: false, error: error instanceof Error ? error.message : 'Failed to create media' },
             { status: 500 }
         );
     }

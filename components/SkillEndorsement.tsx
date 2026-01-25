@@ -50,7 +50,7 @@ export function SkillEndorsement({ skill, initialCount = 0 }: SkillEndorsementPr
             } else {
                 toast.error(data.message || 'Failed to endorse');
             }
-        } catch (error) {
+        } catch {
             toast.error('Something went wrong');
         } finally {
             setLoading(false);
@@ -64,8 +64,8 @@ export function SkillEndorsement({ skill, initialCount = 0 }: SkillEndorsementPr
             onClick={handleEndorse}
             disabled={endorsed || loading}
             className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-all ${endorsed
-                    ? 'bg-primary text-white cursor-default'
-                    : 'bg-muted/30 hover:bg-primary/10 text-muted-foreground hover:text-primary'
+                ? 'bg-primary text-white cursor-default'
+                : 'bg-muted/30 hover:bg-primary/10 text-muted-foreground hover:text-primary'
                 }`}
         >
             {loading ? (

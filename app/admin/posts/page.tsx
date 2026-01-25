@@ -102,7 +102,7 @@ export default function AdminBlogPostsListPage() {
                         <p className="text-muted-foreground mb-6">
                             Are you sure you want to delete this blog post?
                             <br />
-                            <span className="font-semibold text-foreground">"{deleteConfirm.title}"</span>
+                            <span className="font-semibold text-foreground">&quot;{deleteConfirm.title}&quot;</span>
                             <br /><br />
                             This action cannot be undone.
                         </p>
@@ -159,7 +159,7 @@ export default function AdminBlogPostsListPage() {
                         </select>
                         <select
                             value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value as any)}
+                            onChange={(e) => setStatusFilter(e.target.value as "all" | "published" | "draft")}
                             className="px-4 py-2 rounded-xl bg-card border border-primary/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                         >
                             <option value="all">All Status</option>

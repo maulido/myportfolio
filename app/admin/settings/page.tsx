@@ -22,28 +22,28 @@ export default function AdminSettingsPage() {
     });
 
     useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const res = await fetch("/api/settings");
+                const data = await res.json();
+
+                if (data.success && Array.isArray(data.data)) {
+                    // Convert array of {key, value} to object
+                    const settingsObj: Record<string, string> = {};
+                    data.data.forEach((item: { key: string; value: string }) => {
+                        settingsObj[item.key] = item.value;
+                    });
+                    setSettings(prev => ({ ...prev, ...settingsObj }));
+                }
+            } catch (error) {
+                console.error("Failed to load settings", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchSettings();
     }, []);
-
-    const fetchSettings = async () => {
-        try {
-            const res = await fetch("/api/settings");
-            const data = await res.json();
-
-            if (data.success && Array.isArray(data.data)) {
-                // Convert array of {key, value} to object
-                const settingsObj: any = { ...settings };
-                data.data.forEach((item: any) => {
-                    settingsObj[item.key] = item.value;
-                });
-                setSettings(settingsObj);
-            }
-        } catch (error) {
-            console.error("Failed to load settings", error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setSettings({ ...settings, [e.target.name]: e.target.value });

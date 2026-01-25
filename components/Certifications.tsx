@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Award, ExternalLink, Calendar, CheckCircle2, ChevronRight } from 'lucide-react';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import CertificationDetailModal from './CertificationDetailModal';
 
@@ -121,10 +122,12 @@ export function Certifications() {
                             {/* Certificate Image/Badge */}
                             {cert.imageUrl && (
                                 <div className="aspect-video relative mb-4 rounded-lg overflow-hidden bg-muted/20">
-                                    <img
+                                    <Image
                                         src={cert.imageUrl}
                                         alt={cert.title}
-                                        className="w-full h-full object-cover"
+                                        fill
+                                        className="object-cover"
+                                        unoptimized
                                     />
                                 </div>
                             )}

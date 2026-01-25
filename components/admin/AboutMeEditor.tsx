@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Edit, Save, X, Upload, User, Briefcase, MapPin, Mail, Phone, Github, Linkedin, Twitter, Globe, Instagram, FileText, TrendingUp } from "lucide-react";
+import Image from "next/image";
+import { Edit, Save, X, User, Briefcase, MapPin, Mail, Phone, Github, Linkedin, Twitter, Globe, Instagram, FileText, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
+// import { useRouter } from "next/navigation";
 import { UploadButton } from "@/lib/uploadthing";
 
-interface AboutMeData {
+export interface AboutMeData {
     paragraph1: string;
     paragraph2: string;
     profilePhotoUrl?: string;
@@ -152,11 +154,15 @@ export default function AboutMeEditor({ initialData, onSave }: AboutMeEditorProp
                         </label>
                         {editData.profilePhotoUrl ? (
                             <div className="flex items-center gap-4">
-                                <img
-                                    src={editData.profilePhotoUrl}
-                                    alt="Profile"
-                                    className="h-24 w-24 rounded-full object-cover border-2 border-primary/20"
-                                />
+                                <div className="h-24 w-24 rounded-full overflow-hidden border-2 border-primary/20 relative">
+                                    <Image
+                                        src={editData.profilePhotoUrl}
+                                        alt="Profile"
+                                        fill
+                                        className="object-cover"
+                                        unoptimized
+                                    />
+                                </div>
                                 <div className="flex flex-col gap-2">
                                     <a
                                         href={editData.profilePhotoUrl}
@@ -179,9 +185,10 @@ export default function AboutMeEditor({ initialData, onSave }: AboutMeEditorProp
                             <div className="flex items-center justify-center p-6 border-2 border-dashed border-primary/20 rounded-lg">
                                 <UploadButton
                                     endpoint="imageUploader"
-                                    onClientUploadComplete={(res: any) => {
-                                        if (res && res[0]) {
-                                            setEditData({ ...editData, profilePhotoUrl: res[0].url });
+                                    onClientUploadComplete={(res) => {
+                                        const uploadRes = res as { url: string }[];
+                                        if (uploadRes && uploadRes[0]) {
+                                            setEditData({ ...editData, profilePhotoUrl: uploadRes[0].url });
                                         }
                                     }}
                                     onUploadError={(error: Error) => {
@@ -445,11 +452,15 @@ export default function AboutMeEditor({ initialData, onSave }: AboutMeEditorProp
                     {/* Display Mode */}
                     {editData.profilePhotoUrl && (
                         <div className="flex justify-center">
-                            <img
-                                src={editData.profilePhotoUrl}
-                                alt="Profile"
-                                className="h-32 w-32 rounded-full object-cover border-4 border-primary/20"
-                            />
+                            <div className="h-32 w-32 rounded-full overflow-hidden border-4 border-primary/20 relative">
+                                <Image
+                                    src={editData.profilePhotoUrl}
+                                    alt="Profile"
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                />
+                            </div>
                         </div>
                     )}
 

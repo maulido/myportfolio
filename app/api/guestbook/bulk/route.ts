@@ -51,10 +51,10 @@ export async function POST(request: NextRequest) {
             data: result,
             message: `Successfully ${action}ed ${ids.length} item(s)`
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Bulk guestbook operation error:', error);
         return NextResponse.json(
-            { success: false, error: error.message || 'Failed to perform bulk operation' },
+            { success: false, error: error instanceof Error ? error.message : 'Failed to perform bulk operation' },
             { status: 500 }
         );
     }

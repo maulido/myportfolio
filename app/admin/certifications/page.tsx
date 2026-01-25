@@ -96,7 +96,7 @@ export default function AdminCertificationsListPage() {
                         <p className="text-muted-foreground mb-6">
                             Are you sure you want to delete this certification?
                             <br />
-                            <span className="font-semibold text-foreground">"{deleteConfirm.title}"</span>
+                            <span className="font-semibold text-foreground">&quot;{deleteConfirm.title}&quot;</span>
                             <br /><br />
                             This action cannot be undone.
                         </p>
@@ -232,7 +232,7 @@ export default function AdminCertificationsListPage() {
                         <Award className="h-12 w-12 mx-auto mb-4 opacity-20" />
                         <p className="font-bold">No certifications found</p>
                         <p className="text-xs">
-                            {searchTerm || categoryFilter !== "all" ? "Try a different search or filter" : "Add your first certification to see it here"}
+                            {searchTerm || categoryFilter !== "all" ? 'Try a different search or filter' : 'Add your first certification to see it here'}
                         </p>
                     </div>
                 )}

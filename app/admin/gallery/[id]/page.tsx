@@ -47,7 +47,7 @@ export default function EditGalleryItemPage({ params }: { params: Promise<{ id: 
                 const res = await fetch('/api/gallery');
                 const data = await res.json();
                 if (data.success) {
-                    const categories = [...new Set(data.data.map((item: any) => item.category).filter(Boolean))];
+                    const categories = [...new Set(data.data.map((item: { category: string }) => item.category).filter(Boolean))];
                     setExistingCategories(categories as string[]);
                 }
             } catch (error) {

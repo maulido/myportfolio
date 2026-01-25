@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import { Download, Mail, CheckCircle, X } from "lucide-react";
+import { Mail, CheckCircle, X } from "lucide-react";
 
 interface DownloadCVModalProps {
     isOpen: boolean;
@@ -32,7 +32,7 @@ export default function DownloadCVModal({ isOpen, onClose }: DownloadCVModalProp
             } else {
                 setError(data.error || "Failed to send OTP");
             }
-        } catch (err) {
+        } catch {
             setError("Something went wrong. Please try again.");
         } finally {
             setLoading(false);
@@ -56,7 +56,7 @@ export default function DownloadCVModal({ isOpen, onClose }: DownloadCVModalProp
             } else {
                 setError(data.error || "Invalid OTP");
             }
-        } catch (err) {
+        } catch {
             setError("Something went wrong. Please try again.");
         } finally {
             setLoading(false);

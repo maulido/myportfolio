@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);
 
-        const query: any = { timestamp: { $gte: startDate } };
+        const query: Record<string, unknown> = { timestamp: { $gte: startDate } };
         if (event) query.event = event;
 
         const events = await AnalyticsEvent.find(query).sort({ timestamp: -1 });
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
         const stats = {
             totalEvents: events.length,
             uniqueEvents: [...new Set(events.map(e => e.event))].length,
-            eventCounts: events.reduce((acc: any, e) => {
+            eventCounts: events.reduce((acc: Record<string, number>, e) => {
                 acc[e.event] = (acc[e.event] || 0) + 1;
                 return acc;
             }, {}),

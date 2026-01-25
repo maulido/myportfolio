@@ -54,10 +54,10 @@ export async function PUT(
         }
 
         return NextResponse.json({ success: true, data: item });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error updating uses item:', error);
         return NextResponse.json(
-            { success: false, error: error.message || 'Failed to update uses item' },
+            { success: false, error: error instanceof Error ? error.message : 'Failed to update uses item' },
             { status: 500 }
         );
     }

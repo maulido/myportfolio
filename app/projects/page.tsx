@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { ProjectsPageContent } from "@/components/ProjectsPageContent";
 
@@ -9,7 +10,7 @@ export default function ProjectsPage() {
                 {/* Breadcrumbs */}
                 <div className="container mx-auto px-4 md:px-6 py-4">
                     <nav className="text-sm text-muted-foreground">
-                        <a href="/" className="hover:text-primary transition-colors">Home</a>
+                        <Link href="/" className="hover:text-primary transition-colors">Home</Link>
                         <span className="mx-2">/</span>
                         <span className="text-foreground">Projects</span>
                     </nav>

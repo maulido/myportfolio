@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Navbar } from "@/components/Navbar";
 import { motion } from "framer-motion";
 import { MessageSquare, Send, ChevronLeft, ChevronRight } from "lucide-react";
@@ -28,11 +28,7 @@ export default function GuestbookPage() {
     const [charCount, setCharCount] = useState(0);
     const maxChars = 500;
 
-    useEffect(() => {
-        fetchEntries();
-    }, [page]);
-
-    const fetchEntries = async () => {
+    const fetchEntries = useCallback(async () => {
         try {
             const response = await fetch(`/api/guestbook?page=${page}&limit=10`);
             const data = await response.json();
@@ -45,7 +41,11 @@ export default function GuestbookPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [page]);
+
+    useEffect(() => {
+        fetchEntries();
+    }, [fetchEntries]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;

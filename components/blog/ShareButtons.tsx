@@ -29,7 +29,7 @@ export function ShareButtons({ title, url, description }: ShareButtonsProps) {
             setCopied(true);
             toast.success('Link copied to clipboard!');
             setTimeout(() => setCopied(false), 2000);
-        } catch (error) {
+        } catch {
             toast.error('Failed to copy link');
         }
     };
@@ -42,7 +42,7 @@ export function ShareButtons({ title, url, description }: ShareButtonsProps) {
                     text: shareText,
                     url: shareUrl,
                 });
-            } catch (error) {
+            } catch {
                 // User cancelled or error occurred
             }
         }

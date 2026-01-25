@@ -38,7 +38,7 @@ export default function AdminSkillsListPage() {
             if (data.success) {
                 // Flatten grouped skills
                 const allSkills: Skill[] = [];
-                data.data.forEach((group: any) => {
+                data.data.forEach((group: { skills: Skill[] }) => {
                     allSkills.push(...group.skills);
                 });
                 setItems(allSkills.sort((a, b) => a.order - b.order));
@@ -107,7 +107,7 @@ export default function AdminSkillsListPage() {
                         <p className="text-muted-foreground mb-6">
                             Are you sure you want to delete this skill?
                             <br />
-                            <span className="font-semibold text-foreground">"{deleteConfirm.name}"</span>
+                            <span className="font-semibold text-foreground">&quot;{deleteConfirm.name}&quot;</span>
                             <br /><br />
                             This action cannot be undone.
                         </p>

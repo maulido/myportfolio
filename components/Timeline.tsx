@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from 'framer-motion';
-import { Briefcase, GraduationCap, Award, Calendar, MapPin, ChevronDown } from 'lucide-react';
+import { Briefcase, GraduationCap, Calendar, MapPin, Award, ChevronDown } from "lucide-react";
+import Image from "next/image";
 import { useState } from 'react';
 
 export interface TimelineItem {
@@ -88,10 +89,12 @@ export function Timeline({ items }: TimelineProps) {
                             {/* Icon or Company Logo */}
                             <div className={`absolute left-0 w-16 h-16 rounded-full flex items-center justify-center border-4 border-background ${getIconColor(item.type)} overflow-hidden`}>
                                 {item.companyLogo ? (
-                                    <img
+                                    <Image
                                         src={item.companyLogo}
                                         alt={item.organization}
-                                        className="w-full h-full object-cover"
+                                        fill
+                                        className="object-cover"
+                                        unoptimized
                                     />
                                 ) : (
                                     getIcon(item.type)

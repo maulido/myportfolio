@@ -11,7 +11,7 @@ interface SessionUpdate {
 export async function POST(req: Request) {
     try {
         await dbConnect();
-    } catch (e) {
+    } catch {
         return NextResponse.json({ success: false, error: "Database connection failed" }, { status: 500 });
     }
 

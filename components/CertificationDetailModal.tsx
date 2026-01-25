@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, ExternalLink, Award, CheckCircle2, Shield } from "lucide-react";
+import Image from "next/image";
 
 interface Certification {
     _id: string;
@@ -93,10 +94,12 @@ export default function CertificationDetailModal({ certification, isOpen, onClos
                             {/* Certificate Image */}
                             {certification.imageUrl && (
                                 <div className="aspect-video relative rounded-xl overflow-hidden bg-muted/20 border border-primary/10">
-                                    <img
+                                    <Image
                                         src={certification.imageUrl}
                                         alt={certification.title}
-                                        className="w-full h-full object-cover"
+                                        fill
+                                        className="object-cover"
+                                        unoptimized
                                     />
                                 </div>
                             )}

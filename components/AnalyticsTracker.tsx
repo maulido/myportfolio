@@ -59,7 +59,7 @@ export function AnalyticsTracker() {
                         isHeartbeat: true
                     }),
                 });
-            } catch (e) { }
+            } catch { }
         }, 60000); // Every minute
 
         return () => clearInterval(interval);

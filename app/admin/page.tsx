@@ -1,9 +1,10 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { LogOut, Plus, LayoutDashboard, FileText, Briefcase, Image, Award, MessageCircle, Pencil, Trash2, Search, Mail, Package, MessageSquare, FolderOpen, BarChart3, Eye } from "lucide-react";
+import NextImage from "next/image";
+
+import { useSession } from "next-auth/react";
+import { useEffect, useState, useCallback } from "react";
+import { LogOut, Plus, FileText, Briefcase, Image as ImageIcon, Award, MessageCircle, Pencil, Trash2, Search, Mail, MessageSquare, BarChart3, Eye } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import CareerFilter from "@/components/admin/CareerFilter";
@@ -95,11 +96,6 @@ interface Skill {
     order: number;
 }
 
-interface AnalyticsData {
-    type: string;
-    count: number;
-}
-
 const analyticsData = [
     { name: "Mon", views: 400, downloads: 24, messages: 12 },
     { name: "Tue", views: 300, downloads: 13, messages: 9 },
@@ -109,8 +105,6 @@ const analyticsData = [
     { name: "Sat", views: 239, downloads: 38, messages: 20 },
     { name: "Sun", views: 349, downloads: 43, messages: 25 },
 ];
-
-// ... types
 interface GuestbookEntry {
     _id: string;
     name: string;
@@ -123,7 +117,7 @@ interface GuestbookEntry {
 
 export default function AdminDashboard() {
     const { data: session, status } = useSession();
-    const [activeTab, setActiveTab] = useState("overview");
+    const [activeTab] = useState("overview");
     const [isWorking, setIsWorking] = useState(true);
 
     const [stats, setStats] = useState({ totalPosts: 0, totalProjects: 0, totalGallery: 0, visitors: 0, avgDuration: 0 });
@@ -159,14 +153,14 @@ export default function AdminDashboard() {
         console.log('AdminDashboard mounted');
         console.log('Session status:', status);
         console.log('Session data:', session);
-    }, []);
+    }, [status, session]);
 
     // Debug: Log when posts change
     useEffect(() => {
         console.log('Posts updated:', posts.length, 'posts');
     }, [posts]);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             const [postsRes, projectsRes, galleryRes, certsRes, testimonialsRes, newsletterRes, careersRes, skillsRes, analyticsRes, settingsRes, sessionsRes, guestbookRes] = await Promise.all([
                 fetch('/api/blog'),
@@ -183,7 +177,7 @@ export default function AdminDashboard() {
                 fetch('/api/guestbook?limit=5')
             ]);
 
-            const [postsData, projectsData, galleryData, certsData, testimonialsData, newsletterData, careersData, skillsData, analyticsData, settingsData, sessionsData, guestbookData] = await Promise.all([
+            const [postsData, projectsData, galleryData, certsData, testimonialsData, newsletterData, careersData, skillsData, , settingsData, sessionsData, guestbookData] = await Promise.all([
                 postsRes.json(),
                 projectsRes.json(),
                 galleryRes.json(),
@@ -210,7 +204,7 @@ export default function AdminDashboard() {
             }
             if (skillsData.success) {
                 // Flatten grouped skills into single array
-                const allSkills = skillsData.data.flatMap((group: any) => group.skills);
+                const allSkills = skillsData.data.flatMap((group: { skills: Skill[] }) => group.skills);
                 setSkills(allSkills);
             }
             if (settingsData.success && settingsData.data !== undefined) setIsWorking(settingsData.data);
@@ -234,7 +228,7 @@ export default function AdminDashboard() {
             // Keep error logging for admin debugging
             console.error("Failed to fetch admin data", error);
         }
-    };
+    }, []);
 
     const handleBulkDelete = async (type: 'post' | 'project') => {
         const ids = type === 'post' ? Array.from(selectedPosts) : []; // Extend for projects later
@@ -345,11 +339,13 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         if (status === "authenticated") {
+            // eslint-disable-next-line
             fetchData();
         }
-    }, [status]);
+    }, [status, fetchData]);
 
     useEffect(() => {
+        // eslint-disable-next-line
         setSearchTerm("");
     }, [activeTab]);
 
@@ -368,7 +364,7 @@ export default function AdminDashboard() {
                         <h3 className="text-xl font-bold mb-4">Confirm Delete</h3>
                         <p className="text-muted-foreground mb-6">
                             Are you sure you want to delete this {deleteConfirm.type}?
-                            {deleteConfirm.name && <><br /><span className="font-semibold text-foreground">"{deleteConfirm.name}"</span></>}
+                            {deleteConfirm.name && <><br /><span className="font-semibold text-foreground">&quot;{deleteConfirm.name}&quot;</span></>}
                             <br /><br />
                             This action cannot be undone.
                         </p>
@@ -420,7 +416,7 @@ export default function AdminDashboard() {
                                 {[
                                     { label: "Total Posts", value: stats.totalPosts, trend: "+12%", icon: <FileText className="h-4 w-4" /> },
                                     { label: "Total Projects", value: stats.totalProjects, trend: "+8%", icon: <Briefcase className="h-4 w-4" /> },
-                                    { label: "Gallery Items", value: stats.totalGallery, trend: "+5%", icon: <Image className="h-4 w-4" /> },
+                                    { label: "Gallery Items", value: stats.totalGallery, trend: "+5%", icon: <ImageIcon className="h-4 w-4" /> },
                                     { label: "Avg Session", value: `${Math.floor(stats.avgDuration / 60)}m ${stats.avgDuration % 60}s`, trend: "+10%", icon: <LogOut className="h-4 w-4 rotate-180" /> },
                                 ].map((stat) => (
                                     <div key={stat.label} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-6 shadow-sm">
@@ -463,7 +459,7 @@ export default function AdminDashboard() {
                                 <Link href="/admin/gallery/new">
                                     <button className="w-full bg-gradient-to-br from-pink-500/10 to-pink-600/10 hover:from-pink-500/20 hover:to-pink-600/20 border border-pink-500/20 hover:border-pink-500/40 p-4 rounded-2xl flex items-center gap-4 transition-all group">
                                         <div className="h-12 w-12 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-500 group-hover:scale-110 transition-transform">
-                                            <Image className="h-6 w-6" />
+                                            <ImageIcon className="h-6 w-6" />
                                         </div>
                                         <div className="text-left">
                                             <div className="font-bold text-foreground">Upload Image</div>
@@ -579,7 +575,7 @@ export default function AdminDashboard() {
                                                             <div className="font-bold text-sm truncate">{entry.name}</div>
                                                             <div className="text-[10px] text-muted-foreground">{new Date(entry.createdAt).toLocaleDateString()}</div>
                                                         </div>
-                                                        <p className="text-xs text-muted-foreground line-clamp-2 italic">"{entry.message}"</p>
+                                                        <p className="text-xs text-muted-foreground line-clamp-2 italic">&quot;{entry.message}&quot;</p>
                                                     </div>
                                                 </div>
                                             ))
@@ -898,8 +894,8 @@ export default function AdminDashboard() {
                                     {projects.filter((p: Project) => p.title.toLowerCase().includes(searchTerm.toLowerCase())).map((project: Project) => (
                                         <div key={project._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
                                             <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden">
-                                                    {project.image ? <img src={project.image} alt="" className="w-full h-full object-cover" /> : project.title.charAt(0)}
+                                                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden relative">
+                                                    {project.image ? <NextImage src={project.image} alt="" fill className="object-cover" unoptimized /> : project.title.charAt(0)}
                                                 </div>
                                                 <div>
                                                     <h4 className="font-bold">{project.title}</h4>
@@ -968,8 +964,8 @@ export default function AdminDashboard() {
                                     {gallery.filter((g: GalleryItem) => g.title.toLowerCase().includes(searchTerm.toLowerCase())).map((item: GalleryItem) => (
                                         <div key={item._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
                                             <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden">
-                                                    {item.imageUrl ? <img src={item.imageUrl} alt="" className="w-full h-full object-cover" /> : item.title.charAt(0)}
+                                                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden relative">
+                                                    {item.imageUrl ? <NextImage src={item.imageUrl} alt="" fill className="object-cover" unoptimized /> : item.title.charAt(0)}
                                                 </div>
                                                 <div>
                                                     <h4 className="font-bold">{item.title}</h4>
@@ -999,7 +995,7 @@ export default function AdminDashboard() {
                                 </div>
                             ) : (
                                 <div className="rounded-3xl border-2 border-dashed border-primary/10 bg-card/20 backdrop-blur-sm px-8 py-20 text-center text-muted-foreground">
-                                    <Image className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                                    <ImageIcon className="h-12 w-12 mx-auto mb-4 opacity-20" />
                                     <p className="font-bold">Gallery is empty</p>
                                     <p className="text-xs">Upload images to display them in your gallery.</p>
                                 </div>

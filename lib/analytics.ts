@@ -3,10 +3,10 @@
 
 export interface AnalyticsEvent {
     event: string;
-    properties?: Record<string, any>;
+    properties?: Record<string, unknown>;
 }
 
-export function trackEvent(event: string, properties?: Record<string, any>) {
+export function trackEvent(event: string, properties?: Record<string, unknown>) {
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
         console.log('[Analytics]', event, properties);

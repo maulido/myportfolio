@@ -6,10 +6,9 @@ import {
     LayoutDashboard,
     FileText,
     Briefcase,
-    Image,
+    Image as ImageIcon,
     Award,
     MessageCircle,
-    Mail,
     Package,
     MessageSquare,
     FolderOpen,
@@ -53,7 +52,7 @@ export default function AdminSidebar() {
             <div className="px-4 py-2 mt-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Content</div>
             <Link href="/admin/gallery" className="w-full">
                 <button className={`w-full inline-flex items-center rounded-xl text-sm font-bold transition-all h-11 px-4 py-2 justify-start ${isActive("/admin/gallery") ? "bg-primary text-white shadow-lg shadow-primary/25" : "hover:bg-primary/5 hover:text-primary"}`}>
-                    <Image className="mr-3 h-4 w-4" />
+                    <ImageIcon className="mr-3 h-4 w-4" />
                     Gallery
                 </button>
             </Link>

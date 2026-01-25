@@ -1,9 +1,11 @@
 "use client";
+import Link from "next/link";
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { Navbar } from "@/components/Navbar";
-import { Award, Calendar, ExternalLink, CheckCircle, Search, TrendingUp, FileCheck, Clock } from "lucide-react";
+import { Award, Calendar, ExternalLink, CheckCircle, Search, TrendingUp, Clock } from "lucide-react";
 import CertificationDetailModal from "@/components/CertificationDetailModal";
 
 interface ICertification {
@@ -97,7 +99,8 @@ export default function CertificationsPage() {
                 {/* Breadcrumbs */}
                 <div className="container mx-auto px-4 md:px-6 pb-4">
                     <nav className="text-sm text-muted-foreground">
-                        <a href="/" className="hover:text-primary transition-colors">Home</a>
+
+                        <Link href="/" className="hover:text-primary transition-colors">Home</Link>
                         <span className="mx-2">/</span>
                         <span className="text-foreground">Certifications</span>
                     </nav>
@@ -245,10 +248,12 @@ export default function CertificationsPage() {
                                         {/* Certificate Image/Badge */}
                                         {cert.imageUrl && (
                                             <div className="aspect-video relative mb-4 rounded-lg overflow-hidden bg-muted/20 border border-primary/10">
-                                                <img
+                                                <Image
                                                     src={cert.imageUrl}
                                                     alt={cert.title}
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                                    fill
+                                                    unoptimized
                                                 />
                                             </div>
                                         )}

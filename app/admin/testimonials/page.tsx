@@ -197,7 +197,7 @@ export default function AdminTestimonialsListPage() {
                                             </div>
                                         </div>
                                         <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                                            "{item.testimonial}"
+                                            &quot;{item.testimonial}&quot;
                                         </p>
                                         <div className="flex items-center gap-2">
                                             <Link href={`/admin/testimonials/${item._id}/view`}>

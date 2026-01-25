@@ -1,4 +1,4 @@
-import NextAuth, { User, Account, Profile } from "next-auth";
+import NextAuth, { User, Session } from "next-auth";
 import { JWT } from "next-auth/jwt";
 import { AdapterUser } from "next-auth/adapters";
 import CredentialsProvider from "next-auth/providers/credentials";
@@ -44,9 +44,9 @@ export const authOptions = {
             }
             return token;
         },
-        async session({ session, token }: { session: any; token: JWT }) {
+        async session({ session, token }: { session: Session; token: JWT }) {
             if (session.user) {
-                (session.user as any).id = token.id as string;
+                (session.user as Session["user"] & { id: string }).id = token.id as string;
             }
             return session;
         },

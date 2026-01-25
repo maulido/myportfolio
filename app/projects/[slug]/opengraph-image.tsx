@@ -57,8 +57,10 @@ export default async function Image({ params }: { params: Promise<{ slug: string
                 >
                     {/* Background Image/Gradient */}
                     {project.imageUrl ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
                         <img
                             src={project.imageUrl}
+                            alt={project.title}
                             style={{
                                 position: 'absolute',
                                 width: '100%',

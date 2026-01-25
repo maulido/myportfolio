@@ -56,7 +56,7 @@ export function Skills() {
 
             if (result.success) {
                 // Map API data to component format
-                const mappedSkills = result.data.map((group: any) => ({
+                const mappedSkills = result.data.map((group: { category: string; skills: Skill[] }) => ({
                     category: group.category,
                     icon: <Code2 className="h-5 w-5" />,
                     skills: group.skills

@@ -102,7 +102,7 @@ export default function GalleryDetailViewPage({ params }: PageProps) {
                         <p className="text-muted-foreground mb-6">
                             Are you sure you want to delete this gallery item?
                             <br />
-                            <span className="font-semibold text-foreground">"{item.title}"</span>
+                            <span className="font-semibold text-foreground">&quot;{item.title}&quot;</span>
                             <br /><br />
                             This action cannot be undone.
                         </p>

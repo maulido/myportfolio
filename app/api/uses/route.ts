@@ -12,7 +12,7 @@ export async function GET() {
             .lean();
 
         // Group by category
-        const groupedItems = items.reduce((acc: any, item) => {
+        const groupedItems = items.reduce((acc: Record<string, typeof item[]>, item) => {
             if (!acc[item.category]) {
                 acc[item.category] = [];
             }
@@ -43,10 +43,10 @@ export async function POST(request: Request) {
         const item = await UsesItem.create(body);
 
         return NextResponse.json({ success: true, data: item }, { status: 201 });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error creating uses item:', error);
         return NextResponse.json(
-            { success: false, error: error.message || 'Failed to create uses item' },
+            { success: false, error: error instanceof Error ? error.message : 'Failed to create uses item' },
             { status: 500 }
         );
     }

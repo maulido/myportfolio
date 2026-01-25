@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { User, Lock, Mail, UserCircle, Save, Key, Calendar, Shield, CheckCircle2, MapPin, Phone, FileText } from "lucide-react";
-import AboutMeEditor from "@/components/admin/AboutMeEditor";
+import AboutMeEditor, { AboutMeData } from "@/components/admin/AboutMeEditor";
 
 interface ProfileData {
     username: string;
@@ -19,7 +19,7 @@ interface ProfileData {
 }
 
 export default function ProfilePage() {
-    const { data: session, status } = useSession();
+    const { status } = useSession();
     const router = useRouter();
 
     const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -58,7 +58,7 @@ export default function ProfilePage() {
         }
     };
 
-    const handleAboutMeSave = async (data: any) => {
+    const handleAboutMeSave = async (data: AboutMeData) => {
         try {
             const res = await fetch('/api/about', {
                 method: 'PUT',
@@ -426,7 +426,7 @@ export default function ProfilePage() {
                                             className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all"
                                             placeholder="your-email@domain.com"
                                         />
-                                        <p className="text-xs text-muted-foreground">Email displayed in the "Get in Touch" section</p>
+                                        <p className="text-xs text-muted-foreground">Email displayed in the &quot;Get in Touch&quot; section</p>
                                     </div>
 
                                     <div className="space-y-2">

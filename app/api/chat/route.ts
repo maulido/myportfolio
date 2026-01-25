@@ -40,7 +40,7 @@ export async function POST(req: Request) {
         const text = response.text();
 
         return NextResponse.json({ response: text });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Gemini API Error:", error);
         return NextResponse.json({ error: "Failed to get response from AI assistant." }, { status: 500 });
     }
