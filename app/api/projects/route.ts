@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import Project from '@/models/Project';
 
@@ -14,12 +15,19 @@ export async function GET(req: Request) {
 
         let projects;
         if (slug) {
-            projects = await Project.find({ slug });
+            projects = await Project.find({ slug }).lean();
         } else {
-            projects = await Project.find({}).sort({ createdAt: -1 });
+            projects = await Project.find({}).sort({ createdAt: -1 }).lean();
         }
 
-        return NextResponse.json({ success: true, data: projects });
+        return NextResponse.json(
+            { success: true, data: projects },
+            {
+                headers: {
+                    'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+                },
+            }
+        );
     } catch (error: unknown) {
         console.error("API GET Projects Error:", error);
         return NextResponse.json({
@@ -30,6 +38,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
+
     await dbConnect();
 
     try {

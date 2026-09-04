@@ -167,7 +167,7 @@ export default function AdminBlogPostsListPage() {
                             <option value="draft">Draft</option>
                         </select>
                     </div>
-                    <Link href="/admin/blog/new">
+                    <Link href="/admin/posts/new">
                         <button className="inline-flex items-center justify-center rounded-2xl text-sm font-bold bg-primary text-white hover:bg-primary/90 h-11 px-6 shadow-lg shadow-primary/25 transition-all active:scale-95">
                             <Plus className="mr-2 h-4 w-4" />
                             Add New Post

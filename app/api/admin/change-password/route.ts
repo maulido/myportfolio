@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
 
     try {
         await dbConnect();
-        const session = authResult as { user: { id: string } };
+        const session = authResult;
         const { currentPassword, newPassword, confirmPassword } = await req.json();
 
         // Validate input

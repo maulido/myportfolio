@@ -9,7 +9,8 @@ export function Footer({ settings }: { settings: Record<string, string | undefin
 
     const githubUrl = settings?.socialGithub || "https://github.com";
     const linkedinUrl = settings?.socialLinkedin || "https://linkedin.com";
-    const contactEmail = settings?.contactEmail || "mailto:example@example.com";
+    const rawEmail = settings?.contactEmail || "example@example.com";
+    const contactEmail = rawEmail.replace(/^mailto:/i, "");
     // const twitterUrl = settings?.socialTwitter;
     // const instagramUrl = settings?.socialInstagram;
 
@@ -34,19 +35,19 @@ export function Footer({ settings }: { settings: Record<string, string | undefin
     };
 
     return (
-        <footer className="relative border-t border-primary/10 bg-black/50 backdrop-blur-xl py-20 overflow-hidden">
-            {/* Top Glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[150px] bg-primary/5 blur-[120px] -z-10" />
+        <footer className="relative border-t border-border bg-card dark:bg-[#030712] py-16 overflow-hidden">
+            {/* Top Glow (Dark mode only) */}
+            <div className="hidden dark:block absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+            <div className="hidden dark:block absolute top-0 left-1/2 -translate-x-1/2 w-full h-[150px] bg-primary/5 blur-[120px] -z-10" />
 
             <div className="container mx-auto px-4 text-center">
-                <div className="mb-8 flex justify-center space-x-8">
+                <div className="mb-8 flex justify-center space-x-6">
                     {githubUrl && (
                         <a
                             href={githubUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group relative p-3 rounded-full bg-white/5 hover:bg-white/10 transition-all duration-300 ring-1 ring-white/10 hover:ring-primary/50"
+                            className="group relative p-3 rounded-full bg-muted/60 dark:bg-white/5 hover:bg-muted dark:hover:bg-white/10 transition-all duration-300 ring-1 ring-border dark:ring-white/10 hover:ring-primary/50 shadow-sm"
                         >
                             <Github className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                             <span className="sr-only">GitHub</span>
@@ -57,7 +58,7 @@ export function Footer({ settings }: { settings: Record<string, string | undefin
                             href={linkedinUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group relative p-3 rounded-full bg-white/5 hover:bg-white/10 transition-all duration-300 ring-1 ring-white/10 hover:ring-primary/50"
+                            className="group relative p-3 rounded-full bg-muted/60 dark:bg-white/5 hover:bg-muted dark:hover:bg-white/10 transition-all duration-300 ring-1 ring-border dark:ring-white/10 hover:ring-primary/50 shadow-sm"
                         >
                             <Linkedin className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                             <span className="sr-only">LinkedIn</span>
@@ -66,42 +67,42 @@ export function Footer({ settings }: { settings: Record<string, string | undefin
                     {contactEmail && (
                         <a
                             href={`mailto:${contactEmail}`}
-                            className="group relative p-3 rounded-full bg-white/5 hover:bg-white/10 transition-all duration-300 ring-1 ring-white/10 hover:ring-primary/50"
+                            className="group relative p-3 rounded-full bg-muted/60 dark:bg-white/5 hover:bg-muted dark:hover:bg-white/10 transition-all duration-300 ring-1 ring-border dark:ring-white/10 hover:ring-primary/50 shadow-sm"
                         >
                             <Mail className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                             <span className="sr-only">Email</span>
                         </a>
                     )}
                 </div>
-                <div className="space-y-6 max-w-sm mx-auto mb-16">
-                    <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">Subscribe to Newsletter</h4>
-                    <form className="flex flex-col sm:flex-row gap-3" onSubmit={handleSubscribe}>
+                <div className="space-y-4 max-w-sm mx-auto mb-12">
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-foreground/70">Subscribe to Newsletter</h4>
+                    <form className="flex flex-col sm:flex-row gap-2.5" onSubmit={handleSubscribe}>
                         <input
                             type="email"
                             placeholder="Email address"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="flex-1 rounded-2xl border border-white/5 bg-white/5 px-4 py-3 text-sm text-foreground placeholder-muted-foreground/50 focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all disabled:opacity-50"
+                            className="flex-1 rounded-xl border border-input dark:border-white/10 bg-background dark:bg-white/5 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all disabled:opacity-50"
                             disabled={status === "loading" || status === "success"}
                         />
                         <button
                             type="submit"
                             disabled={status === "loading" || status === "success"}
-                            className="rounded-2xl bg-primary px-6 py-3 text-sm font-bold text-white hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-primary/20"
+                            className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50 shadow-md shadow-primary/20"
                         >
                             {status === "loading" ? "..." : status === "success" ? "Joined!" : "Join"}
                         </button>
                     </form>
-                    {status === "error" && <p className="text-xs text-red-400 font-medium">Transmission error. Try again.</p>}
-                    {status === "success" && <p className="text-xs text-green-400 font-medium">Welcome to the network.</p>}
+                    {status === "error" && <p className="text-xs text-red-500 font-medium">Transmission error. Try again.</p>}
+                    {status === "success" && <p className="text-xs text-green-600 dark:text-green-400 font-medium">Welcome to the network.</p>}
                 </div>
 
-                <div className="space-y-2">
-                    <h3 className="text-lg font-bold text-gradient">Portfolio</h3>
-                    <p className="text-sm text-muted-foreground/60">
+                <div className="space-y-1.5 pt-4 border-t border-border/60 dark:border-white/5">
+                    <h3 className="text-base font-bold text-gradient">Portfolio</h3>
+                    <p className="text-xs text-muted-foreground">
                         Built with Next.js & TailwindCSS.
                     </p>
-                    <p className="text-xs text-muted-foreground/40 mt-4">
+                    <p className="text-xs text-muted-foreground/80 pt-2">
                         &copy; {new Date().getFullYear()} All rights reserved.
                     </p>
                 </div>

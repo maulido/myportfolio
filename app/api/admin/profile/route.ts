@@ -13,7 +13,7 @@ export async function GET() {
 
     try {
         await dbConnect();
-        const session = authResult as { user: { id: string } };
+        const session = authResult;
 
         const admin = await Admin.findById(session.user.id).select('-password');
 
@@ -57,7 +57,7 @@ export async function PUT(req: NextRequest) {
 
     try {
         await dbConnect();
-        const session = authResult as { user: { id: string } };
+        const session = authResult;
         const { username, name, email, contactEmail, contactPhone, contactLocation } = await req.json();
 
         // Validate input

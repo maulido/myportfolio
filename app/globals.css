@@ -1,47 +1,54 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #fdfdfd;
-  /* Clean white */
+  --background: #f1f5f9;
+  /* Slate 100 - soft, comfortable neutral canvas that eliminates eye-straining glare */
   --foreground: #0f172a;
-  /* Slate 900 */
+  /* Slate 900 - crisp, deep readable text */
 
   --card: #ffffff;
+  /* Pure white cards that stand out cleanly against Slate 100 */
   --card-foreground: #0f172a;
 
   --popover: #ffffff;
   --popover-foreground: #0f172a;
 
-  --primary: #7c3aed;
-  /* Violet 600 */
+  --primary: #4f46e5;
+  /* Indigo 600 - deep, professional, glare-free */
   --primary-foreground: #ffffff;
 
-  --secondary: #f8fafc;
-  /* Slate 50 */
+  --secondary: #e2e8f0;
+  /* Slate 200 */
   --secondary-foreground: #0f172a;
 
-  --muted: #f1f5f9;
-  /* Slate 100 */
+  --muted: #e2e8f0;
+  /* Slate 200 */
   --muted-foreground: #475569;
-  /* Slate 600 (Better Contrast) */
+  /* Slate 600 - high readability */
 
-  --accent: #0ea5e9;
-  /* Cyan 600 */
-  --accent-foreground: #0f172a;
+  --accent: #2563eb;
+  /* Blue 600 */
+  --accent-foreground: #ffffff;
 
   --destructive: #ef4444;
   --destructive-foreground: #f8fafc;
 
-  --border: #e2e8f0;
-  /* Slate 200 (More Defined) */
-  --input: #e2e8f0;
-  --ring: #7c3aed;
+  --border: #cbd5e1;
+  /* Slate 300 - clear, elegant card boundaries */
+  --input: #cbd5e1;
+  --ring: #4f46e5;
 
   --radius: 0.75rem;
-  --glass-bg: rgba(255, 255, 255, 0.5);
-  /* More translucent */
-  --glass-border: rgba(0, 0, 0, 0.05);
-  /* Softer border */
+  --glass-bg: rgba(255, 255, 255, 0.9);
+  --glass-border: rgba(203, 213, 225, 0.8);
+  --glass-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06);
+
+  --gradient-from: #1e1b4b;
+  /* Deep Indigo 950 - rich, grounded, elegant */
+  --gradient-to: #4338ca;
+  /* Indigo 700 */
 }
 
 .dark {
@@ -82,6 +89,10 @@
 
   --glass-bg: rgba(15, 23, 42, 0.6);
   --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 0 0 0 transparent;
+
+  --gradient-from: #8b5cf6;
+  --gradient-to: #22d3ee;
 }
 
 
@@ -132,19 +143,17 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
 .glass-hover:hover {
   background: var(--glass-bg);
-  /* Adjusted for theme consistency */
   border-color: var(--primary);
-  /* Primary color border on hover */
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 0 20px rgba(124, 58, 237, 0.15);
 }
 
 .text-gradient {
-  background: linear-gradient(to right, #8b5cf6, #22d3ee);
-  /* Violet to Cyan */
+  background: linear-gradient(to right, var(--gradient-from), var(--gradient-to));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

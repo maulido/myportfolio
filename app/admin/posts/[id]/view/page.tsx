@@ -257,8 +257,8 @@ export default function BlogPostDetailViewPage({ params }: PageProps) {
                         </button>
                     </Link>
                     <div className="flex gap-3">
-                        <Link href={`/admin/blog/${id}`}>
-                            <button className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
+                        <Link href={`/admin/posts/${id}`}>
+                            <button className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2">
                                 <Pencil className="mr-2 h-4 w-4" />
                                 Edit
                             </button>

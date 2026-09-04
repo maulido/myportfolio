@@ -3,7 +3,7 @@
  * Middleware for protecting API routes
  */
 
-import { getServerSession } from 'next-auth';
+import { getServerSession, Session } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { NextResponse } from 'next/server';
 
@@ -11,7 +11,7 @@ import { NextResponse } from 'next/server';
  * Require authentication for API routes
  * Returns session if authenticated, error response if not
  */
-export async function requireAuth() {
+export async function requireAuth(): Promise<NextResponse | Session> {
     const session = await getServerSession(authOptions);
 
     if (!session || !session.user) {

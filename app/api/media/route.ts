@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import Media from '@/models/Media';
 
@@ -30,6 +31,9 @@ export async function GET(request: NextRequest) {
 
 // POST - Create new media entry
 export async function POST(request: NextRequest) {
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
+
     try {
         await dbConnect();
 

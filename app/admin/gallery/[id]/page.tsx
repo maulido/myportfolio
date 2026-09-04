@@ -27,12 +27,13 @@ export default function EditGalleryItemPage({ params }: { params: Promise<{ id: 
                 const res = await fetch(`/api/gallery/${id}`);
                 const data = await res.json();
                 if (data.success) {
+                    const formattedDate = data.data.date ? (data.data.date.includes('T') ? data.data.date.split('T')[0] : data.data.date) : new Date().toISOString().split('T')[0];
                     setFormData({
-                        title: data.data.title,
-                        description: data.data.description,
-                        imageUrl: data.data.imageUrl,
-                        category: data.data.category,
-                        date: data.data.date.split('T')[0],
+                        title: data.data.title || "",
+                        description: data.data.description || "",
+                        imageUrl: data.data.imageUrl || "",
+                        category: data.data.category || "General",
+                        date: formattedDate,
                     });
                 }
             } catch (error) {
@@ -85,7 +86,7 @@ export default function EditGalleryItemPage({ params }: { params: Promise<{ id: 
             });
 
             if (res.ok) {
-                router.push("/admin");
+                router.push("/admin/gallery");
             } else {
                 alert("Failed to update image");
             }
@@ -105,7 +106,7 @@ export default function EditGalleryItemPage({ params }: { params: Promise<{ id: 
         <div className="min-h-screen bg-background/50 p-8">
             <div className="max-w-4xl mx-auto space-y-8">
                 <div className="flex items-center gap-4">
-                    <Link href="/admin">
+                    <Link href="/admin/gallery">
                         <button className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10">
                             <ArrowLeft className="h-4 w-4" />
                         </button>
@@ -175,7 +176,7 @@ export default function EditGalleryItemPage({ params }: { params: Promise<{ id: 
                         />
                         {formData.imageUrl && (
                             <p className="text-xs text-muted-foreground">
-                                💡 Upload a new image to replace the current one
+                                Upload a new image to replace the current one
                             </p>
                         )}
                     </div>

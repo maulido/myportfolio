@@ -11,10 +11,12 @@ interface Testimonial {
     name: string;
     role: string;
     company?: string;
-    testimonial: string;
+    content?: string;
+    testimonial?: string;
     rating?: number;
+    image?: string;
     imageUrl?: string;
-    featured: boolean;
+    featured?: boolean;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -142,10 +144,10 @@ export default function TestimonialDetailViewPage({ params }: PageProps) {
                 <div className="rounded-xl border border-primary/10 bg-card/10 backdrop-blur-sm p-8 space-y-6">
                     {/* Person Info */}
                     <div className="flex items-start gap-4">
-                        {item.imageUrl ? (
+                        {(item.imageUrl || item.image) ? (
                             <div className="h-20 w-20 rounded-full overflow-hidden bg-muted flex-shrink-0">
                                 <Image
-                                    src={item.imageUrl}
+                                    src={(item.imageUrl || item.image)!}
                                     alt={item.name}
                                     width={80}
                                     height={80}
@@ -186,7 +188,7 @@ export default function TestimonialDetailViewPage({ params }: PageProps) {
                     <div>
                         <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-3">Testimonial</h3>
                         <blockquote className="text-foreground leading-relaxed text-lg italic border-l-4 border-primary/20 pl-4">
-                            &quot;{item.testimonial}&quot;
+                            &quot;{item.content || item.testimonial}&quot;
                         </blockquote>
                     </div>
 

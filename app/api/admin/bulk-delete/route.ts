@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/lib/auth-helpers";
 import dbConnect from "@/lib/db";
 import Post from "@/models/Post";
 import Project from "@/models/Project";
@@ -6,6 +7,9 @@ import Skill from "@/models/Skill";
 import Certification from "@/models/Certification";
 
 export async function POST(req: NextRequest) {
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
+
     try {
         const { ids, type } = await req.json();
 

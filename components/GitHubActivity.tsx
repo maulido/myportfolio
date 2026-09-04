@@ -23,53 +23,28 @@ export function GitHubActivity({ username = "maulido" }: { username?: string }) 
     useEffect(() => {
         async function fetchRepos() {
             try {
-                // Prepare headers with optional GitHub token
-                const headers: HeadersInit = {
-                    'Accept': 'application/vnd.github.v3+json',
-                };
-
-                // Add token if available (increases rate limit from 60 to 5000/hour)
-                const token = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
-                if (token) {
-                    headers['Authorization'] = `Bearer ${token}`;
-                }
-
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
 
                 const res = await fetch(
-                    `https://api.github.com/users/${username}/repos?sort=updated&per_page=6`,
-                    {
-                        headers,
-                        signal: controller.signal,
-                        cache: 'force-cache', // Cache the response
-                        next: { revalidate: 3600 } // Revalidate every hour
-                    }
+                    `/api/github?username=${encodeURIComponent(username)}`,
+                    { signal: controller.signal }
                 );
 
                 clearTimeout(timeoutId);
 
                 if (!res.ok) {
-                    // Handle rate limiting gracefully
-                    if (res.status === 403) {
-                        console.warn('GitHub API rate limit exceeded');
-                    } else {
-                        console.warn(`GitHub API returned ${res.status}`);
-                    }
                     setError(true);
                     return;
                 }
 
-                const data = await res.json();
+                const result = await res.json();
+                const reposData = result.success ? result.data : result;
 
                 // Validate response
-                if (Array.isArray(data) && data.length > 0) {
-                    setRepos(data);
-                } else if (Array.isArray(data) && data.length === 0) {
-                    console.info('No GitHub repositories found');
-                    setError(true);
+                if (Array.isArray(reposData) && reposData.length > 0) {
+                    setRepos(reposData);
                 } else {
-                    console.warn('GitHub API returned unexpected format');
                     setError(true);
                 }
             } catch (error) {
@@ -149,7 +124,7 @@ export function GitHubActivity({ username = "maulido" }: { username?: string }) 
                             transition={{ delay: index * 0.1 }}
                             viewport={{ once: true }}
                             whileHover={{ scale: 1.02, y: -5 }}
-                            className="p-4 rounded-lg border border-primary/20 bg-card/40 backdrop-blur-sm hover:border-primary/40 transition-all group"
+                            className="p-4 rounded-lg border border-border/80 dark:border-primary/20 bg-card/90 dark:bg-card/40 backdrop-blur-sm hover:border-primary/40 shadow-sm hover:shadow-lg transition-colors duration-300 group"
                         >
                             <div className="flex items-start justify-between mb-2">
                                 <h3 className="font-bold text-primary group-hover:text-accent transition-colors line-clamp-1">
@@ -187,7 +162,7 @@ export function GitHubActivity({ username = "maulido" }: { username?: string }) 
                         href={`https://github.com/${username}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-muted/30 border border-primary/20 rounded-xl font-bold hover:border-primary/40 transition-all"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-card/80 dark:bg-muted/30 border border-border/80 dark:border-primary/20 rounded-xl font-bold hover:border-primary/40 shadow-sm transition-all"
                     >
                         <Github className="h-5 w-5" />
                         View All Repositories

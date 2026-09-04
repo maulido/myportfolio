@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import Post from '@/models/Post';
 
@@ -31,6 +32,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
+
     await dbConnect();
 
     try {

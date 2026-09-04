@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import UsesItem from '@/models/UsesItem';
 
@@ -20,11 +21,18 @@ export async function GET() {
             return acc;
         }, {});
 
-        return NextResponse.json({
-            success: true,
-            data: groupedItems,
-            items: items // Also return flat list
-        });
+        return NextResponse.json(
+            {
+                success: true,
+                data: groupedItems,
+                items: items // Also return flat list
+            },
+            {
+                headers: {
+                    'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+                },
+            }
+        );
     } catch (error) {
         console.error('Error fetching uses items:', error);
         return NextResponse.json(
@@ -36,6 +44,9 @@ export async function GET() {
 
 // POST - Create new uses item (admin only)
 export async function POST(request: Request) {
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
+
     try {
         await dbConnect();
 

@@ -1,9 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
 const SYSTEM_PROMPT = `
 You are an AI assistant for a professional Portfolio Website. Your job is to answer questions about the portfolio owner (Me). 
 Our background: Senior Network Engineer & Developer with expertise in Next.js, React, Node.js, Cisco, and Python.
@@ -24,12 +21,31 @@ export async function POST(req: Request) {
     try {
         const { message, history } = await req.json();
 
+        if (!message || typeof message !== 'string') {
+            return NextResponse.json({ error: "Message is required" }, { status: 400 });
+        }
+
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({
+            model: "gemini-1.5-flash",
+            systemInstruction: SYSTEM_PROMPT
+        });
+
+        // Filter and sanitize history: ensure it starts with user and alternates
+        const validHistory: { role: string; parts: { text: string }[] }[] = [];
+        if (Array.isArray(history)) {
+            for (const item of history) {
+                if ((item.role === 'user' || item.role === 'model') && Array.isArray(item.parts) && item.parts.length > 0) {
+                    // Skip if consecutive duplicate roles
+                    if (validHistory.length === 0 && item.role !== 'user') continue;
+                    if (validHistory.length > 0 && validHistory[validHistory.length - 1].role === item.role) continue;
+                    validHistory.push(item);
+                }
+            }
+        }
+
         const chat = model.startChat({
-            history: [
-                { role: "user", parts: [{ text: SYSTEM_PROMPT }] },
-                { role: "model", parts: [{ text: "Understood. I will act as your professional portfolio assistant." }] },
-                ...(history || [])
-            ],
+            history: validHistory,
             generationConfig: {
                 maxOutputTokens: 500,
             },

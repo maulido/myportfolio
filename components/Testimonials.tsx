@@ -79,7 +79,7 @@ export function Testimonials() {
                             whileInView={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5, delay: index * 0.1 }}
                             viewport={{ once: true }}
-                            className="glass rounded-xl p-8 relative transition-transform hover:-translate-y-1"
+                            className="glass rounded-xl p-8 relative transition-all hover:-translate-y-1 shadow-sm hover:shadow-xl"
                         >
                             <Quote className="absolute top-4 right-4 h-8 w-8 text-primary/20" />
                             <p className="text-lg text-foreground/90 mb-4 italic">&quot;{item.content}&quot;</p>
@@ -95,8 +95,8 @@ export function Testimonials() {
                             <div className="flex items-center">
                                 <div className="h-10 w-10 rounded-full bg-muted mr-3 overflow-hidden border border-primary/20">
                                     {item.image ? (
-                                        <div className="h-full w-full bg-slate-800 flex items-center justify-center text-xs text-muted-foreground">IMG</div>
-                                    ) : <div className="h-full w-full bg-slate-800" />}
+                                        <div className="h-full w-full bg-muted flex items-center justify-center text-xs text-muted-foreground">IMG</div>
+                                    ) : <div className="h-full w-full bg-muted" />}
                                 </div>
                                 <div>
                                     <h4 className="font-semibold text-primary">{item.name}</h4>

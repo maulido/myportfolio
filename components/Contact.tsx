@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Mail, MapPin, Phone } from "lucide-react";
+import { Mail, MapPin, Phone, Send } from "lucide-react";
 import { useState, useEffect } from "react";
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -50,7 +50,6 @@ export function Contact() {
             if (response.ok && result.success) {
                 toast.success('Message sent successfully! I\'ll get back to you soon.', {
                     duration: 5000,
-                    icon: '✉️',
                     style: {
                         background: '#10b981',
                         color: '#fff',
@@ -66,7 +65,6 @@ export function Contact() {
             console.error('Contact form error:', error);
             toast.error(error instanceof Error ? error.message : 'Failed to send message. Please try again.', {
                 duration: 4000,
-                icon: '❌',
             });
         } finally {
             setIsSubmitting(false);
@@ -121,25 +119,25 @@ export function Contact() {
                             ))}
                         </div>
                     </div>
-                    <div className="rounded-xl border border-primary/20 bg-card/80 backdrop-blur-md p-6 shadow-xl">
+                    <div className="rounded-xl border border-border/80 dark:border-primary/20 bg-card/90 dark:bg-card/80 backdrop-blur-md p-6 shadow-sm md:shadow-xl">
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label htmlFor="first-name" className="text-sm font-medium leading-none text-muted-foreground">First name</label>
-                                    <input id="first-name" name="firstName" className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all" required placeholder="John" />
+                                    <input id="first-name" name="firstName" className="flex h-11 w-full rounded-xl border border-input bg-background/60 px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200" required placeholder="First name" />
                                 </div>
                                 <div className="space-y-2">
                                     <label htmlFor="last-name" className="text-sm font-medium leading-none text-muted-foreground">Last name</label>
-                                    <input id="last-name" name="lastName" className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all" required placeholder="Doe" />
+                                    <input id="last-name" name="lastName" className="flex h-11 w-full rounded-xl border border-input bg-background/60 px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200" required placeholder="Last name" />
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <label htmlFor="email" className="text-sm font-medium leading-none text-muted-foreground">Email</label>
-                                <input id="email" name="email" type="email" className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all" required placeholder="john@example.com" />
+                                <input id="email" name="email" type="email" className="flex h-11 w-full rounded-xl border border-input bg-background/60 px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200" required placeholder="name@example.com" />
                             </div>
                             <div className="space-y-2">
                                 <label htmlFor="message" className="text-sm font-medium leading-none text-muted-foreground">Message</label>
-                                <textarea id="message" name="message" className="flex min-h-[120px] w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm placeholder:text-muted-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary transition-all" required placeholder="Your message..." />
+                                <textarea id="message" name="message" className="flex min-h-[120px] w-full rounded-xl border border-input bg-background/60 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200 resize-y" required placeholder="Your message..." />
                             </div>
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
@@ -152,12 +150,7 @@ export function Contact() {
                                     {isSubmitting ? "Dispatching Message..." : (
                                         <>
                                             Send Message
-                                            <motion.span
-                                                animate={{ x: [0, 5, 0] }}
-                                                transition={{ repeat: Infinity, duration: 1.5 }}
-                                            >
-                                                🚀
-                                            </motion.span>
+                                            <Send className="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" />
                                         </>
                                     )}
                                 </span>

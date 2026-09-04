@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import Media from '@/models/Media';
 
@@ -7,6 +8,9 @@ export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
+
     try {
         await dbConnect();
 

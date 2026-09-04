@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import GuestbookEntry from '@/models/GuestbookEntry';
+import { rateLimit } from '@/lib/rate-limit';
+
+const guestbookLimiter = rateLimit({
+    interval: 5 * 60 * 1000, // 5 minutes
+    uniqueTokenPerInterval: 500,
+});
 
 // GET - Get approved guestbook entries (public)
 export async function GET(request: NextRequest) {
@@ -21,16 +27,23 @@ export async function GET(request: NextRequest) {
 
         const total = await GuestbookEntry.countDocuments({ approved: true, spam: false });
 
-        return NextResponse.json({
-            success: true,
-            data: entries,
-            pagination: {
-                page,
-                limit,
-                total,
-                pages: Math.ceil(total / limit)
+        return NextResponse.json(
+            {
+                success: true,
+                data: entries,
+                pagination: {
+                    page,
+                    limit,
+                    total,
+                    pages: Math.ceil(total / limit)
+                }
+            },
+            {
+                headers: {
+                    'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+                },
             }
-        });
+        );
     } catch (error) {
         console.error('Error fetching guestbook entries:', error);
         return NextResponse.json(
@@ -43,13 +56,21 @@ export async function GET(request: NextRequest) {
 // POST - Submit new guestbook entry
 export async function POST(request: NextRequest) {
     try {
+        const forwarded = request.headers.get('x-forwarded-for');
+        const ip = forwarded ? forwarded.split(',')[0].trim() : request.headers.get('x-real-ip') || 'unknown';
+
+        try {
+            await guestbookLimiter.check(5, ip); // Max 5 submissions per 5 minutes per IP
+        } catch {
+            return NextResponse.json(
+                { success: false, error: 'Too many submissions. Please wait a few minutes before trying again.' },
+                { status: 429 }
+            );
+        }
+
         await dbConnect();
 
         const body = await request.json();
-
-        // Get IP address for spam prevention
-        const forwarded = request.headers.get('x-forwarded-for');
-        const ip = forwarded ? forwarded.split(',')[0] : request.headers.get('x-real-ip') || 'unknown';
 
         // Simple rate limiting check - max 10 entries per IP in last hour
         const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);

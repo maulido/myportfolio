@@ -269,15 +269,17 @@ export default function ProjectDetailViewPage({ params }: PageProps) {
                     )}
 
                     {/* Timeline */}
-                    <div>
-                        <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-2">Timeline</h3>
-                        <div className="flex items-center gap-2 text-sm">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                            <span>
-                                {new Date(item.startDate).toLocaleDateString()} - {item.endDate ? new Date(item.endDate).toLocaleDateString() : 'Present'}
-                            </span>
+                    {item.startDate && (
+                        <div>
+                            <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-2">Timeline</h3>
+                            <div className="flex items-center gap-2 text-sm">
+                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                                <span>
+                                    {new Date(item.startDate).toLocaleDateString()} - {item.endDate ? new Date(item.endDate).toLocaleDateString() : 'Present'}
+                                </span>
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* Metadata */}
                     {(item.createdAt || item.updatedAt) && (

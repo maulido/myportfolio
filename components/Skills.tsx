@@ -92,8 +92,17 @@ export function Skills() {
                 </motion.div>
 
                 {isLoading ? (
-                    <div className="flex justify-center items-center py-20">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="bg-card/40 rounded-2xl border border-border/60 p-6 space-y-4">
+                                <div className="h-6 w-1/2 bg-muted/60 animate-pulse rounded-lg mb-4" />
+                                <div className="space-y-3">
+                                    <div className="h-4 w-full bg-muted/60 animate-pulse rounded" />
+                                    <div className="h-4 w-4/5 bg-muted/60 animate-pulse rounded" />
+                                    <div className="h-4 w-2/3 bg-muted/60 animate-pulse rounded" />
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 ) : error ? (
                     <div className="text-center py-20">
@@ -114,10 +123,10 @@ export function Skills() {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.5, delay: categoryIndex * 0.1 }}
                                     viewport={{ once: true }}
-                                    className="group relative overflow-hidden bg-card/50 backdrop-blur-md rounded-2xl border border-primary/10 p-6 shadow-xl hover:shadow-primary/10 transition-all duration-500 hover:-translate-y-1"
+                                    className="group relative overflow-hidden bg-card/90 dark:bg-card/50 backdrop-blur-md rounded-2xl border border-border/80 dark:border-primary/10 p-6 shadow-sm hover:shadow-xl hover:shadow-primary/10 transition-all duration-500 hover:-translate-y-1"
                                 >
                                     {/* Category Header */}
-                                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-primary/10">
+                                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/80 dark:border-primary/10">
                                         <div className="p-2 rounded-lg bg-primary/10 text-primary">
                                             {category.icon}
                                         </div>
@@ -174,7 +183,7 @@ export function Skills() {
                             viewport={{ once: true }}
                             className="mt-12 flex flex-wrap justify-center gap-4 text-xs"
                         >
-                            <div className="flex items-center gap-6 px-6 py-3 rounded-full bg-card/50 backdrop-blur-md border border-primary/10">
+                            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl sm:rounded-full bg-card/90 dark:bg-card/50 backdrop-blur-md border border-border/80 dark:border-primary/10 shadow-sm">
                                 <div className="flex items-center gap-2">
                                     <Award className="h-4 w-4 text-muted-foreground" />
                                     <span className="text-muted-foreground font-medium">Proficiency Levels:</span>

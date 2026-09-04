@@ -16,27 +16,33 @@ export async function GET() {
             await Project.create([
                 {
                     title: "Project Alpha",
+                    slug: "project-alpha",
+                    category: "Web Development",
                     description: "A comprehensive network monitoring dashboard built with Next.js and real-time data visualization.",
-                    tags: ["Next.js", "TypeScript", "WebSocket", "TailwindCSS"],
-                    github: "https://github.com",
-                    demo: "https://example.com",
-                    image: "/placeholder-project.jpg"
+                    technologies: ["Next.js", "TypeScript", "WebSocket", "TailwindCSS"],
+                    githubUrl: "https://github.com",
+                    demoUrl: "https://example.com",
+                    imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=60"
                 },
                 {
                     title: "Project Beta",
+                    slug: "project-beta",
+                    category: "Automation",
                     description: "Automated network configuration script generator using Python and Flask.",
-                    tags: ["Python", "Flask", "Network Automation", "Docker"],
-                    github: "https://github.com",
-                    demo: "https://example.com",
-                    image: "/placeholder-project.jpg"
+                    technologies: ["Python", "Flask", "Network Automation", "Docker"],
+                    githubUrl: "https://github.com",
+                    demoUrl: "https://example.com",
+                    imageUrl: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=60"
                 },
                 {
                     title: "Portfolio Website",
+                    slug: "portfolio-website",
+                    category: "Web Development",
                     description: "This personal portfolio website featuring SEO best practices and smooth animations.",
-                    tags: ["Next.js", "React", "Framer Motion", "TailwindCSS"],
-                    github: "https://github.com",
-                    demo: "https://example.com",
-                    image: "/placeholder-project.jpg"
+                    technologies: ["Next.js", "React", "Framer Motion", "TailwindCSS"],
+                    githubUrl: "https://github.com",
+                    demoUrl: "https://example.com",
+                    imageUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=60"
                 }
             ]);
         }
@@ -122,23 +128,23 @@ export async function GET() {
                 {
                     title: "Cisco Certified Network Associate (CCNA)",
                     issuer: "Cisco",
-                    date: new Date("2023-05-15"),
+                    issueDate: new Date("2023-05-15"),
                     credentialUrl: "https://www.credly.com",
-                    imageUrl: "/placeholder-project.jpg"
+                    imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&auto=format&fit=crop&q=60"
                 },
                 {
                     title: "AWS Certified Solutions Architect",
                     issuer: "Amazon Web Services",
-                    date: new Date("2023-08-20"),
+                    issueDate: new Date("2023-08-20"),
                     credentialUrl: "https://www.credly.com",
-                    imageUrl: "/placeholder-project.jpg"
+                    imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&auto=format&fit=crop&q=60"
                 },
                 {
                     title: "Google Cloud Professional Data Engineer",
                     issuer: "Google Cloud",
-                    date: new Date("2024-02-10"),
+                    issueDate: new Date("2024-02-10"),
                     credentialUrl: "https://www.credly.com",
-                    imageUrl: "/placeholder-project.jpg"
+                    imageUrl: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&auto=format&fit=crop&q=60"
                 }
             ]);
         }

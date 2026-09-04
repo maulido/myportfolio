@@ -3,7 +3,9 @@
 import { motion } from "framer-motion";
 import { Briefcase, Calendar, MapPin, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
-import CareerDetailModal from "./CareerDetailModal";
+import dynamic from "next/dynamic";
+
+const CareerDetailModal = dynamic(() => import("./CareerDetailModal"), { ssr: false });
 
 interface CareerEntry {
     _id: string;
@@ -39,12 +41,10 @@ export function Experience() {
     useEffect(() => {
         const fetchCareerData = async () => {
             try {
-                const res = await fetch('/api/career');
+                const res = await fetch('/api/career?type=work');
                 const data = await res.json();
-                if (data.success) {
-                    // Filter only work type entries
-                    const workEntries = data.data.filter((entry: CareerEntry) => entry.type === 'work');
-                    setExperience(workEntries);
+                if (data.success && Array.isArray(data.data)) {
+                    setExperience(data.data);
                 }
             } catch (error) {
                 console.error('Failed to fetch career data:', error);
@@ -64,8 +64,16 @@ export function Experience() {
     if (isLoading) {
         return (
             <section id="experience" className="py-16 md:py-24 relative overflow-hidden">
-                <div className="container mx-auto px-4 md:px-6">
-                    <div className="text-center">Loading career journey...</div>
+                <div className="container mx-auto px-4 md:px-6 max-w-4xl space-y-6">
+                    <div className="h-8 w-48 mx-auto bg-muted/60 animate-pulse rounded-lg mb-10" />
+                    {[1, 2].map((i) => (
+                        <div key={i} className="p-6 rounded-2xl border border-border/60 bg-card/40 space-y-4">
+                            <div className="h-5 w-1/3 bg-muted/60 animate-pulse rounded" />
+                            <div className="h-4 w-1/4 bg-muted/60 animate-pulse rounded" />
+                            <div className="h-4 w-full bg-muted/60 animate-pulse rounded mt-2" />
+                            <div className="h-4 w-4/5 bg-muted/60 animate-pulse rounded" />
+                        </div>
+                    ))}
                 </div>
             </section>
         );
@@ -110,13 +118,13 @@ export function Experience() {
                                     }`}
                             >
                                 {/* Dot */}
-                                <div className="absolute left-6 md:left-1/2 md:-translate-x-1/2 top-0 h-4 w-4 rounded-full bg-background border-4 border-primary shadow-[0_0_10px_theme(colors.primary.DEFAULT)] z-10" />
+                                <div className="absolute left-6 md:left-1/2 -translate-x-1/2 top-6 h-4 w-4 rounded-full bg-background border-4 border-primary shadow-[0_0_10px_theme(colors.primary.DEFAULT)] z-10" />
 
                                 {/* Content Card */}
                                 <div className="w-full md:w-[45%] pl-16 md:pl-0">
                                     <div
                                         onClick={() => handleCareerClick(item)}
-                                        className="group bg-card/40 backdrop-blur-md rounded-2xl p-6 border border-white/5 shadow-xl hover:border-primary/40 transition-all duration-300 hover:shadow-primary/5 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                                        className="group bg-card/90 dark:bg-card/40 backdrop-blur-md rounded-2xl p-6 border border-border/80 dark:border-white/5 shadow-sm hover:shadow-xl hover:border-primary/40 transition-all duration-300 hover:shadow-primary/5 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                                     >
                                         <div className="flex flex-col gap-2 mb-4">
                                             <div className="flex items-center justify-between">
@@ -135,7 +143,7 @@ export function Experience() {
                                             {item.description}
                                         </p>
 
-                                        <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                                        <div className="flex items-center justify-between pt-4 border-t border-border/80 dark:border-white/5">
                                             <div className="flex items-center text-[11px] text-muted-foreground/60">
                                                 <MapPin className="mr-1 h-3 w-3" />
                                                 {item.location || 'Remote'}

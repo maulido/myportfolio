@@ -1,13 +1,10 @@
 "use client";
 
-import NextImage from "next/image";
-
 import { useSession } from "next-auth/react";
-import { useEffect, useState, useCallback } from "react";
-import { LogOut, Plus, FileText, Briefcase, Image as ImageIcon, Award, MessageCircle, Pencil, Trash2, Search, Mail, MessageSquare, BarChart3, Eye } from "lucide-react";
+import { useEffect, useState } from "react";
+import { LogOut, FileText, Briefcase, Image as ImageIcon, MessageSquare, BarChart3, Eye, Pencil } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import CareerFilter from "@/components/admin/CareerFilter";
 
 import {
     LineChart,
@@ -35,8 +32,10 @@ interface Post {
 interface Project {
     _id: string;
     title: string;
-    tags: string[];
+    tags?: string[];
+    technologies?: string[];
     image?: string;
+    imageUrl?: string;
 }
 
 interface GalleryItem {
@@ -44,56 +43,6 @@ interface GalleryItem {
     title: string;
     category: string;
     imageUrl?: string;
-    date: string;
-}
-
-interface Certification {
-    _id: string;
-    title: string;
-    issuer: string;
-    issueDate: string;
-    category: string;
-}
-
-interface Newsletter {
-    _id: string;
-    email: string;
-    name?: string;
-    subscribed: boolean;
-    createdAt: string;
-}
-
-interface Testimonial {
-    _id: string;
-    name: string;
-    role: string;
-    company?: string;
-}
-
-interface CareerJourney {
-    _id: string;
-    type: 'work' | 'education' | 'achievement';
-    title: string;
-    organization: string;
-    location?: string;
-    startDate: string;
-    endDate?: string;
-    current: boolean;
-    description: string;
-    skills: string[];
-    achievements?: string[];
-    responsibilities?: string[];
-}
-
-interface Skill {
-    _id: string;
-    name: string;
-    level: 'Expert' | 'Advanced' | 'Intermediate' | 'Beginner';
-    years: number;
-    category: string;
-    icon: string;
-    color?: string;
-    order: number;
 }
 
 const analyticsData = [
@@ -105,6 +54,7 @@ const analyticsData = [
     { name: "Sat", views: 239, downloads: 38, messages: 20 },
     { name: "Sun", views: 349, downloads: 43, messages: 25 },
 ];
+
 interface GuestbookEntry {
     _id: string;
     name: string;
@@ -113,146 +63,74 @@ interface GuestbookEntry {
     approved: boolean;
 }
 
-// ... existing types ...
-
 export default function AdminDashboard() {
-    const { data: session, status } = useSession();
-    const [activeTab] = useState("overview");
+    const { status } = useSession();
     const [isWorking, setIsWorking] = useState(true);
 
     const [stats, setStats] = useState({ totalPosts: 0, totalProjects: 0, totalGallery: 0, visitors: 0, avgDuration: 0 });
     const [posts, setPosts] = useState<Post[]>([]);
     const [projects, setProjects] = useState<Project[]>([]);
     const [gallery, setGallery] = useState<GalleryItem[]>([]);
-    const [certs, setCerts] = useState<Certification[]>([]);
-    const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-    const [newsletter, setNewsletter] = useState<Newsletter[]>([]);
-    const [careers, setCareers] = useState<CareerJourney[]>([]);
-    const [careerTypeFilter, setCareerTypeFilter] = useState<'all' | 'work' | 'education' | 'achievement'>('all');
-    const [skills, setSkills] = useState<Skill[]>([]);
-    const [searchTerm, setSearchTerm] = useState("");
     const [recentGuestbook, setRecentGuestbook] = useState<GuestbookEntry[]>([]);
     const [deviceStats, setDeviceStats] = useState({ mobile: 0, desktop: 0 });
     const [topPages, setTopPages] = useState<{ _id: string; count: number }[]>([]);
 
-    // ... delete confirm state
-
-    const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; type: string; id: string; name: string }>({
-        show: false,
-        type: '',
-        id: '',
-        name: ''
-    });
-
-    const [selectedPosts, setSelectedPosts] = useState<Set<string>>(new Set());
-
-    // ...
-
-    // Debug: Log component mount
     useEffect(() => {
-        console.log('AdminDashboard mounted');
-        console.log('Session status:', status);
-        console.log('Session data:', session);
-    }, [status, session]);
+        let isMounted = true;
+        if (status === "authenticated") {
+            const loadData = async () => {
+                try {
+                    const [postsRes, projectsRes, galleryRes, settingsRes, sessionsRes, guestbookRes] = await Promise.all([
+                        fetch('/api/blog'),
+                        fetch('/api/projects'),
+                        fetch('/api/gallery'),
+                        fetch('/api/settings?key=isWorking'),
+                        fetch('/api/analytics/session/stats'),
+                        fetch('/api/guestbook?limit=5')
+                    ]);
 
-    // Debug: Log when posts change
-    useEffect(() => {
-        console.log('Posts updated:', posts.length, 'posts');
-    }, [posts]);
+                    const [postsData, projectsData, galleryData, settingsData, sessionsData, guestbookData] = await Promise.all([
+                        postsRes.json(),
+                        projectsRes.json(),
+                        galleryRes.json(),
+                        settingsRes.json(),
+                        sessionsRes.json(),
+                        guestbookRes.json()
+                    ]);
 
-    const fetchData = useCallback(async () => {
-        try {
-            const [postsRes, projectsRes, galleryRes, certsRes, testimonialsRes, newsletterRes, careersRes, skillsRes, analyticsRes, settingsRes, sessionsRes, guestbookRes] = await Promise.all([
-                fetch('/api/blog'),
-                fetch('/api/projects'),
-                fetch('/api/gallery'),
-                fetch('/api/certifications'),
-                fetch('/api/testimonials'),
-                fetch('/api/newsletter'),
-                fetch('/api/career'),
-                fetch('/api/skills'),
-                fetch('/api/analytics'),
-                fetch('/api/settings?key=isWorking'),
-                fetch('/api/analytics/session/stats'),
-                fetch('/api/guestbook?limit=5')
-            ]);
+                    if (!isMounted) return;
 
-            const [postsData, projectsData, galleryData, certsData, testimonialsData, newsletterData, careersData, skillsData, , settingsData, sessionsData, guestbookData] = await Promise.all([
-                postsRes.json(),
-                projectsRes.json(),
-                galleryRes.json(),
-                certsRes.json(),
-                testimonialsRes.json(),
-                newsletterRes.json(),
-                careersRes.json(),
-                skillsRes.json(),
-                analyticsRes.json(),
-                settingsRes.json(),
-                sessionsRes.json(),
-                guestbookRes.json()
-            ]);
+                    if (postsData.success) setPosts(postsData.data);
+                    if (projectsData.success) setProjects(projectsData.data);
+                    if (galleryData.success) setGallery(galleryData.data);
+                    if (guestbookData.success) setRecentGuestbook(guestbookData.data);
+                    if (settingsData.success && settingsData.data !== undefined) setIsWorking(settingsData.data);
 
-            if (postsData.success) setPosts(postsData.data);
-            if (projectsData.success) setProjects(projectsData.data);
-            if (galleryData.success) setGallery(galleryData.data);
-            if (certsData.success) setCerts(certsData.data);
-            if (testimonialsData.success) setTestimonials(testimonialsData.data);
-            if (newsletterData.success) setNewsletter(newsletterData.data);
-            if (guestbookData.success) setRecentGuestbook(guestbookData.data);
-            if (careersData.success) {
-                setCareers(careersData.data);
-            }
-            if (skillsData.success) {
-                // Flatten grouped skills into single array
-                const allSkills = skillsData.data.flatMap((group: { skills: Skill[] }) => group.skills);
-                setSkills(allSkills);
-            }
-            if (settingsData.success && settingsData.data !== undefined) setIsWorking(settingsData.data);
+                    setStats({
+                        totalPosts: postsData.data?.length || 0,
+                        totalProjects: projectsData.data?.length || 0,
+                        totalGallery: galleryData.data?.length || 0,
+                        visitors: sessionsData.data?.totalVisitors || 0,
+                        avgDuration: sessionsData.data?.avgDuration || 0
+                    });
 
-            setStats({
-                totalPosts: postsData.data?.length || 0,
-                totalProjects: projectsData.data?.length || 0,
-                totalGallery: galleryData.data?.length || 0,
-                visitors: sessionsData.data?.totalVisitors || 0,
-                avgDuration: sessionsData.data?.avgDuration || 0
-            });
+                    if (sessionsData.success && sessionsData.data?.devices) {
+                        setDeviceStats(sessionsData.data.devices);
+                    }
+                    if (sessionsData.success && sessionsData.data?.topPages) {
+                        setTopPages(sessionsData.data.topPages);
+                    }
 
-            if (sessionsData.success && sessionsData.data?.devices) {
-                setDeviceStats(sessionsData.data.devices);
-            }
-            if (sessionsData.success && sessionsData.data?.topPages) {
-                setTopPages(sessionsData.data.topPages);
-            }
-
-        } catch (error) {
-            // Keep error logging for admin debugging
-            console.error("Failed to fetch admin data", error);
+                } catch (error) {
+                    console.error("Failed to fetch admin data", error);
+                }
+            };
+            loadData();
         }
-    }, []);
-
-    const handleBulkDelete = async (type: 'post' | 'project') => {
-        const ids = type === 'post' ? Array.from(selectedPosts) : []; // Extend for projects later
-
-        if (!confirm(`Are you sure you want to delete ${ids.length} items?`)) return;
-
-        try {
-            const res = await fetch('/api/admin/bulk-delete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ids, type })
-            });
-
-            if (res.ok) {
-                alert('Bulk delete successful');
-                fetchData();
-                setSelectedPosts(new Set());
-            } else {
-                alert('Failed to delete items');
-            }
-        } catch (error) {
-            console.error('Bulk delete failed', error);
-        }
-    };
+        return () => {
+            isMounted = false;
+        };
+    }, [status]);
 
     const handleToggleWorking = async () => {
         const newValue = !isWorking;
@@ -268,87 +146,6 @@ export default function AdminDashboard() {
         }
     };
 
-
-
-    const handleDelete = async (type: string, id: string, name: string = '') => {
-        console.log('🗑️ handleDelete called with:', { type, id, name });
-
-        // Show confirmation modal instead of browser confirm
-        setDeleteConfirm({
-            show: true,
-            type,
-            id,
-            name
-        });
-    };
-
-    const executeDelete = async () => {
-        const { type, id } = deleteConfirm;
-        console.log('🗑️ Executing delete for:', { type, id });
-
-        // Hide confirmation modal
-        setDeleteConfirm({ show: false, type: '', id: '', name: '' });
-
-        try {
-            let endpoint = `/api/${type}/${id}`;
-            if (type === 'post') endpoint = `/api/blog/${id}`;
-            if (type === 'project') endpoint = `/api/projects/${id}`;
-            if (type === 'career') endpoint = `/api/career/${id}`;
-            if (type === 'certification') endpoint = `/api/certifications/${id}`;
-            if (type === 'testimonial') endpoint = `/api/testimonials/${id}`;
-            if (type === 'skill') endpoint = `/api/skills/${id}`;
-
-            console.log(`Deleting ${type} with ID: ${id} at endpoint: ${endpoint}`);
-
-            const res = await fetch(endpoint, { method: 'DELETE' });
-
-            // Check if response is JSON before parsing
-            const contentType = res.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                const text = await res.text();
-                console.error('Non-JSON response received:', text.substring(0, 200));
-                alert(`Server error: Expected JSON response but received HTML. Please check if you're logged in and try again.`);
-                return;
-            }
-
-            const data = await res.json();
-
-            console.log('Delete response:', res.status, data);
-
-            if (res.ok) {
-                alert(`${type.charAt(0).toUpperCase() + type.slice(1)} deleted successfully!`);
-                fetchData();
-            } else {
-                console.error('Delete failed:', data);
-                alert(`Failed to delete ${type}: ${data.error || 'Unknown error'}`);
-            }
-        } catch (error) {
-            console.error('Delete error:', error);
-            alert(`An error occurred while deleting ${type}: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-    };
-
-    const cancelDelete = () => {
-        console.log('Delete cancelled by user');
-        setDeleteConfirm({ show: false, type: '', id: '', name: '' });
-    };
-
-    const handleCareerFilterChange = (filter: 'all' | 'work' | 'education' | 'achievement') => {
-        setCareerTypeFilter(filter);
-    };
-
-    useEffect(() => {
-        if (status === "authenticated") {
-            // eslint-disable-next-line
-            fetchData();
-        }
-    }, [status, fetchData]);
-
-    useEffect(() => {
-        // eslint-disable-next-line
-        setSearchTerm("");
-    }, [activeTab]);
-
     if (status === "loading") {
         return <div className="flex h-screen items-center justify-center bg-background">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -357,59 +154,29 @@ export default function AdminDashboard() {
 
     return (
         <div className="flex min-h-screen flex-col bg-background/50">
-            {/* Delete Confirmation Modal */}
-            {deleteConfirm.show && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-card border border-primary/20 rounded-2xl p-6 max-w-md w-full shadow-2xl">
-                        <h3 className="text-xl font-bold mb-4">Confirm Delete</h3>
-                        <p className="text-muted-foreground mb-6">
-                            Are you sure you want to delete this {deleteConfirm.type}?
-                            {deleteConfirm.name && <><br /><span className="font-semibold text-foreground">&quot;{deleteConfirm.name}&quot;</span></>}
-                            <br /><br />
-                            This action cannot be undone.
-                        </p>
-                        <div className="flex gap-3 justify-end">
-                            <button
-                                onClick={cancelDelete}
-                                className="px-4 py-2 rounded-lg border border-primary/20 hover:bg-primary/5 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={executeDelete}
-                                className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors"
-                            >
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
             <main className="flex-1 container mx-auto px-4 py-8">
                 <div className="space-y-8">
                     {/* Content Area */}
-                    {activeTab === "overview" && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.98 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="space-y-8"
-                        >
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                <div>
-                                    <h2 className="text-3xl font-bold tracking-tight">System Overview</h2>
-                                    <p className="text-muted-foreground">Real-time performance and portfolio metrics.</p>
-                                </div>
-                                <div className="flex items-center gap-3 bg-card/50 backdrop-blur-xl border border-primary/10 p-2 rounded-2xl">
-                                    <span className="text-xs font-bold pl-2">Status:</span>
-                                    <button
-                                        onClick={handleToggleWorking}
-                                        className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${isWorking ? "bg-green-500 text-white shadow-lg shadow-green-500/20" : "bg-orange-500 text-white shadow-lg shadow-orange-500/20"}`}
-                                    >
-                                        {isWorking ? "Available for Hire" : "Currently Busy"}
-                                    </button>
-                                </div>
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="space-y-8"
+                    >
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <h2 className="text-3xl font-bold tracking-tight">System Overview</h2>
+                                <p className="text-muted-foreground">Real-time performance and portfolio metrics.</p>
                             </div>
+                            <div className="flex items-center gap-3 bg-card/50 backdrop-blur-xl border border-primary/10 p-2 rounded-2xl">
+                                <span className="text-xs font-bold pl-2">Status:</span>
+                                <button
+                                    onClick={handleToggleWorking}
+                                    className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${isWorking ? "bg-green-500 text-white shadow-lg shadow-green-500/20" : "bg-orange-500 text-white shadow-lg shadow-orange-500/20"}`}
+                                >
+                                    {isWorking ? "Available for Hire" : "Currently Busy"}
+                                </button>
+                            </div>
+                        </div>
 
                             {/* Summary Stats */}
                             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -595,8 +362,8 @@ export default function AdminDashboard() {
                                         {[
                                             {
                                                 label: "Projects without Images",
-                                                count: projects.filter(p => !p.image).length,
-                                                status: projects.filter(p => !p.image).length === 0 ? "good" : "warning",
+                                                count: projects.filter(p => !p.imageUrl && !p.image).length,
+                                                status: projects.filter(p => !p.imageUrl && !p.image).length === 0 ? "good" : "warning",
                                                 link: "/admin/projects"
                                             },
                                             {
@@ -677,8 +444,7 @@ export default function AdminDashboard() {
                                                     <div className="flex items-center gap-3 overflow-hidden">
                                                         <div className="h-8 w-8 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
                                                             #{idx + 1}
-                                                        </div>
-                                                        <span className="text-sm font-medium truncate" title={page._id}>
+                                                        </div>                                                        <span className="text-sm font-medium truncate" title={page._id}>
                                                             {page._id === '/' ? 'Home' : page._id}
                                                         </span>
                                                     </div>
@@ -697,667 +463,9 @@ export default function AdminDashboard() {
                                     </div>
                                 </div>
                             </div>
-
                         </motion.div>
-                    )}
-                    {activeTab === "posts" && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="space-y-6"
-                        >
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                                <div className="flex items-center gap-4">
-                                    <h2 className="text-3xl font-bold tracking-tight">Manage Posts</h2>
-                                    {selectedPosts.size > 0 && (
-                                        <button
-                                            onClick={() => handleBulkDelete('post')}
-                                            className="px-3 py-1 text-xs font-bold bg-red-500/10 text-red-500 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-colors animate-in fade-in slide-in-from-left-4"
-                                        >
-                                            Delete {selectedPosts.size} Selected
-                                        </button>
-                                    )}
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <div className="relative">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search posts..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="pl-10 pr-4 py-2 rounded-xl bg-card border border-primary/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64"
-                                        />
-                                    </div>
-                                    <Link href="/admin/posts/new">
-                                        <button className="inline-flex items-center justify-center rounded-2xl text-sm font-bold bg-primary text-white hover:bg-primary/90 h-11 px-6 shadow-lg shadow-primary/25 transition-all active:scale-95">
-                                            <Plus className="mr-2 h-4 w-4" />
-                                            New Post
-                                        </button>
-                                    </Link>
-                                </div>
-                            </div>
-
-                            {posts.filter((p: Post) => p.title.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
-                                <div className="grid gap-4">
-                                    <div className="flex items-center gap-2 px-4 pb-2 text-sm text-muted-foreground">
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedPosts.size === posts.length && posts.length > 0}
-                                            onChange={(e) => {
-                                                if (e.target.checked) {
-                                                    setSelectedPosts(new Set(posts.map(p => p._id)));
-                                                } else {
-                                                    setSelectedPosts(new Set());
-                                                }
-                                            }}
-                                            className="rounded border-primary/20 bg-card data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
-                                        />
-                                        <span>Select All</span>
-                                    </div>
-                                    {posts.filter((p: Post) => p.title.toLowerCase().includes(searchTerm.toLowerCase())).map((post: Post) => (
-                                        <div key={post._id} className={`bg-card/40 backdrop-blur-md border ${selectedPosts.has(post._id) ? 'border-primary' : 'border-primary/10'} rounded-2xl p-4 flex items-center justify-between transition-colors`}>
-                                            <div className="flex items-center gap-4">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectedPosts.has(post._id)}
-                                                    onChange={(e) => {
-                                                        const newSelected = new Set(selectedPosts);
-                                                        if (e.target.checked) {
-                                                            newSelected.add(post._id);
-                                                        } else {
-                                                            newSelected.delete(post._id);
-                                                        }
-                                                        setSelectedPosts(newSelected);
-                                                    }}
-                                                    className="rounded border-primary/20 bg-card"
-                                                />
-                                                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
-                                                    {post.title.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold">{post.title}</h4>
-                                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                        <span>{post.category}</span>
-                                                        <span>•</span>
-                                                        <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-                                                        <span>•</span>
-                                                        <span className="flex items-center gap-1">
-                                                            <Eye className="h-3 w-3" />
-                                                            {post.views || 0}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Link href={`/admin/posts/${post._id}`}>
-                                                    <button type="button" className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
-                                                        <Pencil className="h-4 w-4" />
-                                                    </button>
-                                                </Link>
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        handleDelete('post', post._id, post.title);
-                                                    }}
-                                                    className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="rounded-3xl border-2 border-dashed border-primary/10 bg-card/20 backdrop-blur-sm px-8 py-20 text-center text-muted-foreground">
-                                    <FileText className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                                    <p className="font-bold">No posts found</p>
-                                    <p className="text-xs">Create your first blog post to see it here.</p>
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
-                    {activeTab === "documents" && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="space-y-6"
-                        >
-                            <div className="flex items-center justify-between mb-8">
-                                <h2 className="text-3xl font-bold tracking-tight">CV Management</h2>
-                                <button className="inline-flex items-center justify-center rounded-2xl text-sm font-bold bg-primary text-white hover:bg-primary/90 h-11 px-6 shadow-lg shadow-primary/25 transition-all active:scale-95">
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Upload New Version
-                                </button>
-                            </div>
-                            <div className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-6">
-                                <div className="space-y-4">
-                                    {[
-                                        { version: "v2.1", date: "2023-12-01", status: "Active" },
-                                        { version: "v2.0", date: "2023-10-15", status: "Archived" },
-                                        { version: "v1.9", date: "2023-08-20", status: "Archived" }
-                                    ].map((cv) => (
-                                        <div key={cv.version} className="flex items-center justify-between p-4 bg-background/50 rounded-xl border border-primary/5 hover:border-primary/20 transition-all">
-                                            <div className="flex items-center gap-4">
-                                                <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                                                    <FileText className="h-5 w-5" />
-                                                </div>
-                                                <div>
-                                                    <div className="font-bold">{cv.version}</div>
-                                                    <div className="text-xs text-muted-foreground">Uploaded on {cv.date}</div>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-4">
-                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cv.status === 'Active' ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'}`}>
-                                                    {cv.status}
-                                                </span>
-                                                <button className="text-xs font-bold text-primary hover:underline">Download</button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                    {activeTab === "projects" && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="space-y-6"
-                        >
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                                <h2 className="text-3xl font-bold tracking-tight">Manage Projects</h2>
-                                <div className="flex items-center gap-4">
-                                    <div className="relative">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search projects..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="pl-10 pr-4 py-2 rounded-xl bg-card border border-primary/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64"
-                                        />
-                                    </div>
-                                    <Link href="/admin/projects/new">
-                                        <button className="inline-flex items-center justify-center rounded-2xl text-sm font-bold bg-primary text-white hover:bg-primary/90 h-11 px-6 shadow-lg shadow-primary/25 transition-all active:scale-95">
-                                            <Plus className="mr-2 h-4 w-4" />
-                                            Add Project
-                                        </button>
-                                    </Link>
-                                </div>
-                            </div>
-
-                            {projects.filter((p: Project) => p.title.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
-                                <div className="grid gap-4">
-                                    {projects.filter((p: Project) => p.title.toLowerCase().includes(searchTerm.toLowerCase())).map((project: Project) => (
-                                        <div key={project._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
-                                            <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden relative">
-                                                    {project.image ? <NextImage src={project.image} alt="" fill className="object-cover" unoptimized /> : project.title.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold">{project.title}</h4>
-                                                    <p className="text-xs text-muted-foreground">{project.tags.join(', ')}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Link href={`/admin/projects/${project._id}`}>
-                                                    <button className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
-                                                        <Pencil className="h-4 w-4" />
-                                                    </button>
-                                                </Link>
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        handleDelete('project', project._id, project.title);
-                                                    }}
-                                                    className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="rounded-3xl border-2 border-dashed border-primary/10 bg-card/20 backdrop-blur-sm px-8 py-20 text-center text-muted-foreground">
-                                    <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                                    <p className="font-bold">No projects found</p>
-                                    <p className="text-xs">Add your first project to showcase it here.</p>
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
-                    {activeTab === "gallery" && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="space-y-6"
-                        >
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                                <h2 className="text-3xl font-bold tracking-tight">Manage Gallery</h2>
-                                <div className="flex items-center gap-4">
-                                    <div className="relative">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search gallery..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="pl-10 pr-4 py-2 rounded-xl bg-card border border-primary/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64"
-                                        />
-                                    </div>
-                                    <Link href="/admin/gallery/new">
-                                        <button className="inline-flex items-center justify-center rounded-2xl text-sm font-bold bg-primary text-white hover:bg-primary/90 h-11 px-6 shadow-lg shadow-primary/25 transition-all active:scale-95">
-                                            <Plus className="mr-2 h-4 w-4" />
-                                            Add Image
-                                        </button>
-                                    </Link>
-                                </div>
-                            </div>
-                            {gallery.filter((g: GalleryItem) => g.title.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
-                                <div className="grid gap-4">
-                                    {gallery.filter((g: GalleryItem) => g.title.toLowerCase().includes(searchTerm.toLowerCase())).map((item: GalleryItem) => (
-                                        <div key={item._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
-                                            <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden relative">
-                                                    {item.imageUrl ? <NextImage src={item.imageUrl} alt="" fill className="object-cover" unoptimized /> : item.title.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold">{item.title}</h4>
-                                                    <p className="text-xs text-muted-foreground">{item.category} • {new Date(item.date).toLocaleDateString()}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Link href={`/admin/gallery/${item._id}`}>
-                                                    <button className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
-                                                        <Pencil className="h-4 w-4" />
-                                                    </button>
-                                                </Link>
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        handleDelete('gallery', item._id, item.title);
-                                                    }}
-                                                    className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="rounded-3xl border-2 border-dashed border-primary/10 bg-card/20 backdrop-blur-sm px-8 py-20 text-center text-muted-foreground">
-                                    <ImageIcon className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                                    <p className="font-bold">Gallery is empty</p>
-                                    <p className="text-xs">Upload images to display them in your gallery.</p>
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
-                    {activeTab === "certifications" && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="space-y-6"
-                        >
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                                <h2 className="text-3xl font-bold tracking-tight">Manage Certifications</h2>
-                                <div className="flex items-center gap-4">
-                                    <div className="relative">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search certs..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="pl-10 pr-4 py-2 rounded-xl bg-card border border-primary/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64"
-                                        />
-                                    </div>
-                                    <Link href="/admin/certifications/new">
-                                        <button className="inline-flex items-center justify-center rounded-2xl text-sm font-bold bg-primary text-white hover:bg-primary/90 h-11 px-6 shadow-lg shadow-primary/25 transition-all active:scale-95">
-                                            <Plus className="mr-2 h-4 w-4" />
-                                            Add Certificate
-                                        </button>
-                                    </Link>
-                                </div>
-                            </div>
-                            {certs.filter((c: Certification) => c.title.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
-                                <div className="grid gap-4">
-                                    {certs.filter((c: Certification) => c.title.toLowerCase().includes(searchTerm.toLowerCase())).map((cert: Certification) => (
-                                        <div key={cert._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
-                                            <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
-                                                    <Award className="h-5 w-5" />
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold">{cert.title}</h4>
-                                                    <p className="text-xs text-muted-foreground">{cert.issuer} • {cert.issueDate ? new Date(cert.issueDate).toLocaleDateString() : 'No date'}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Link href={`/admin/certifications/${cert._id}`}>
-                                                    <button className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
-                                                        <Pencil className="h-4 w-4" />
-                                                    </button>
-                                                </Link>
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        handleDelete('certification', cert._id, cert.title);
-                                                    }}
-                                                    className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="rounded-3xl border-2 border-dashed border-primary/10 bg-card/20 backdrop-blur-sm px-8 py-20 text-center text-muted-foreground">
-                                    <Award className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                                    <p className="font-bold">No certifications</p>
-                                    <p className="text-xs">Show off your achievements here.</p>
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
-                    {activeTab === "testimonials" && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="space-y-6"
-                        >
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                                <h2 className="text-3xl font-bold tracking-tight">Manage Testimonials</h2>
-                                <div className="flex items-center gap-4">
-                                    <div className="relative">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search testimonials..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="pl-10 pr-4 py-2 rounded-xl bg-card border border-primary/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64"
-                                        />
-                                    </div>
-                                    <Link href="/admin/testimonials/new">
-                                        <button className="inline-flex items-center justify-center rounded-2xl text-sm font-bold bg-primary text-white hover:bg-primary/90 h-11 px-6 shadow-lg shadow-primary/25 transition-all active:scale-95">
-                                            <Plus className="mr-2 h-4 w-4" />
-                                            Add Testimonial
-                                        </button>
-                                    </Link>
-                                </div>
-                            </div>
-                            {testimonials.filter((t: Testimonial) => t.name.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
-                                <div className="grid gap-4">
-                                    {testimonials.filter((t: Testimonial) => t.name.toLowerCase().includes(searchTerm.toLowerCase())).map((t: Testimonial) => (
-                                        <div key={t._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
-                                            <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
-                                                    {t.name.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold">{t.name}</h4>
-                                                    <p className="text-xs text-muted-foreground">{t.role} {t.company ? `@ ${t.company}` : ''}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Link href={`/admin/testimonials/${t._id}`}>
-                                                    <button className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
-                                                        <Pencil className="h-4 w-4" />
-                                                    </button>
-                                                </Link>
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        handleDelete('testimonial', t._id, t.name);
-                                                    }}
-                                                    className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="rounded-3xl border-2 border-dashed border-primary/10 bg-card/20 backdrop-blur-sm px-8 py-20 text-center text-muted-foreground">
-                                    <MessageCircle className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                                    <p className="font-bold">No testimonials found</p>
-                                    <p className="text-xs">Manage client feedback and reviews here.</p>
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
-                    {activeTab === "career" && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="space-y-6"
-                        >
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                                <h2 className="text-3xl font-bold tracking-tight">Manage Career Journey</h2>
-                                <div className="flex items-center gap-4">
-                                    <CareerFilter
-                                        currentFilter={careerTypeFilter}
-                                        onFilterChange={handleCareerFilterChange}
-                                    />
-                                    <div className="relative">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search career entries..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="pl-10 pr-4 py-2 rounded-xl bg-card border border-primary/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64"
-                                        />
-                                    </div>
-                                    <Link href="/admin/career/new">
-                                        <button className="inline-flex items-center justify-center rounded-2xl text-sm font-bold bg-primary text-white hover:bg-primary/90 h-11 px-6 shadow-lg shadow-primary/25 transition-all active:scale-95">
-                                            <Plus className="mr-2 h-4 w-4" />
-                                            Add Career Entry
-                                        </button>
-                                    </Link>
-                                </div>
-                            </div>
-                            {careers.filter((c: CareerJourney) => {
-                                const matchesSearch = c.title.toLowerCase().includes(searchTerm.toLowerCase()) || c.organization.toLowerCase().includes(searchTerm.toLowerCase());
-                                const matchesType = careerTypeFilter === 'all' || c.type === careerTypeFilter;
-                                return matchesSearch && matchesType;
-                            }).length > 0 ? (
-                                <div className="grid gap-4">
-                                    {careers.filter((c: CareerJourney) => {
-                                        const matchesSearch = c.title.toLowerCase().includes(searchTerm.toLowerCase()) || c.organization.toLowerCase().includes(searchTerm.toLowerCase());
-                                        const matchesType = careerTypeFilter === 'all' || c.type === careerTypeFilter;
-                                        return matchesSearch && matchesType;
-                                    }).map((career: CareerJourney) => (
-                                        <div key={career._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
-                                            <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
-                                                    <Briefcase className="h-5 w-5" />
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold">{career.title}</h4>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {career.organization} • {career.type} • {career.current ? 'Current' : new Date(career.startDate).getFullYear()}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Link href={`/admin/career/${career._id}`}>
-                                                    <button type="button" className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
-                                                        <Pencil className="h-4 w-4" />
-                                                    </button>
-                                                </Link>
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        e.stopPropagation();
-                                                        handleDelete('career', career._id, career.title);
-                                                    }}
-                                                    className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="rounded-3xl border-2 border-dashed border-primary/10 bg-card/20 backdrop-blur-sm px-8 py-20 text-center text-muted-foreground">
-                                    <Briefcase className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                                    <p className="font-bold">No career entries found</p>
-                                    <p className="text-xs">Add your professional journey and achievements here.</p>
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
-
-                    {activeTab === "skills" && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="space-y-6"
-                        >
-                            <div className="flex items-center justify-between mb-8">
-                                <h2 className="text-3xl font-bold tracking-tight">Manage Technical Skills</h2>
-                                <Link href="/admin/skills/new">
-                                    <button className="inline-flex items-center justify-center rounded-2xl text-sm font-bold bg-primary text-white hover:bg-primary/90 h-11 px-6 shadow-lg shadow-primary/25 transition-all active:scale-95">
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        Add Skill
-                                    </button>
-                                </Link>
-                            </div>
-
-                            {skills.length > 0 ? (
-                                <div className="space-y-6">
-                                    {Array.from(new Set(skills.map(s => s.category))).map((category) => {
-                                        const categorySkills = skills.filter(s => s.category === category).sort((a, b) => a.order - b.order);
-                                        return (
-                                            <div key={category} className="rounded-3xl border border-primary/10 bg-card/20 backdrop-blur-sm p-6">
-                                                <h3 className="text-lg font-bold mb-4 text-primary">{category}</h3>
-                                                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                                                    {categorySkills.map((skill) => (
-                                                        <div
-                                                            key={skill._id}
-                                                            className="flex items-center justify-between p-4 rounded-xl bg-card/50 border border-primary/5 hover:border-primary/20 transition-all group"
-                                                        >
-                                                            <div className="flex-1">
-                                                                <div className="font-semibold text-sm">{skill.name}</div>
-                                                                <div className="flex items-center gap-2 mt-1">
-                                                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${skill.level === 'Expert' ? 'bg-emerald-500/10 text-emerald-500' :
-                                                                        skill.level === 'Advanced' ? 'bg-blue-500/10 text-blue-500' :
-                                                                            skill.level === 'Intermediate' ? 'bg-amber-500/10 text-amber-500' :
-                                                                                'bg-slate-500/10 text-slate-500'
-                                                                        }`}>
-                                                                        {skill.level}
-                                                                    </span>
-                                                                    <span className="text-[10px] text-muted-foreground">{skill.years}y</span>
-                                                                </div>
-                                                            </div>
-                                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <Link href={`/admin/skills/${skill._id}`}>
-                                                                    <button className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors">
-                                                                        <Pencil className="h-4 w-4" />
-                                                                    </button>
-                                                                </Link>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={(e) => {
-                                                                        e.preventDefault();
-                                                                        e.stopPropagation();
-                                                                        handleDelete('skill', skill._id, skill.name);
-                                                                    }}
-                                                                    className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            ) : (
-                                <div className="rounded-3xl border-2 border-dashed border-primary/10 bg-card/20 backdrop-blur-sm px-8 py-20 text-center text-muted-foreground">
-                                    <Award className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                                    <p className="font-bold">No skills found</p>
-                                    <p className="text-xs">Add your technical skills and expertise here.</p>
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
-
-                    {activeTab === "newsletter" && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="space-y-6"
-                        >
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                                <h2 className="text-3xl font-bold tracking-tight">Newsletter Subscribers</h2>
-                                <div className="flex items-center gap-4">
-                                    <div className="relative">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search subscribers..."
-                                            value={searchTerm}
-                                            onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="pl-10 pr-4 py-2 rounded-xl bg-card border border-primary/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 w-64"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {newsletter.filter((n: Newsletter) => n.email.toLowerCase().includes(searchTerm.toLowerCase())).length > 0 ? (
-                                <div className="grid gap-4">
-                                    {newsletter.filter((n: Newsletter) => n.email.toLowerCase().includes(searchTerm.toLowerCase())).map((sub: Newsletter) => (
-                                        <div key={sub._id} className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-4 flex items-center justify-between">
-                                            <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold">
-                                                    <Mail className="h-5 w-5" />
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold">{sub.email}</h4>
-                                                    <p className="text-xs text-muted-foreground">{sub.name || 'No name'} • {new Date(sub.createdAt).toLocaleDateString()}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-4">
-                                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${sub.subscribed ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
-                                                    {sub.subscribed ? 'Subscribed' : 'Unsubscribed'}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="rounded-3xl border-2 border-dashed border-primary/10 bg-card/20 backdrop-blur-sm px-8 py-20 text-center text-muted-foreground">
-                                    <Mail className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                                    <p className="font-bold">No subscribers yet</p>
-                                    <p className="text-xs">Share your newsletter to get subscribers.</p>
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
                 </div>
-            </main >
-        </div >
+            </main>
+        </div>
     );
 }

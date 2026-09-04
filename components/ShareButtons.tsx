@@ -1,7 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Linkedin, Twitter, Link as LinkIcon, Facebook } from "lucide-react";
+import { Linkedin, Twitter, Link as LinkIcon, Facebook, Check } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface ShareButtonsProps {
@@ -10,6 +11,7 @@ interface ShareButtonsProps {
 }
 
 export function ShareButtons({ title, url }: ShareButtonsProps) {
+    const [copied, setCopied] = useState(false);
     // Helper to get URL client-side if not provided
     const getUrl = () => {
         if (typeof window !== "undefined") {
@@ -48,7 +50,9 @@ export function ShareButtons({ title, url }: ShareButtonsProps) {
     const handleCopy = () => {
         const shareUrl = getUrl();
         navigator.clipboard.writeText(shareUrl).then(() => {
+            setCopied(true);
             toast.success("Link copied to clipboard!");
+            setTimeout(() => setCopied(false), 2000);
         });
     };
 
@@ -90,10 +94,10 @@ export function ShareButtons({ title, url }: ShareButtonsProps) {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleCopy}
-                className="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors"
-                title="Copy Link"
+                className={`p-2 rounded-full transition-colors ${copied ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30" : "bg-primary/10 text-primary hover:bg-primary hover:text-white"}`}
+                title={copied ? "Copied!" : "Copy Link"}
             >
-                <LinkIcon className="h-4 w-4" />
+                {copied ? <Check className="h-4 w-4" /> : <LinkIcon className="h-4 w-4" />}
             </motion.button>
         </div>
     );

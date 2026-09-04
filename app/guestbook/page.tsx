@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Navbar } from "@/components/Navbar";
+import { Breadcrumb } from "@/components/Breadcrumb";
 import { motion } from "framer-motion";
 import { MessageSquare, Send, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -96,6 +97,11 @@ export default function GuestbookPage() {
         <div className="flex min-h-screen flex-col">
             <Navbar />
             <main className="flex-1 pt-24 pb-16">
+                {/* Breadcrumbs */}
+                <div className="container mx-auto px-4 md:px-6 pb-4 max-w-4xl">
+                    <Breadcrumb items={[{ label: "Guestbook" }]} />
+                </div>
+
                 {/* Hero Section */}
                 <section className="container mx-auto px-4 md:px-6 mb-12 max-w-4xl">
                     <motion.div
@@ -122,7 +128,7 @@ export default function GuestbookPage() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="border border-primary/20 rounded-xl p-6 md:p-8 bg-card/40 backdrop-blur-sm"
+                        className="border border-border/80 dark:border-primary/20 rounded-xl p-6 md:p-8 bg-card/90 dark:bg-card/40 backdrop-blur-sm shadow-sm"
                     >
                         <h2 className="text-2xl font-bold mb-6">Leave a Message</h2>
                         <form onSubmit={handleSubmit} className="space-y-4">
@@ -135,7 +141,7 @@ export default function GuestbookPage() {
                                         value={formData.name}
                                         onChange={handleChange}
                                         maxLength={100}
-                                        className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        className="flex h-10 w-full rounded-md border border-input bg-background/80 px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         placeholder="Your name"
                                     />
                                 </div>
@@ -147,7 +153,7 @@ export default function GuestbookPage() {
                                         type="email"
                                         value={formData.email}
                                         onChange={handleChange}
-                                        className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        className="flex h-10 w-full rounded-md border border-input bg-background/80 px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         placeholder="your@email.com"
                                     />
                                 </div>
@@ -160,7 +166,7 @@ export default function GuestbookPage() {
                                     type="url"
                                     value={formData.website}
                                     onChange={handleChange}
-                                    className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    className="flex h-10 w-full rounded-md border border-input bg-background/80 px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                     placeholder="https://yourwebsite.com"
                                 />
                             </div>
@@ -178,8 +184,8 @@ export default function GuestbookPage() {
                                     value={formData.message}
                                     onChange={handleChange}
                                     rows={4}
-                                    className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                    placeholder="Your message..."
+                                    className="flex min-h-[120px] w-full rounded-md border border-input bg-background/80 px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="Write your message here..."
                                 />
                             </div>
 
@@ -215,7 +221,7 @@ export default function GuestbookPage() {
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: index * 0.05 }}
-                                            className="border border-border rounded-lg p-6 bg-card/20 hover:border-primary/40 transition-colors"
+                                            className="border border-border/80 rounded-lg p-6 bg-card/90 dark:bg-card/20 shadow-sm hover:border-primary/40 transition-colors"
                                         >
                                             <div className="flex items-start justify-between mb-3">
                                                 <div>

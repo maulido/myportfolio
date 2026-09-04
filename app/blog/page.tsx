@@ -14,6 +14,7 @@ interface IPost {
     title: string;
     slug: string;
     excerpt: string;
+    content?: string;
     tags: string[];
     createdAt: Date;
     coverImage?: string;
@@ -89,7 +90,7 @@ export default function BlogPage() {
                                 placeholder="Search articles..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-lg shadow-xl"
+                                className="w-full bg-card/90 dark:bg-card/40 backdrop-blur-md border border-border/80 dark:border-primary/10 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-lg shadow-sm focus:shadow-md text-foreground"
                             />
                         </div>
 
@@ -98,7 +99,7 @@ export default function BlogPage() {
                                 onClick={() => setSelectedTag(null)}
                                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${selectedTag === null
                                     ? "bg-primary text-white shadow-lg shadow-primary/25"
-                                    : "bg-card/50 text-muted-foreground hover:bg-card hover:text-primary border border-primary/10"
+                                    : "bg-card text-muted-foreground hover:bg-muted hover:text-primary border border-border/80 dark:border-primary/10 shadow-sm"
                                     }`}
                             >
                                 All Topics
@@ -109,7 +110,7 @@ export default function BlogPage() {
                                     onClick={() => setSelectedTag(tag)}
                                     className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${selectedTag === tag
                                         ? "bg-primary text-white shadow-lg shadow-primary/25"
-                                        : "bg-card/50 text-muted-foreground hover:bg-card hover:text-primary border border-primary/10"
+                                        : "bg-card text-muted-foreground hover:bg-muted hover:text-primary border border-border/80 dark:border-primary/10 shadow-sm"
                                         }`}
                                 >
                                     {tag}
@@ -121,7 +122,7 @@ export default function BlogPage() {
                     {loading ? (
                         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-2 max-w-5xl mx-auto">
                             {[1, 2, 3, 4].map(i => (
-                                <div key={i} className="rounded-2xl border border-primary/10 bg-card/30 p-8 space-y-4">
+                                <div key={i} className="rounded-2xl border border-border/80 dark:border-primary/10 bg-card/50 dark:bg-card/30 p-8 space-y-4 shadow-sm">
                                     <Skeleton className="h-4 w-32" />
                                     <Skeleton className="h-8 w-full" />
                                     <Skeleton className="h-20 w-full" />
@@ -140,7 +141,7 @@ export default function BlogPage() {
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     transition={{ duration: 0.5, delay: index * 0.1 }}
-                                    className="group relative flex flex-col justify-between rounded-2xl border border-primary/10 bg-card/30 backdrop-blur-sm p-8 hover:border-primary/50 hover:shadow-2xl transition-all duration-500 hover:-translate-y-1"
+                                    className="group relative flex flex-col justify-between rounded-2xl border border-border/80 dark:border-primary/10 bg-card/90 dark:bg-card/30 backdrop-blur-sm p-8 hover:border-primary/50 shadow-sm hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 hover:-translate-y-1"
                                 >
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -150,7 +151,7 @@ export default function BlogPage() {
                                             </span>
                                             <span className="flex items-center gap-1">
                                                 <Clock className="h-3 w-3" />
-                                                5 min read
+                                                {Math.max(1, Math.ceil((post.content ? post.content.split(/\s+/).length : 500) / 200))} min read
                                             </span>
                                         </div>
                                         <Link href={`/blog/${post.slug}`} className="block">

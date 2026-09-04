@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import Settings from '@/models/Settings';
 
@@ -7,11 +8,11 @@ export async function GET() {
         await dbConnect();
 
         // Try to find existing aboutMe settings
-        let settings = await Settings.findOne({ key: 'aboutMe' });
+        let settings = await Settings.findOne({ key: 'aboutMe' }).lean();
 
         // If not found, create default
         if (!settings) {
-            settings = await Settings.create({
+            const created = await Settings.create({
                 key: 'aboutMe',
                 value: true, // dummy value for required field
                 aboutMe: {
@@ -19,13 +20,16 @@ export async function GET() {
                     paragraph2: 'I love solving complex problems and building efficient, scalable solutions. Whether it\'s configuring a complex network topology or building a modern web application, I bring dedication and attention to detail to every project.'
                 }
             });
+            settings = created.toObject();
         }
-
-        console.log('📖 GET /api/about - Returning data:', settings.aboutMe);
 
         return NextResponse.json({
             success: true,
-            data: settings.aboutMe || {}
+            data: settings?.aboutMe || {}
+        }, {
+            headers: {
+                'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400'
+            }
         });
     } catch (error: unknown) {
         console.error("API GET About Error:", error);
@@ -37,6 +41,9 @@ export async function GET() {
 }
 
 export async function PUT(req: Request) {
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
+
     try {
         await dbConnect();
         const body = await req.json();

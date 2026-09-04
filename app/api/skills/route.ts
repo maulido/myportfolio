@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import Skill from '@/models/Skill';
 
@@ -6,7 +7,7 @@ export async function GET() {
     try {
         await dbConnect();
 
-        const skills = await Skill.find({}).sort({ category: 1, order: 1 });
+        const skills = await Skill.find({}).sort({ category: 1, order: 1 }).lean();
 
         // Group skills by category
         const groupedSkills = skills.reduce((acc: Record<string, typeof skill[]>, skill) => {
@@ -24,7 +25,14 @@ export async function GET() {
             skills: groupedSkills[category]
         }));
 
-        return NextResponse.json({ success: true, data: result });
+        return NextResponse.json(
+            { success: true, data: result },
+            {
+                headers: {
+                    'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+                },
+            }
+        );
     } catch (error: unknown) {
         console.error("API GET Skills Error:", error);
         return NextResponse.json({
@@ -35,6 +43,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
+
     try {
         await dbConnect();
         const body = await req.json();

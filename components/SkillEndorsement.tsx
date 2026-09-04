@@ -44,9 +44,7 @@ export function SkillEndorsement({ skill, initialCount = 0 }: SkillEndorsementPr
                 endorsedSkills.push(skill);
                 localStorage.setItem('endorsedSkills', JSON.stringify(endorsedSkills));
 
-                toast.success('Thanks for endorsing!', {
-                    icon: '👍',
-                });
+                toast.success('Thanks for endorsing!');
             } else {
                 toast.error(data.message || 'Failed to endorse');
             }

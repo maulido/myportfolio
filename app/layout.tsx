@@ -8,17 +8,19 @@ import { getGlobalSettings } from "@/lib/settings";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 import ClientLayout from "@/components/ClientLayout";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
-import { ScrollProgress } from "@/components/Widgets";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { LanguageProvider } from "@/context/LanguageContext";
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getGlobalSettings();
@@ -33,7 +35,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: description,
     keywords: ["Software Engineer", "Network Engineer", "Portfolio", "Next.js", "React", "Cisco"],
-    authors: [{ name: "John Doe" }], // Ideally also dynamic
+    authors: [{ name: "Maulido" }],
     openGraph: {
       title: title,
       description: description,
@@ -64,22 +66,77 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const settings = await getGlobalSettings();
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": `${baseUrl}/#website`,
+        "url": baseUrl,
+        "name": settings.siteTitle || "Professional Portfolio | Network & Software Engineer",
+        "description": settings.siteDescription,
+        "inLanguage": "en-US",
+      },
+      {
+        "@type": "Person",
+        "@id": `${baseUrl}/#person`,
+        "name": "Maulido",
+        "url": baseUrl,
+        "jobTitle": "Network Specialist & Full Stack Software Engineer",
+        "description": settings.siteDescription,
+        "knowsAbout": [
+          "Network Engineering",
+          "Routing & Switching",
+          "Cisco",
+          "MikroTik",
+          "BGP & OSPF",
+          "Software Engineering",
+          "Full-Stack Web Development",
+          "Next.js",
+          "React",
+          "TypeScript",
+          "Cloud Architecture",
+          "DevOps & CI/CD",
+          "Docker",
+          "Network Security"
+        ],
+        "sameAs": [
+          settings.socialGithub || "https://github.com",
+          settings.socialLinkedin || "https://linkedin.com",
+          settings.socialTwitter || "https://twitter.com",
+        ].filter(Boolean),
+      },
+    ],
+  };
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="dark">
+      <head>
+        <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        <link rel="preconnect" href="https://utfs.io" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://utfs.io" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
         <GoogleAnalytics GA_MEASUREMENT_ID={process.env.NEXT_PUBLIC_GA_ID || ""} />
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <div className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/5 via-background to-background" />
-          <AnalyticsTracker />
-          <ScrollProgress />
-          <ClientLayout settings={settings}>
-            {children}
-          </ClientLayout>
-          <ScrollToTop />
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+          <LanguageProvider>
+            <div className="fixed inset-0 -z-10 hidden dark:block bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-background to-background" />
+            <AnalyticsTracker />
+            <ClientLayout settings={settings}>
+              {children}
+            </ClientLayout>
+            <ScrollToTop />
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

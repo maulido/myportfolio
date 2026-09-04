@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import Newsletter from '@/models/Newsletter';
 
-// GET - Fetch all newsletter subscribers
+// GET - Fetch all newsletter subscribers (Admin only)
 export async function GET() {
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
+
     try {
         await dbConnect();
         const subscribers = await Newsletter.find().sort({ createdAt: -1 });

@@ -2,6 +2,7 @@ import dbConnect from "@/lib/db";
 import Settings from "@/models/Settings";
 
 export interface GlobalSettings {
+    brandName?: string;
     siteTitle?: string;
     siteDescription?: string;
     contactEmail?: string;

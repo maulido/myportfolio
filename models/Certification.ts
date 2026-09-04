@@ -30,4 +30,8 @@ const CertificationSchema: Schema = new Schema({
     timestamps: true
 });
 
+// Indexes for query optimization
+CertificationSchema.index({ issueDate: -1 });
+CertificationSchema.index({ category: 1, issueDate: -1 });
+
 export default mongoose.models.Certification || mongoose.model<ICertification>('Certification', CertificationSchema);

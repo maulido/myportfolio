@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Download, ShieldCheck, Bot, MapPin, Mail, Phone, Github, Linkedin, Twitter, Globe, Instagram, TrendingUp, Award, Code, Briefcase } from "lucide-react";
+import { Download, ShieldCheck, Bot, MapPin, Mail, Phone, Github, Linkedin, Twitter, Globe, Instagram, TrendingUp, Award, Code, Briefcase, ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 interface AboutMeContent {
     paragraph1: string;
@@ -39,7 +40,7 @@ interface EducationEntry {
 
 export function About() {
     const [aboutMe, setAboutMe] = useState<AboutMeContent>({
-        paragraph1: 'Loading...',
+        paragraph1: '',
         paragraph2: ''
     });
     const [education, setEducation] = useState<EducationEntry[]>([]);
@@ -124,7 +125,8 @@ export function About() {
                                         alt={aboutMe.name || "Profile"}
                                         className="object-cover"
                                         fill
-                                        unoptimized
+                                        sizes="(max-width: 768px) 256px, 384px"
+                                        priority
                                     />
                                 ) : (
                                     <>
@@ -196,7 +198,13 @@ export function About() {
 
                         {/* Paragraphs */}
                         {isLoading ? (
-                            <p className="text-muted-foreground text-lg leading-relaxed">Loading...</p>
+                            <div className="space-y-3 py-2">
+                                <div className="h-4 w-full rounded-md bg-muted/60 animate-pulse" />
+                                <div className="h-4 w-11/12 rounded-md bg-muted/60 animate-pulse" />
+                                <div className="h-4 w-4/5 rounded-md bg-muted/60 animate-pulse" />
+                                <div className="h-4 w-full rounded-md bg-muted/60 animate-pulse mt-4" />
+                                <div className="h-4 w-3/4 rounded-md bg-muted/60 animate-pulse" />
+                            </div>
                         ) : (
                             <>
                                 <p className="text-muted-foreground text-lg leading-relaxed">
@@ -227,6 +235,17 @@ export function About() {
                                 ))}
                             </div>
                         )}
+
+                        {/* Read More Detail CTA */}
+                        <div className="pt-2">
+                            <Link
+                                href="/about"
+                                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-xs md:text-sm font-bold shadow-md shadow-primary/20 hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-95 group"
+                            >
+                                Read Full Story & Engineering Philosophy
+                                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                            </Link>
+                        </div>
 
                         {/* Quick Stats */}
                         {(aboutMe.stats?.yearsExperience || aboutMe.stats?.projectsCompleted || aboutMe.stats?.technologiesMastered || aboutMe.stats?.certificationsEarned) ? (

@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Contact } from "@/components/Contact";
+import { Breadcrumb } from "@/components/Breadcrumb";
 
 export default function ContactPage() {
     return (
@@ -9,11 +9,7 @@ export default function ContactPage() {
             <main className="flex-1 pt-16">
                 {/* Breadcrumbs */}
                 <div className="container mx-auto px-4 md:px-6 py-4">
-                    <nav className="text-sm text-muted-foreground">
-                        <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-                        <span className="mx-2">/</span>
-                        <span className="text-foreground">Contact</span>
-                    </nav>
+                    <Breadcrumb items={[{ label: "Contact" }]} />
                 </div>
 
                 <Contact />

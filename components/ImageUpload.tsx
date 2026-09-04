@@ -100,7 +100,7 @@ export default function ImageUpload({ value, onChange, endpoint = "imageUploader
             {/* Info: File uploads immediately to UploadThing when selected */}
             {!uploadedUrl && (
                 <p className="text-xs text-muted-foreground text-center">
-                    ℹ️ Note: Image will be uploaded immediately when selected, but won&apos;t be saved to your gallery until you click &quot;Save to Gallery&quot;
+                    Note: Image will be uploaded immediately when selected, but won&apos;t be saved to your gallery until you click &quot;Save to Gallery&quot;
                 </p>
             )}
         </div>

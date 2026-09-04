@@ -11,6 +11,7 @@ export default function EditCertificationPage({ params }: { params: Promise<{ id
     const [formData, setFormData] = useState({
         title: "",
         issuer: "",
+        category: "General",
         date: "",
         credentialUrl: "",
         imageUrl: "",
@@ -24,10 +25,13 @@ export default function EditCertificationPage({ params }: { params: Promise<{ id
                 const res = await fetch(`/api/certifications/${id}`);
                 const data = await res.json();
                 if (data.success) {
+                    const rawDate = data.data.issueDate || data.data.date;
+                    const parsedDate = rawDate ? new Date(rawDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
                     setFormData({
-                        title: data.data.title,
-                        issuer: data.data.issuer,
-                        date: data.data.date ? new Date(data.data.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+                        title: data.data.title || "",
+                        issuer: data.data.issuer || "",
+                        category: data.data.category || "General",
+                        date: parsedDate,
                         credentialUrl: data.data.credentialUrl || "",
                         imageUrl: data.data.imageUrl || "",
                     });
@@ -54,11 +58,15 @@ export default function EditCertificationPage({ params }: { params: Promise<{ id
             const res = await fetch(`/api/certifications/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({
+                    ...formData,
+                    issueDate: formData.date,
+                    date: formData.date,
+                }),
             });
 
             if (res.ok) {
-                router.push("/admin");
+                router.push("/admin/certifications");
             } else {
                 alert("Failed to update certification");
             }
@@ -78,7 +86,7 @@ export default function EditCertificationPage({ params }: { params: Promise<{ id
         <div className="min-h-screen bg-background/50 p-8">
             <div className="max-w-4xl mx-auto space-y-8">
                 <div className="flex items-center gap-4">
-                    <Link href="/admin">
+                    <Link href="/admin/certifications">
                         <button className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10">
                             <ArrowLeft className="h-4 w-4" />
                         </button>
@@ -112,7 +120,18 @@ export default function EditCertificationPage({ params }: { params: Promise<{ id
                         </div>
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-4 md:grid-cols-3">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium leading-none">Category</label>
+                            <input
+                                required
+                                name="category"
+                                value={formData.category}
+                                onChange={handleChange}
+                                className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                placeholder="Cloud, Frontend, AI..."
+                            />
+                        </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium leading-none">Date Issued</label>
                             <input

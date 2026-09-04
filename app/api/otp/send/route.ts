@@ -2,9 +2,25 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import OTP from '@/models/OTP';
 import nodemailer from 'nodemailer';
+import { rateLimit } from '@/lib/rate-limit';
+
+const otpLimiter = rateLimit({
+    interval: 10 * 60 * 1000, // 10 minutes
+    uniqueTokenPerInterval: 500,
+});
 
 export async function POST(req: Request) {
     try {
+        const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
+        try {
+            await otpLimiter.check(5, ip); // Max 5 requests per 10 minutes per IP
+        } catch {
+            return NextResponse.json(
+                { success: false, error: "Too many OTP requests. Please wait before trying again." },
+                { status: 429 }
+            );
+        }
+
         const { email } = await req.json();
 
         if (!email) {

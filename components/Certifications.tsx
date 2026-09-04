@@ -4,7 +4,9 @@ import { motion } from 'framer-motion';
 import { Award, ExternalLink, Calendar, CheckCircle2, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import CertificationDetailModal from './CertificationDetailModal';
+import dynamic from 'next/dynamic';
+
+const CertificationDetailModal = dynamic(() => import('./CertificationDetailModal'), { ssr: false });
 
 interface ICertification {
     _id: string;
@@ -57,9 +59,28 @@ export function Certifications() {
 
     if (loading) {
         return (
-            <section className="py-16 md:py-24">
+            <section className="py-16 md:py-24 relative overflow-hidden">
                 <div className="container mx-auto px-4 md:px-6">
-                    <h2 className="text-3xl font-bold mb-8">Loading certifications...</h2>
+                    <div className="text-center mb-12 space-y-3">
+                        <div className="h-9 w-64 mx-auto rounded-xl bg-muted/60 animate-pulse" />
+                        <div className="h-4 w-96 max-w-full mx-auto rounded-lg bg-muted/40 animate-pulse" />
+                    </div>
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="rounded-2xl border border-border/80 bg-card/60 p-6 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="h-10 w-10 rounded-xl bg-muted animate-pulse" />
+                                    <div className="h-5 w-20 rounded-full bg-muted animate-pulse" />
+                                </div>
+                                <div className="h-6 w-3/4 rounded-lg bg-muted animate-pulse" />
+                                <div className="h-4 w-1/2 rounded-md bg-muted/60 animate-pulse" />
+                                <div className="pt-4 flex gap-2">
+                                    <div className="h-6 w-16 rounded-full bg-muted/40 animate-pulse" />
+                                    <div className="h-6 w-20 rounded-full bg-muted/40 animate-pulse" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </section>
         );
@@ -117,7 +138,7 @@ export function Certifications() {
                             viewport={{ once: true }}
                             whileHover={{ scale: 1.02, y: -5 }}
                             onClick={() => handleCertClick(cert)}
-                            className="border border-primary/20 rounded-xl p-6 bg-card/40 backdrop-blur-sm hover:border-primary/40 transition-all group cursor-pointer"
+                            className="border border-border/80 dark:border-primary/20 rounded-xl p-6 bg-card/90 dark:bg-card/40 backdrop-blur-sm hover:border-primary/40 shadow-sm hover:shadow-xl hover:shadow-primary/10 transition-colors duration-300 group cursor-pointer"
                         >
                             {/* Certificate Image/Badge */}
                             {cert.imageUrl && (
@@ -190,6 +211,7 @@ export function Certifications() {
                                     href={cert.credentialUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
                                     className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-medium"
                                 >
                                     Verify Credential

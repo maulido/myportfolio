@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import mongoose from 'mongoose';
 
@@ -43,6 +44,9 @@ export async function POST(req: NextRequest) {
 
 // Get analytics data (for admin dashboard)
 export async function GET(req: NextRequest) {
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
+
     try {
         await dbConnect();
 

@@ -76,7 +76,7 @@ export default function DownloadCVModal({ isOpen, onClose }: DownloadCVModalProp
                         initial={{ scale: 0.9, y: 20 }}
                         animate={{ scale: 1, y: 0 }}
                         exit={{ scale: 0.9, y: 20 }}
-                        className="bg-card w-full max-w-md rounded-2xl shadow-2xl border border-white/10 overflow-hidden"
+                        className="bg-card w-full max-w-md rounded-2xl shadow-2xl border border-border/80 dark:border-white/10 overflow-hidden"
                     >
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-6">
@@ -100,7 +100,7 @@ export default function DownloadCVModal({ isOpen, onClose }: DownloadCVModalProp
                                                 required
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
-                                                className="w-full pl-11 pr-4 py-3 bg-muted/30 border border-primary/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                                className="w-full pl-11 pr-4 py-3 bg-muted/40 border border-border dark:border-primary/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground placeholder:text-muted-foreground/60"
                                                 placeholder="name@example.com"
                                             />
                                         </div>
@@ -129,7 +129,7 @@ export default function DownloadCVModal({ isOpen, onClose }: DownloadCVModalProp
                                             required
                                             value={otp}
                                             onChange={(e) => setOtp(e.target.value)}
-                                            className="w-full text-center text-3xl tracking-[1rem] font-bold py-4 bg-muted/30 border border-primary/10 rounded-xl focus:outline-none focus:border-primary transition-all"
+                                            className="w-full text-center text-3xl tracking-[1rem] font-bold py-4 bg-muted/40 border border-border dark:border-primary/10 rounded-xl focus:outline-none focus:border-primary transition-all text-foreground"
                                             placeholder="000000"
                                         />
                                     </div>
@@ -138,7 +138,7 @@ export default function DownloadCVModal({ isOpen, onClose }: DownloadCVModalProp
                                         <button
                                             type="button"
                                             onClick={() => setStep(1)}
-                                            className="flex-1 py-3 bg-muted border border-white/5 rounded-xl font-bold hover:bg-muted/80 transition-all text-sm"
+                                            className="flex-1 py-3 bg-muted border border-border dark:border-white/5 rounded-xl font-bold hover:bg-muted/80 transition-all text-sm"
                                         >
                                             Back
                                         </button>

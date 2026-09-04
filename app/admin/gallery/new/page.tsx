@@ -37,7 +37,7 @@ export default function NewGalleryItemPage() {
             });
 
             if (res.ok) {
-                router.push("/admin");
+                router.push("/admin/gallery");
             } else {
                 alert("Failed to add image");
             }
@@ -53,7 +53,7 @@ export default function NewGalleryItemPage() {
         <div className="min-h-screen bg-background/50 p-8">
             <div className="max-w-4xl mx-auto space-y-8">
                 <div className="flex items-center gap-4">
-                    <Link href="/admin">
+                    <Link href="/admin/gallery">
                         <button type="button" className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10">
                             <ArrowLeft className="h-4 w-4" />
                         </button>

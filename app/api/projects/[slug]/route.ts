@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import Project from '@/models/Project';
 
@@ -39,6 +40,9 @@ export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ slug: string }> }
 ) {
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
+
     try {
         await dbConnect();
 
@@ -73,6 +77,9 @@ export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ slug: string }> }
 ) {
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
+
     try {
         await dbConnect();
 

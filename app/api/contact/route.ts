@@ -1,54 +1,83 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
+import { rateLimit } from '@/lib/rate-limit';
+import dbConnect from '@/lib/db';
+import ContactMessage from '@/models/ContactMessage';
+import { requireAuth } from '@/lib/auth-helpers';
 
+const contactLimiter = rateLimit({
+  interval: 5 * 60 * 1000, // 5 minutes
+  uniqueTokenPerInterval: 500,
+});
+
+/**
+ * GET /api/contact
+ * Admin endpoint to list contact form submissions
+ */
+export async function GET() {
+  const authResult = await requireAuth();
+  if (authResult instanceof NextResponse) return authResult;
+
+  try {
+    await dbConnect();
+    const messages = await ContactMessage.find({}).sort({ createdAt: -1 }).lean();
+    return NextResponse.json({ success: true, data: messages });
+  } catch (error) {
+    console.error('[CONTACT API] Failed to fetch messages:', error);
+    return NextResponse.json({ success: false, error: 'Failed to fetch contact messages' }, { status: 500 });
+  }
+}
+
+/**
+ * POST /api/contact
+ * Public endpoint to submit contact messages
+ */
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
+    try {
+      await contactLimiter.check(3, ip); // Max 3 messages per 5 minutes per IP
+    } catch {
+      return NextResponse.json(
+        { success: false, error: "Too many messages sent. Please wait a few minutes before trying again." },
+        { status: 429 }
+      );
+    }
+
     const { name, email, message } = await req.json();
 
     if (!name || !email || !message) {
       return NextResponse.json({ success: false, error: "Missing fields" }, { status: 400 });
     }
 
-    // Check if email service is configured
-    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-      console.warn('[CONTACT API] Email service not configured. Set SMTP_HOST, SMTP_USER, and SMTP_PASS environment variables.');
-
-      // Return user-friendly message instead of 500 error
-      return NextResponse.json({
-        success: false,
-        error: "Email service is not configured. Please contact the administrator directly or try again later."
-      }, { status: 503 });
-    }
-
-    // Configure nodemailer with environment variables
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT) || 587,
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
+    // Always persist the inquiry to the database so it is never lost
+    await dbConnect();
+    await ContactMessage.create({
+      name,
+      email,
+      message,
+      ip
     });
 
-    // Verify transporter configuration
-    try {
-      await transporter.verify();
-    } catch (verifyError) {
-      console.error('[CONTACT API] Email transporter verification failed:', verifyError);
-      return NextResponse.json({
-        success: false,
-        error: "Email service is currently unavailable. Please try again later."
-      }, { status: 503 });
-    }
+    // Attempt to send email if SMTP is configured
+    if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+      try {
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST,
+          port: Number(process.env.SMTP_PORT) || 587,
+          secure: process.env.SMTP_SECURE === 'true',
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+          },
+        });
 
-    // Send email
-    await transporter.sendMail({
-      from: `"${name}" <${process.env.SMTP_USER}>`,
-      to: process.env.CONTACT_EMAIL || process.env.SMTP_USER,
-      subject: `Portfolio Contact: ${name}`,
-      text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
-      html: `
+        await transporter.sendMail({
+          from: `"${name}" <${process.env.SMTP_USER}>`,
+          to: process.env.CONTACT_EMAIL || process.env.SMTP_USER,
+          subject: `Portfolio Contact: ${name}`,
+          text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
+          html: `
             <div style="font-family: sans-serif; padding: 20px; color: #333;">
                 <h3 style="color: #0070f3;">New Contact Form Submission</h3>
                 <p><strong>Name:</strong> ${name}</p>
@@ -59,18 +88,24 @@ export async function POST(req: Request) {
                 </div>
             </div>
           `,
-    });
+        });
 
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[EMAIL SENT] From: ${email}, To: ${process.env.CONTACT_EMAIL || process.env.SMTP_USER}`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[EMAIL SENT] From: ${email}, To: ${process.env.CONTACT_EMAIL || process.env.SMTP_USER}`);
+        }
+      } catch (emailError) {
+        console.warn('[CONTACT API] Failed to send notification email (message saved to DB):', emailError);
+      }
+    } else {
+      console.info('[CONTACT API] Message saved to database (SMTP not configured).');
     }
-    return NextResponse.json({ success: true, message: "Thank you! Your message has been sent successfully." });
+
+    return NextResponse.json({ success: true, message: "Thank you! Your message has been received successfully." });
   } catch (error) {
-    // Log errors in all environments for debugging
-    console.error("[CONTACT API] Email send error:", error);
+    console.error("[CONTACT API] Error:", error);
     return NextResponse.json({
       success: false,
-      error: "Failed to send email. Please try again later or contact us directly."
+      error: "Failed to process message. Please try again later."
     }, { status: 500 });
   }
 }

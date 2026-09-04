@@ -26,13 +26,14 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                 const res = await fetch(`/api/projects/${id}`);
                 const data = await res.json();
                 if (data.success) {
+                    const tagsArr = data.data.technologies || data.data.tags || [];
                     setFormData({
-                        title: data.data.title,
-                        description: data.data.description,
-                        tags: data.data.tags.join(", "),
-                        image: data.data.image || "",
-                        github: data.data.github || "",
-                        demo: data.data.demo || "",
+                        title: data.data.title || "",
+                        description: data.data.description || "",
+                        tags: Array.isArray(tagsArr) ? tagsArr.join(", ") : "",
+                        image: data.data.imageUrl || data.data.image || "",
+                        github: data.data.githubUrl || data.data.github || "",
+                        demo: data.data.demoUrl || data.data.demo || "",
                     });
                 }
             } catch (error) {
@@ -54,17 +55,22 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
         setIsSubmitting(true);
 
         try {
+            const tagsArray = (formData.tags || "").split(",").map((tag) => tag.trim()).filter(Boolean);
             const res = await fetch(`/api/projects/${id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     ...formData,
-                    tags: formData.tags.split(",").map((tag) => tag.trim()),
+                    technologies: tagsArray,
+                    tags: tagsArray,
+                    imageUrl: formData.image,
+                    githubUrl: formData.github,
+                    demoUrl: formData.demo,
                 }),
             });
 
             if (res.ok) {
-                router.push("/admin");
+                router.push("/admin/projects");
             } else {
                 alert("Failed to update project");
             }
@@ -115,7 +121,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                             />
                             {formData.image && (
                                 <p className="text-xs text-muted-foreground">
-                                    💡 Upload a new image to replace the current one
+                                    Upload a new image to replace the current one
                                 </p>
                             )}
                         </div>

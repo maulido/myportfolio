@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import { Breadcrumb } from "@/components/Breadcrumb";
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -98,12 +98,7 @@ export default function CertificationsPage() {
             <main className="flex-1 pt-24 pb-16">
                 {/* Breadcrumbs */}
                 <div className="container mx-auto px-4 md:px-6 pb-4">
-                    <nav className="text-sm text-muted-foreground">
-
-                        <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-                        <span className="mx-2">/</span>
-                        <span className="text-foreground">Certifications</span>
-                    </nav>
+                    <Breadcrumb items={[{ label: "Certifications" }]} />
                 </div>
 
                 <div className="container mx-auto px-4 md:px-6">

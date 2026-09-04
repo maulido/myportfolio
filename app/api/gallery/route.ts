@@ -1,12 +1,20 @@
 import { NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import GalleryItem from '@/models/GalleryItem';
 
 export async function GET() {
     try {
         await dbConnect();
-        const items = await GalleryItem.find({}).sort({ date: -1 });
-        return NextResponse.json({ success: true, data: items });
+        const items = await GalleryItem.find({}).sort({ date: -1 }).lean();
+        return NextResponse.json(
+            { success: true, data: items },
+            {
+                headers: {
+                    'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+                },
+            }
+        );
     } catch (error: unknown) {
         console.error("API GET Gallery Error:", error);
         return NextResponse.json({
@@ -17,6 +25,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
+
     try {
         await dbConnect();
         const body = await req.json();

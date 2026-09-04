@@ -24,4 +24,7 @@ const NewsletterSchema: Schema = new Schema({
     timestamps: true
 });
 
+// Index for subscriber queries
+NewsletterSchema.index({ subscribed: 1, createdAt: -1 });
+
 export default mongoose.models.Newsletter || mongoose.model<INewsletter>('Newsletter', NewsletterSchema);

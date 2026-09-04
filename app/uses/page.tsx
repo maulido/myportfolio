@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
+import { Breadcrumb } from "@/components/Breadcrumb";
 import { motion } from "framer-motion";
 import { ExternalLink, Laptop, Code, Server, Armchair, Package } from "lucide-react";
 import Image from "next/image";
@@ -51,8 +52,22 @@ export default function UsesPage() {
         return (
             <div className="flex min-h-screen flex-col">
                 <Navbar />
-                <main className="flex-1 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <main className="flex-1 pt-24 pb-16">
+                    <div className="container mx-auto px-4 md:px-6 max-w-6xl space-y-12">
+                        <div className="text-center max-w-xl mx-auto space-y-3">
+                            <div className="h-10 w-48 mx-auto rounded-xl bg-muted/60 animate-pulse" />
+                            <div className="h-4 w-96 max-w-full mx-auto rounded-lg bg-muted/40 animate-pulse" />
+                        </div>
+                        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                            {[1, 2, 3, 4, 5, 6].map((i) => (
+                                <div key={i} className="rounded-2xl border border-border/80 bg-card/60 p-6 space-y-3">
+                                    <div className="h-6 w-1/2 rounded-lg bg-muted animate-pulse" />
+                                    <div className="h-4 w-full rounded-md bg-muted/50 animate-pulse" />
+                                    <div className="h-4 w-2/3 rounded-md bg-muted/40 animate-pulse" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </main>
             </div>
         );
@@ -62,6 +77,11 @@ export default function UsesPage() {
         <div className="flex min-h-screen flex-col">
             <Navbar />
             <main className="flex-1 pt-24 pb-16">
+                {/* Breadcrumbs */}
+                <div className="container mx-auto px-4 md:px-6 pb-4 max-w-6xl">
+                    <Breadcrumb items={[{ label: "Uses" }]} />
+                </div>
+
                 {/* Hero Section */}
                 <section className="container mx-auto px-4 md:px-6 mb-16 max-w-6xl">
                     <motion.div
@@ -106,7 +126,7 @@ export default function UsesPage() {
                                             whileInView={{ opacity: 1, y: 0 }}
                                             viewport={{ once: true }}
                                             transition={{ delay: index * 0.05 }}
-                                            className="group border border-border rounded-lg p-6 hover:border-primary transition-all hover:shadow-lg hover:shadow-primary/5"
+                                            className="group border border-border/80 rounded-xl p-6 bg-card/90 dark:bg-card/40 shadow-sm hover:border-primary transition-all hover:shadow-xl hover:shadow-primary/5"
                                         >
                                             {item.imageUrl && (
                                                 <div className="relative w-full h-40 mb-4 rounded-lg overflow-hidden bg-muted">

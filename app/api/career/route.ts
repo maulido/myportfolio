@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import CareerJourney from '@/models/CareerJourney';
 
@@ -13,8 +14,15 @@ export async function GET(req: Request) {
         // Build query
         const query = type ? { type } : {};
 
-        const careers = await CareerJourney.find(query).sort({ startDate: -1 });
-        return NextResponse.json({ success: true, data: careers });
+        const careers = await CareerJourney.find(query).sort({ startDate: -1 }).lean();
+        return NextResponse.json(
+            { success: true, data: careers },
+            {
+                headers: {
+                    'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+                },
+            }
+        );
     } catch (error: unknown) {
         console.error("API GET Career Error:", error);
         return NextResponse.json({
@@ -25,6 +33,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
+
     try {
         await dbConnect();
         const body = await req.json();

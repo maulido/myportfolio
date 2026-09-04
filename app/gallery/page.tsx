@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import { Breadcrumb } from "@/components/Breadcrumb";
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -52,12 +52,7 @@ export default function GalleryPage() {
             <main className="flex-1 pt-24 pb-16">
                 {/* Breadcrumbs */}
                 <div className="container mx-auto px-4 md:px-6 pb-4">
-                    <nav className="text-sm text-muted-foreground">
-
-                        <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-                        <span className="mx-2">/</span>
-                        <span className="text-foreground">Gallery</span>
-                    </nav>
+                    <Breadcrumb items={[{ label: "Gallery" }]} />
                 </div>
                 <div className="container mx-auto px-4 md:px-6">
                     <motion.div
@@ -99,7 +94,7 @@ export default function GalleryPage() {
                                     whileInView={{ opacity: 1, scale: 1 }}
                                     transition={{ duration: 0.5, delay: index * 0.05 }}
                                     viewport={{ once: true }}
-                                    className="break-inside-avoid relative group rounded-xl overflow-hidden cursor-pointer border border-primary/10 hover:border-primary/40 transition-all duration-500 shadow-sm hover:shadow-xl"
+                                    className="break-inside-avoid relative group rounded-xl overflow-hidden cursor-pointer border border-border/80 dark:border-primary/10 hover:border-primary/40 transition-all duration-500 shadow-sm hover:shadow-xl bg-card"
                                     onClick={() => setSelectedImage(item)}
                                 >
                                     <div className="relative aspect-[4/3] w-full bg-muted/30 overflow-hidden">

@@ -13,6 +13,8 @@ import {
     Code2,
     Image as ImageIcon
 } from "lucide-react";
+import { Navbar } from "@/components/Navbar";
+import { Breadcrumb } from "@/components/Breadcrumb";
 import { ShareButtons } from "@/components/ShareButtons";
 
 interface Project {
@@ -76,22 +78,33 @@ export default function ProjectDetailPage() {
         return null;
     }
 
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+    const projectJsonLd = {
+        "@context": "https://schema.org",
+        "@type": "SoftwareSourceCode",
+        "name": project.title,
+        "description": project.description,
+        "programmingLanguage": project.technologies,
+        "author": {
+            "@type": "Person",
+            "name": "Maulido"
+        },
+        "codeRepository": project.githubUrl,
+        "url": project.liveUrl || project.demoUrl || `${baseUrl}/projects/${project.slug}`
+    };
+
     return (
-        <div className="min-h-screen bg-background">
-            {/* Breadcrumbs */}
-            <div className="container mx-auto px-4 py-6">
-                <nav className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    <Link href="/" className="hover:text-foreground transition-colors">
-                        Home
-                    </Link>
-                    <span>/</span>
-                    <Link href="/projects" className="hover:text-foreground transition-colors">
-                        Projects
-                    </Link>
-                    <span>/</span>
-                    <span className="text-foreground">{project.title}</span>
-                </nav>
-            </div>
+        <div className="min-h-screen bg-background flex flex-col">
+            <Navbar />
+            <main className="flex-1 pt-20">
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(projectJsonLd) }}
+                />
+                {/* Breadcrumbs */}
+                <div className="container mx-auto px-4 py-4">
+                    <Breadcrumb items={[{ label: "Projects", href: "/projects" }, { label: project.title }]} />
+                </div>
 
             {/* Hero Section */}
             <section className="container mx-auto px-4 py-12">
@@ -337,6 +350,7 @@ export default function ProjectDetailPage() {
                     </section>
                 )
             }
-        </div >
+            </main>
+        </div>
     );
 }

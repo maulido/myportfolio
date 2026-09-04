@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Search, ArrowLeft, MessageCircle, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, ArrowLeft, MessageCircle, Eye, Star } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import Image from "next/image";
@@ -11,10 +11,12 @@ interface Testimonial {
     name: string;
     role: string;
     company?: string;
-    testimonial: string;
+    content?: string;
+    testimonial?: string;
     rating?: number;
+    image?: string;
     imageUrl?: string;
-    featured: boolean;
+    featured?: boolean;
 }
 
 export default function AdminTestimonialsListPage() {
@@ -150,55 +152,57 @@ export default function AdminTestimonialsListPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="grid gap-4"
                     >
-                        {filteredItems.map((item) => (
-                            <div
-                                key={item._id}
-                                className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-6 hover:border-primary/30 transition-all"
-                            >
-                                <div className="flex items-start gap-4">
-                                    {item.imageUrl ? (
-                                        <div className="h-16 w-16 rounded-full overflow-hidden bg-muted flex-shrink-0">
-                                            <Image
-                                                src={item.imageUrl}
-                                                alt={item.name}
-                                                width={64}
-                                                height={64}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl flex-shrink-0">
-                                            {item.name.charAt(0)}
-                                        </div>
-                                    )}
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-start justify-between mb-2">
-                                            <div>
-                                                <div className="flex items-center gap-2">
-                                                    <h4 className="font-bold">{item.name}</h4>
-                                                    {item.featured && (
-                                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
-                                                            FEATURED
-                                                        </span>
+                        {filteredItems.map((item) => {
+                            const avatarSrc = item.imageUrl || item.image;
+                            const testimonialContent = item.content || item.testimonial || "";
+
+                            return (
+                                <div
+                                    key={item._id}
+                                    className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-6 hover:border-primary/30 transition-all"
+                                >
+                                    <div className="flex items-start gap-4">
+                                        {avatarSrc ? (
+                                            <div className="h-16 w-16 rounded-full overflow-hidden bg-muted flex-shrink-0">
+                                                <Image
+                                                    src={avatarSrc}
+                                                    alt={item.name}
+                                                    width={64}
+                                                    height={64}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl flex-shrink-0">
+                                                {item.name.charAt(0)}
+                                            </div>
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-start justify-between mb-2">
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <h4 className="font-bold">{item.name}</h4>
+                                                        {item.featured && (
+                                                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                                                                FEATURED
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {item.role}{item.company && ` at ${item.company}`}
+                                                    </p>
+                                                    {item.rating && (
+                                                        <div className="flex items-center gap-1 mt-1">
+                                                            {Array.from({ length: 5 }).map((_, i) => (
+                                                                <Star key={i} className={`h-3.5 w-3.5 ${i < item.rating! ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground/30"}`} />
+                                                            ))}
+                                                        </div>
                                                     )}
                                                 </div>
-                                                <p className="text-sm text-muted-foreground">
-                                                    {item.role}{item.company && ` at ${item.company}`}
-                                                </p>
-                                                {item.rating && (
-                                                    <div className="flex items-center gap-1 mt-1">
-                                                        {Array.from({ length: 5 }).map((_, i) => (
-                                                            <span key={i} className={i < item.rating! ? "text-yellow-500" : "text-muted-foreground"}>
-                                                                ★
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                )}
                                             </div>
-                                        </div>
-                                        <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-                                            &quot;{item.testimonial}&quot;
-                                        </p>
+                                            <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                                                &quot;{testimonialContent}&quot;
+                                            </p>
                                         <div className="flex items-center gap-2">
                                             <Link href={`/admin/testimonials/${item._id}/view`}>
                                                 <button
@@ -228,7 +232,8 @@ export default function AdminTestimonialsListPage() {
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                        );
+                    })}
                     </motion.div>
                 ) : (
                     <div className="rounded-3xl border-2 border-dashed border-primary/10 bg-card/20 backdrop-blur-sm px-8 py-20 text-center text-muted-foreground">

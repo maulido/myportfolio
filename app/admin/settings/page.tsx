@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Save, Globe, Share2, Mail, FileText, ArrowLeft, Loader2 } from "lucide-react";
+import { Save, Globe, Share2, Mail, FileText, ArrowLeft, Loader2, Sparkles, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 
 export default function AdminSettingsPage() {
     const [loading, setLoading] = useState(true);
@@ -11,10 +12,15 @@ export default function AdminSettingsPage() {
 
     // Settings State
     const [settings, setSettings] = useState({
+        brandName: "Portfolio",
         siteTitle: "",
         siteDescription: "",
+        heroTitle: "Digital Architect",
+        heroRoles: "Network Specialist, Software Engineer, Cloud Architect, DevOps Engineer",
+        heroSubtitle: "Building robust network infrastructures and scalable web applications with a focus on comprehensive digital solutions.",
         resumeUrl: "",
         contactEmail: "",
+        whatsappNumber: "6281234567890",
         socialGithub: "",
         socialLinkedin: "",
         socialTwitter: "",
@@ -52,21 +58,22 @@ export default function AdminSettingsPage() {
     const handleSave = async () => {
         setSaving(true);
         try {
-            // Save each setting individually (or could update API to accept bulk)
-            // For now, we loop through keys
-            const promises = Object.entries(settings).map(([key, value]) =>
-                fetch("/api/settings", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ key, value })
-                })
-            );
+            // Save all settings in a single atomic request
+            const res = await fetch("/api/settings", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ settings })
+            });
 
-            await Promise.all(promises);
-            alert("Settings saved successfully!");
+            const data = await res.json();
+            if (data.success) {
+                toast.success("Settings saved successfully!");
+            } else {
+                toast.error(data.error || "Failed to save settings");
+            }
         } catch (error) {
             console.error("Failed to save", error);
-            alert("Failed to save settings");
+            toast.error("Failed to save settings");
         } finally {
             setSaving(false);
         }
@@ -125,6 +132,17 @@ export default function AdminSettingsPage() {
                         </div>
                         <div className="grid gap-6">
                             <div className="space-y-2">
+                                <label className="text-sm font-medium">Navbar Brand / Logo Text</label>
+                                <input
+                                    name="brandName"
+                                    value={settings.brandName}
+                                    onChange={handleChange}
+                                    placeholder="e.g. Portfolio, Maulido, or your custom brand"
+                                    className="w-full px-4 py-2 rounded-xl bg-background/50 border border-primary/10 focus:outline-none focus:ring-2 focus:ring-primary/50 font-semibold"
+                                />
+                                <p className="text-xs text-muted-foreground">Teks logo/brand yang tampil di sudut kiri atas navigasi (Navbar).</p>
+                            </div>
+                            <div className="space-y-2">
                                 <label className="text-sm font-medium">Site Title</label>
                                 <input
                                     name="siteTitle"
@@ -142,6 +160,53 @@ export default function AdminSettingsPage() {
                                     onChange={handleChange}
                                     placeholder="Brief description for search engines..."
                                     rows={3}
+                                    className="w-full px-4 py-2 rounded-xl bg-background/50 border border-primary/10 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Hero Section Configuration */}
+                    <div className="bg-card/40 backdrop-blur-md border border-primary/10 rounded-2xl p-6 shadow-xl">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-primary/10 rounded-lg">
+                                <Sparkles className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold">Hero Section (Home Page)</h2>
+                                <p className="text-xs text-muted-foreground">Customize your main headline and typing animation roles</p>
+                            </div>
+                        </div>
+                        <div className="grid gap-6">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Main Headline Title</label>
+                                <input
+                                    name="heroTitle"
+                                    value={settings.heroTitle}
+                                    onChange={handleChange}
+                                    placeholder="e.g. Digital Architect"
+                                    className="w-full px-4 py-2 rounded-xl bg-background/50 border border-primary/10 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Rotating Job Roles (Typing Effect)</label>
+                                <input
+                                    name="heroRoles"
+                                    value={settings.heroRoles}
+                                    onChange={handleChange}
+                                    placeholder="e.g. Network Specialist, Software Engineer, Cloud Architect, DevOps Engineer"
+                                    className="w-full px-4 py-2 rounded-xl bg-background/50 border border-primary/10 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                />
+                                <p className="text-xs text-muted-foreground">Separate roles with a comma (,)</p>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Hero Subtitle Description</label>
+                                <textarea
+                                    name="heroSubtitle"
+                                    value={settings.heroSubtitle}
+                                    onChange={handleChange}
+                                    placeholder="Brief introduction displayed below the typing headline..."
+                                    rows={2}
                                     className="w-full px-4 py-2 rounded-xl bg-background/50 border border-primary/10 focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                                 />
                             </div>
@@ -235,6 +300,20 @@ export default function AdminSettingsPage() {
                                         className="w-full pl-10 pr-4 py-2 rounded-xl bg-background/50 border border-primary/10 focus:outline-none focus:ring-2 focus:ring-primary/50"
                                     />
                                 </div>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">WhatsApp Number (FAB Quick Chat)</label>
+                                <div className="relative">
+                                    <MessageCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
+                                    <input
+                                        name="whatsappNumber"
+                                        value={settings.whatsappNumber}
+                                        onChange={handleChange}
+                                        placeholder="e.g. 6281234567890 (no + or -)"
+                                        className="w-full pl-10 pr-4 py-2 rounded-xl bg-background/50 border border-primary/10 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                    />
+                                </div>
+                                <p className="text-xs text-muted-foreground">Format with country code without spaces (e.g. 628xxx)</p>
                             </div>
                         </div>
                     </div>

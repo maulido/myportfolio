@@ -42,7 +42,7 @@ export default function NewPostPage() {
             });
 
             if (res.ok) {
-                router.push("/admin");
+                router.push("/admin/posts");
             } else {
                 alert("Failed to create post");
             }

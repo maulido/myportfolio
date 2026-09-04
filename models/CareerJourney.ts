@@ -76,5 +76,9 @@ const CareerJourneySchema = new Schema<ICareerJourney>(
     }
 );
 
+// Indexes for query optimization
+CareerJourneySchema.index({ type: 1, startDate: -1 });
+CareerJourneySchema.index({ startDate: -1 });
+
 export default mongoose.models.CareerJourney || mongoose.model<ICareerJourney>('CareerJourney', CareerJourneySchema);
 

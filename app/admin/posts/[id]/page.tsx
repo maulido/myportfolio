@@ -26,11 +26,11 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                 const data = await res.json();
                 if (data.success) {
                     setFormData({
-                        title: data.data.title,
-                        slug: data.data.slug,
-                        excerpt: data.data.excerpt,
-                        content: data.data.content,
-                        tags: data.data.tags.join(", "),
+                        title: data.data.title || "",
+                        slug: data.data.slug || "",
+                        excerpt: data.data.excerpt || "",
+                        content: data.data.content || "",
+                        tags: Array.isArray(data.data.tags) ? data.data.tags.join(", ") : "",
                     });
                 }
             } catch (error) {
@@ -57,12 +57,12 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     ...formData,
-                    tags: formData.tags.split(",").map((tag) => tag.trim()),
+                    tags: formData.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
                 }),
             });
 
             if (res.ok) {
-                router.push("/admin");
+                router.push("/admin/posts");
             } else {
                 alert("Failed to update post");
             }
