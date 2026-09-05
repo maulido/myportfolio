@@ -15,7 +15,10 @@ import {
     ThumbsUp,
     CheckCircle2,
     ArrowUpRight,
-    TerminalSquare
+    TerminalSquare,
+    LayoutGrid,
+    SlidersHorizontal,
+    ChevronRight
 } from "lucide-react";
 import { getIcon } from "@/lib/iconMap";
 import { useState, useEffect, useMemo } from "react";
@@ -24,6 +27,7 @@ import { SkillEndorsement } from "./SkillEndorsement";
 import Link from "next/link";
 
 type SkillLevel = "Expert" | "Advanced" | "Intermediate" | "Beginner";
+type ViewMode = "compact" | "detailed";
 
 type Skill = {
     _id: string;
@@ -42,7 +46,7 @@ type SkillCategory = {
     skills: Skill[];
 };
 
-// Sub-competencies and role descriptions for each technology to make every card dense, practical, and informative
+// Sub-competencies and role descriptions for detailed mode
 const SKILL_DETAILS: Record<string, { role: string; tags: string[] }> = {
     "Next.js": {
         role: "Full-Stack React Framework",
@@ -106,7 +110,7 @@ const SKILL_DETAILS: Record<string, { role: string; tags: string[] }> = {
     }
 };
 
-// Associated Ecosystem & Complementary Tooling to eliminate empty dead space in card footers
+// Associated Ecosystem & Complementary Tooling for detailed mode
 const CATEGORY_ECOSYSTEM: Record<string, { label: string; tools: string[] }> = {
     "Frontend Development": {
         label: "Complementary Tools & Ecosystem",
@@ -160,6 +164,9 @@ export function Skills() {
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<string>("all");
     const [searchQuery, setSearchQuery] = useState<string>("");
+    
+    // View mode: default is "compact" (Mode Ringkas)
+    const [viewMode, setViewMode] = useState<ViewMode>("compact");
 
     useEffect(() => {
         loadData();
@@ -335,16 +342,16 @@ export function Skills() {
                     </div>
                 </motion.div>
 
-                {/* Filter Tabs & Instant Search Controls */}
+                {/* Controls Bar: Category Pills + View Mode Switch (Ringkas / Detail) + Search */}
                 <motion.div
                     initial={{ opacity: 0, y: 15 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
                     viewport={{ once: true }}
-                    className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8 max-w-6xl mx-auto"
+                    className="flex flex-col lg:flex-row items-center justify-between gap-4 mb-8 max-w-6xl mx-auto"
                 >
                     {/* Category Filter Pills */}
-                    <div className="flex flex-wrap items-center justify-center gap-2 p-1.5 rounded-2xl bg-card/80 dark:bg-card/40 border border-border/80 dark:border-primary/15 backdrop-blur-md shadow-sm w-full md:w-auto">
+                    <div className="flex flex-wrap items-center justify-center gap-2 p-1.5 rounded-2xl bg-card/80 dark:bg-card/40 border border-border/80 dark:border-primary/15 backdrop-blur-md shadow-sm w-full lg:w-auto">
                         <button
                             onClick={() => setActiveTab("all")}
                             className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${activeTab === "all"
@@ -378,24 +385,53 @@ export function Skills() {
                         })}
                     </div>
 
-                    {/* Search Input */}
-                    <div className="relative w-full md:w-72">
-                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Filter skills, e.g. React, Docker..."
-                            className="w-full pl-9.5 pr-8 py-2 text-xs rounded-xl bg-card/80 dark:bg-card/40 border border-border/80 dark:border-primary/15 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all placeholder:text-muted-foreground"
-                        />
-                        {searchQuery && (
+                    {/* Right Toolbar: View Mode Toggle & Search */}
+                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                        {/* Mode Ringkas / Detail Toggle (Segmented Switch) */}
+                        <div className="flex items-center p-1 rounded-xl bg-card/80 dark:bg-card/40 border border-border/80 dark:border-primary/15 backdrop-blur-md shadow-sm shrink-0 w-full sm:w-auto justify-center">
                             <button
-                                onClick={() => setSearchQuery("")}
-                                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
+                                onClick={() => setViewMode("compact")}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${viewMode === "compact"
+                                    ? "bg-primary text-primary-foreground shadow-xs"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                                    }`}
+                                title="Mode Ringkas (Tampilan Ringkas & Cepat)"
                             >
-                                <X className="h-3.5 w-3.5" />
+                                <LayoutGrid className="h-3.5 w-3.5" />
+                                <span>Mode Ringkas</span>
                             </button>
-                        )}
+                            <button
+                                onClick={() => setViewMode("detailed")}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${viewMode === "detailed"
+                                    ? "bg-primary text-primary-foreground shadow-xs"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                                    }`}
+                                title="Mode Detail (Spesialisasi & Tag Kompetensi)"
+                            >
+                                <SlidersHorizontal className="h-3.5 w-3.5" />
+                                <span>Mode Detail</span>
+                            </button>
+                        </div>
+
+                        {/* Search Input */}
+                        <div className="relative w-full sm:w-64">
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Filter skills, e.g. React..."
+                                className="w-full pl-9.5 pr-8 py-2 text-xs rounded-xl bg-card/80 dark:bg-card/40 border border-border/80 dark:border-primary/15 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all placeholder:text-muted-foreground"
+                            />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery("")}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
+                                >
+                                    <X className="h-3.5 w-3.5" />
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </motion.div>
 
@@ -403,15 +439,11 @@ export function Skills() {
                 {isLoading ? (
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
                         {[1, 2, 3].map((i) => (
-                            <div key={i} className="bg-card/40 rounded-2xl border border-border/60 p-6 space-y-5">
-                                <div className="h-8 w-2/3 bg-muted/60 animate-pulse rounded-lg" />
-                                <div className="h-4 w-full bg-muted/40 animate-pulse rounded" />
-                                <div className="space-y-4 pt-4">
+                            <div key={i} className="bg-card/40 rounded-2xl border border-border/60 p-6 space-y-4">
+                                <div className="h-7 w-2/3 bg-muted/60 animate-pulse rounded-lg" />
+                                <div className="space-y-3 pt-2">
                                     {[1, 2, 3, 4].map(j => (
-                                        <div key={j} className="p-3 rounded-xl border border-muted/40 space-y-2">
-                                            <div className="h-4 w-1/2 bg-muted/60 animate-pulse rounded" />
-                                            <div className="h-4 w-3/4 bg-muted/40 animate-pulse rounded" />
-                                        </div>
+                                        <div key={j} className="h-10 rounded-xl bg-muted/30 border border-muted/40 animate-pulse" />
                                     ))}
                                 </div>
                             </div>
@@ -439,8 +471,8 @@ export function Skills() {
                     </div>
                 ) : (
                     <>
-                        {/* High-Density Bento Grid */}
-                        <div className={`grid gap-6 max-w-6xl mx-auto ${filteredCategories.length === 1
+                        {/* Skills Grid */}
+                        <div className={`grid gap-5 max-w-6xl mx-auto ${filteredCategories.length === 1
                             ? "grid-cols-1 max-w-3xl"
                             : filteredCategories.length === 2
                                 ? "grid-cols-1 md:grid-cols-2"
@@ -455,131 +487,181 @@ export function Skills() {
                                         <motion.div
                                             key={category.category}
                                             layout
-                                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                                            initial={{ opacity: 0, scale: 0.96, y: 15 }}
                                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                                            exit={{ opacity: 0, scale: 0.95 }}
-                                            transition={{ duration: 0.4, delay: categoryIndex * 0.08 }}
+                                            exit={{ opacity: 0, scale: 0.96 }}
+                                            transition={{ duration: 0.35, delay: categoryIndex * 0.06 }}
                                             className="h-full flex flex-col"
                                         >
-                                            <SpotlightCard className="p-6 h-full flex flex-col justify-between bg-card/90 dark:bg-card/40 border border-border/80 dark:border-primary/20 hover:border-primary/50 shadow-md">
+                                            <SpotlightCard className="p-5 sm:p-6 h-full flex flex-col justify-between bg-card/90 dark:bg-card/40 border border-border/80 dark:border-primary/20 hover:border-primary/50 shadow-sm transition-all duration-300">
                                                 <div>
                                                     {/* Category Header */}
-                                                    <div className="mb-5 pb-4 border-b border-border/70 dark:border-primary/10">
-                                                        <div className="flex items-center justify-between mb-2">
-                                                            <div className="flex items-center gap-2.5">
-                                                                <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-inner">
-                                                                    {category.icon}
-                                                                </div>
-                                                                <h3 className="font-bold text-base sm:text-lg text-foreground tracking-tight">
-                                                                    {category.category}
-                                                                </h3>
+                                                    <div className={`flex items-center justify-between pb-3.5 border-b border-border/70 dark:border-primary/10 ${viewMode === "detailed" ? "mb-4" : "mb-3"}`}>
+                                                        <div className="flex items-center gap-2.5">
+                                                            <div className="p-2 rounded-xl bg-primary/10 text-primary border border-primary/20 shadow-inner">
+                                                                {category.icon}
                                                             </div>
-                                                            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-muted/70 text-muted-foreground border border-border/50">
-                                                                {category.skills.length} skills
-                                                            </span>
+                                                            <h3 className="font-bold text-base sm:text-lg text-foreground tracking-tight">
+                                                                {category.category}
+                                                            </h3>
                                                         </div>
-                                                        {desc && (
-                                                            <p className="text-xs text-muted-foreground leading-relaxed mt-2 line-clamp-2">
-                                                                {desc}
-                                                            </p>
-                                                        )}
+                                                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-muted/70 text-muted-foreground border border-border/50">
+                                                            {category.skills.length} skills
+                                                        </span>
                                                     </div>
 
-                                                    {/* Skills List */}
-                                                    <div className="space-y-3">
-                                                        {category.skills.map((skill: Skill, skillIndex: number) => {
-                                                            const details = SKILL_DETAILS[skill.name];
+                                                    {/* Category Description in Detailed Mode */}
+                                                    {viewMode === "detailed" && desc && (
+                                                        <p className="text-xs text-muted-foreground leading-relaxed mb-4 line-clamp-2">
+                                                            {desc}
+                                                        </p>
+                                                    )}
 
-                                                            return (
-                                                                <motion.div
+                                                    {/* Skills List: MODE RINGKAS (COMPACT - DEFAULT) */}
+                                                    {viewMode === "compact" ? (
+                                                        <div className="space-y-2">
+                                                            {category.skills.map((skill: Skill) => (
+                                                                <div
                                                                     key={skill._id || skill.name}
-                                                                    initial={{ opacity: 0, x: -10 }}
-                                                                    whileInView={{ opacity: 1, x: 0 }}
-                                                                    transition={{ delay: 0.04 * skillIndex }}
-                                                                    viewport={{ once: true }}
-                                                                    className="group/skill rounded-xl p-3 bg-muted/20 hover:bg-muted/40 dark:bg-background/40 dark:hover:bg-background/70 border border-border/50 hover:border-primary/30 transition-all duration-200"
+                                                                    className="group/skill flex items-center justify-between p-2.5 rounded-xl bg-muted/20 hover:bg-muted/40 dark:bg-background/40 dark:hover:bg-background/80 border border-border/40 hover:border-primary/30 transition-all duration-200"
                                                                 >
-                                                                    {/* Top row: Icon, Name, Subtitle & Endorse Button */}
-                                                                    <div className="flex items-start justify-between gap-2 mb-2">
-                                                                        <div className="flex items-start gap-2.5 min-w-0">
-                                                                            <div className="p-2 rounded-xl bg-card border border-border/60 shadow-sm shrink-0 mt-0.5">
-                                                                                <div className={skill.color || 'text-foreground'}>
-                                                                                    {getIcon(skill.icon, "h-4 w-4")}
-                                                                                </div>
-                                                                            </div>
-                                                                            <div className="min-w-0">
-                                                                                <div className="text-sm font-semibold text-foreground tracking-tight truncate">
-                                                                                    {skill.name}
-                                                                                </div>
-                                                                                {details?.role && (
-                                                                                    <div className="text-[11px] text-muted-foreground truncate">
-                                                                                        {details.role}
-                                                                                    </div>
-                                                                                )}
+                                                                    {/* Left: Icon & Name */}
+                                                                    <div className="flex items-center gap-2.5 min-w-0">
+                                                                        <div className="p-1.5 rounded-lg bg-card border border-border/60 shadow-2xs shrink-0">
+                                                                            <div className={skill.color || 'text-foreground'}>
+                                                                                {getIcon(skill.icon, "h-4 w-4")}
                                                                             </div>
                                                                         </div>
-
-                                                                        {/* Live Endorsement Button */}
-                                                                        <div className="shrink-0">
-                                                                            <SkillEndorsement
-                                                                                skill={skill.name}
-                                                                                initialCount={endorsements[skill.name] || 0}
-                                                                            />
-                                                                        </div>
+                                                                        <span className="text-xs font-semibold text-foreground tracking-tight truncate">
+                                                                            {skill.name}
+                                                                        </span>
                                                                     </div>
 
-                                                                    {/* Middle row: Badges for Level & Experience */}
-                                                                    <div className="flex items-center gap-2 mb-2.5">
-                                                                        {/* Level Badge */}
+                                                                    {/* Right: Level Pill & Endorsement Button */}
+                                                                    <div className="flex items-center gap-2 shrink-0">
                                                                         <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${getLevelColor(skill.level)}`}>
                                                                             <span className={`w-1.5 h-1.5 rounded-full ${getLevelDot(skill.level)}`} />
                                                                             {skill.level}
                                                                         </span>
-
-                                                                        {/* Years Badge */}
-                                                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-muted/60 text-muted-foreground border border-border/40">
-                                                                            <Calendar className="h-2.5 w-2.5" />
-                                                                            {skill.years}y experience
-                                                                        </span>
+                                                                        <SkillEndorsement
+                                                                            skill={skill.name}
+                                                                            initialCount={endorsements[skill.name] || 0}
+                                                                        />
                                                                     </div>
-
-                                                                    {/* Sub-competencies Pills */}
-                                                                    {details?.tags && details.tags.length > 0 && (
-                                                                        <div className="flex flex-wrap gap-1">
-                                                                            {details.tags.map((tag) => (
-                                                                                <span
-                                                                                    key={tag}
-                                                                                    className="px-1.5 py-0.5 rounded text-[9.5px] font-medium bg-background/80 text-muted-foreground/90 border border-border/40"
-                                                                                >
-                                                                                    {tag}
-                                                                                </span>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-                                                                </motion.div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </div>
-
-                                                {/* Category Footer: Ecosystem & Tooling (Eliminates Empty Space) */}
-                                                {eco && (
-                                                    <div className="mt-6 pt-4 border-t border-border/60 dark:border-primary/10">
-                                                        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground mb-2.5">
-                                                            <TerminalSquare className="h-3.5 w-3.5 text-primary" />
-                                                            <span>{eco.label}</span>
-                                                        </div>
-                                                        <div className="flex flex-wrap gap-1.5">
-                                                            {eco.tools.map((tool) => (
-                                                                <span
-                                                                    key={tool}
-                                                                    className="px-2 py-0.5 rounded-lg text-[10px] font-medium bg-primary/5 hover:bg-primary/10 text-foreground border border-primary/15 transition-colors"
-                                                                >
-                                                                    {tool}
-                                                                </span>
+                                                                </div>
                                                             ))}
                                                         </div>
+                                                    ) : (
+                                                        /* Skills List: MODE DETAIL (COMPREHENSIVE) */
+                                                        <div className="space-y-3">
+                                                            {category.skills.map((skill: Skill, skillIndex: number) => {
+                                                                const details = SKILL_DETAILS[skill.name];
+
+                                                                return (
+                                                                    <motion.div
+                                                                        key={skill._id || skill.name}
+                                                                        initial={{ opacity: 0, x: -8 }}
+                                                                        animate={{ opacity: 1, x: 0 }}
+                                                                        transition={{ delay: 0.03 * skillIndex }}
+                                                                        className="group/skill rounded-xl p-3 bg-muted/20 hover:bg-muted/40 dark:bg-background/40 dark:hover:bg-background/70 border border-border/50 hover:border-primary/30 transition-all duration-200"
+                                                                    >
+                                                                        {/* Top row: Icon, Name, Subtitle & Endorse Button */}
+                                                                        <div className="flex items-start justify-between gap-2 mb-2">
+                                                                            <div className="flex items-start gap-2.5 min-w-0">
+                                                                                <div className="p-2 rounded-xl bg-card border border-border/60 shadow-sm shrink-0 mt-0.5">
+                                                                                    <div className={skill.color || 'text-foreground'}>
+                                                                                        {getIcon(skill.icon, "h-4 w-4")}
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div className="min-w-0">
+                                                                                    <div className="text-sm font-semibold text-foreground tracking-tight truncate">
+                                                                                        {skill.name}
+                                                                                    </div>
+                                                                                    {details?.role && (
+                                                                                        <div className="text-[11px] text-muted-foreground truncate">
+                                                                                            {details.role}
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+
+                                                                            {/* Live Endorsement Button */}
+                                                                            <div className="shrink-0">
+                                                                                <SkillEndorsement
+                                                                                    skill={skill.name}
+                                                                                    initialCount={endorsements[skill.name] || 0}
+                                                                                />
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Middle row: Badges for Level & Experience */}
+                                                                        <div className="flex items-center gap-2 mb-2.5">
+                                                                            {/* Level Badge */}
+                                                                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border ${getLevelColor(skill.level)}`}>
+                                                                                <span className={`w-1.5 h-1.5 rounded-full ${getLevelDot(skill.level)}`} />
+                                                                                {skill.level}
+                                                                            </span>
+
+                                                                            {/* Years Badge */}
+                                                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-muted/60 text-muted-foreground border border-border/40">
+                                                                                <Calendar className="h-2.5 w-2.5" />
+                                                                                {skill.years}y experience
+                                                                            </span>
+                                                                        </div>
+
+                                                                        {/* Sub-competencies Pills */}
+                                                                        {details?.tags && details.tags.length > 0 && (
+                                                                            <div className="flex flex-wrap gap-1">
+                                                                                {details.tags.map((tag) => (
+                                                                                    <span
+                                                                                        key={tag}
+                                                                                        className="px-1.5 py-0.5 rounded text-[9.5px] font-medium bg-background/80 text-muted-foreground/90 border border-border/40"
+                                                                                    >
+                                                                                        {tag}
+                                                                                    </span>
+                                                                                ))}
+                                                                            </div>
+                                                                        )}
+                                                                    </motion.div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Category Footer: MODE RINGKAS (Minimal Quick Action) vs MODE DETAIL (Ecosystem Tools) */}
+                                                {viewMode === "compact" ? (
+                                                    <div className="mt-4 pt-3 border-t border-border/50 dark:border-primary/10 flex items-center justify-between text-[11px] text-muted-foreground">
+                                                        <span className="font-medium">
+                                                            {category.skills.length} tools verified
+                                                        </span>
+                                                        <button
+                                                            onClick={() => setViewMode("detailed")}
+                                                            className="inline-flex items-center gap-1 text-primary hover:underline underline-offset-2 font-medium"
+                                                        >
+                                                            <span>Detail</span>
+                                                            <ChevronRight className="h-3 w-3" />
+                                                        </button>
                                                     </div>
+                                                ) : (
+                                                    eco && (
+                                                        <div className="mt-5 pt-4 border-t border-border/60 dark:border-primary/10">
+                                                            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground mb-2.5">
+                                                                <TerminalSquare className="h-3.5 w-3.5 text-primary" />
+                                                                <span>{eco.label}</span>
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-1.5">
+                                                                {eco.tools.map((tool) => (
+                                                                    <span
+                                                                        key={tool}
+                                                                        className="px-2 py-0.5 rounded-lg text-[10px] font-medium bg-primary/5 hover:bg-primary/10 text-foreground border border-primary/15 transition-colors"
+                                                                    >
+                                                                        {tool}
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )
                                                 )}
                                             </SpotlightCard>
                                         </motion.div>
@@ -588,55 +670,75 @@ export function Skills() {
                             </AnimatePresence>
                         </div>
 
-                        {/* Bottom Feature Callout: Architecture & Collaboration */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: 0.3 }}
-                            viewport={{ once: true }}
-                            className="mt-12 max-w-6xl mx-auto"
-                        >
-                            <div className="p-6 md:p-8 rounded-3xl bg-gradient-to-br from-card/90 via-card/50 to-primary/5 border border-border/80 dark:border-primary/20 backdrop-blur-md shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-                                <div className="space-y-2 max-w-2xl">
-                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                                        <CheckCircle2 className="h-3 w-3" />
-                                        <span>Production Ready Architecture</span>
-                                    </div>
-                                    <h3 className="text-lg md:text-xl font-bold tracking-tight text-foreground">
-                                        Looking for a specialized tech stack or network deployment?
-                                    </h3>
-                                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                                        Whether designing secure enterprise VLANs, zero-downtime microservices with Docker, or high-performance Next.js web applications, I can engineer and deploy the solution.
-                                    </p>
-                                </div>
+                        {/* Bottom Action / View Switcher in Mode Ringkas */}
+                        {viewMode === "compact" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4 }}
+                                viewport={{ once: true }}
+                                className="mt-8 text-center"
+                            >
+                                <button
+                                    onClick={() => setViewMode("detailed")}
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-muted/60 hover:bg-muted text-foreground border border-border/70 shadow-2xs transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                >
+                                    <SlidersHorizontal className="h-3.5 w-3.5 text-primary" />
+                                    <span>Lihat Spesialisasi & Tag Arsitektur Lengkap (Mode Detail)</span>
+                                </button>
+                            </motion.div>
+                        )}
 
-                                <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
-                                    <Link
-                                        href="#contact"
-                                        className="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                                    >
-                                        <span>Start Collaboration</span>
-                                        <ArrowUpRight className="h-3.5 w-3.5" />
-                                    </Link>
-                                    <Link
-                                        href="#projects"
-                                        className="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-muted/60 hover:bg-muted text-foreground border border-border/60 transition-colors"
-                                    >
-                                        <span>View Projects</span>
-                                    </Link>
+                        {/* Bottom Feature Callout: Architecture & Collaboration (Only shown in Detailed Mode or when desired) */}
+                        {viewMode === "detailed" && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.4 }}
+                                className="mt-12 max-w-6xl mx-auto"
+                            >
+                                <div className="p-6 md:p-8 rounded-3xl bg-gradient-to-br from-card/90 via-card/50 to-primary/5 border border-border/80 dark:border-primary/20 backdrop-blur-md shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                                    <div className="space-y-2 max-w-2xl">
+                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                                            <CheckCircle2 className="h-3 w-3" />
+                                            <span>Production Ready Architecture</span>
+                                        </div>
+                                        <h3 className="text-lg md:text-xl font-bold tracking-tight text-foreground">
+                                            Looking for a specialized tech stack or network deployment?
+                                        </h3>
+                                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                                            Whether designing secure enterprise VLANs, zero-downtime microservices with Docker, or high-performance Next.js web applications, I can engineer and deploy the solution.
+                                        </p>
+                                    </div>
+
+                                    <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
+                                        <Link
+                                            href="#contact"
+                                            className="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                        >
+                                            <span>Start Collaboration</span>
+                                            <ArrowUpRight className="h-3.5 w-3.5" />
+                                        </Link>
+                                        <Link
+                                            href="#projects"
+                                            className="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-muted/60 hover:bg-muted text-foreground border border-border/60 transition-colors"
+                                        >
+                                            <span>View Projects</span>
+                                        </Link>
+                                    </div>
                                 </div>
-                            </div>
-                        </motion.div>
+                            </motion.div>
+                        )}
 
                         {/* Proficiency Legend Bar */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             whileInView={{ opacity: 1 }}
-                            transition={{ delay: 0.4 }}
+                            transition={{ delay: 0.3 }}
                             viewport={{ once: true }}
                             className="mt-8 flex justify-center"
                         >
-                            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 px-4 sm:px-6 py-2.5 rounded-2xl bg-card/80 dark:bg-card/40 backdrop-blur-md border border-border/80 dark:border-primary/10 shadow-sm text-xs">
+                            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 px-4 sm:px-6 py-2 rounded-2xl bg-card/80 dark:bg-card/40 backdrop-blur-md border border-border/80 dark:border-primary/10 shadow-sm text-xs">
                                 <div className="flex items-center gap-1.5 text-muted-foreground font-medium">
                                     <Award className="h-3.5 w-3.5 text-primary" />
                                     <span>Proficiency Levels:</span>
