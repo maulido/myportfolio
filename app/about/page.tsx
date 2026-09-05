@@ -37,7 +37,7 @@ export default function AboutPage() {
 
                 {/* Technical Skills & Endorsements */}
                 <div className="mt-20">
-                    <Skills />
+                    <Skills defaultMode="detailed" />
                 </div>
 
                 {/* Credentials & Certifications */}

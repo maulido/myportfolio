@@ -157,7 +157,11 @@ const getCategoryIcon = (category: string): React.ReactNode => {
     return <Cpu className="h-5 w-5" />;
 };
 
-export function Skills() {
+export interface SkillsProps {
+    defaultMode?: ViewMode;
+}
+
+export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
     const [skills, setSkills] = useState<SkillCategory[]>([]);
     const [endorsements, setEndorsements] = useState<Record<string, number>>({});
     const [isLoading, setIsLoading] = useState(true);
@@ -165,8 +169,8 @@ export function Skills() {
     const [activeTab, setActiveTab] = useState<string>("all");
     const [searchQuery, setSearchQuery] = useState<string>("");
     
-    // View mode: default is "compact" (Mode Ringkas)
-    const [viewMode, setViewMode] = useState<ViewMode>("compact");
+    // View mode initialized from defaultMode prop
+    const [viewMode, setViewMode] = useState<ViewMode>(defaultMode);
 
     useEffect(() => {
         loadData();

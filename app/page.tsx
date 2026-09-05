@@ -53,7 +53,7 @@ export default function Home() {
         <Hero />
         <Separator />
         <About />
-        <Skills />
+        <Skills defaultMode="compact" />
         <Experience />
         <Certifications />
         <Projects />
