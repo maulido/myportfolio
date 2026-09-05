@@ -150,11 +150,11 @@ const getLevelDot = (level: SkillLevel): string => {
     }
 };
 
-const getCategoryIcon = (category: string): React.ReactNode => {
-    if (category.toLowerCase().includes("frontend")) return <Code2 className="h-5 w-5" />;
-    if (category.toLowerCase().includes("backend") || category.toLowerCase().includes("database")) return <Database className="h-5 w-5" />;
-    if (category.toLowerCase().includes("network") || category.toLowerCase().includes("devops")) return <Network className="h-5 w-5" />;
-    return <Cpu className="h-5 w-5" />;
+const getCategoryIcon = (category: string, className: string = "h-5 w-5"): React.ReactNode => {
+    if (category.toLowerCase().includes("frontend")) return <Code2 className={className} />;
+    if (category.toLowerCase().includes("backend") || category.toLowerCase().includes("database")) return <Database className={className} />;
+    if (category.toLowerCase().includes("network") || category.toLowerCase().includes("devops")) return <Network className={className} />;
+    return <Cpu className={className} />;
 };
 
 export interface SkillsProps {
@@ -347,24 +347,25 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                 </motion.div>
 
                 {/* Controls Bar: Category Pills + View Mode Switch (Ringkas / Detail) + Search */}
+                {/* Category Navigation Pills (Centered single-line capsule, smooth scroll on mobile, zero awkward wrapping) */}
                 <motion.div
                     initial={{ opacity: 0, y: 15 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
+                    transition={{ duration: 0.5, delay: 0.15 }}
                     viewport={{ once: true }}
-                    className="flex flex-col lg:flex-row items-center justify-between gap-4 mb-8 max-w-6xl mx-auto"
+                    className="flex justify-center w-full mb-6"
                 >
-                    {/* Category Filter Pills */}
-                    <div className="flex flex-wrap items-center justify-center gap-2 p-1.5 rounded-2xl bg-card/80 dark:bg-card/40 border border-border/80 dark:border-primary/15 backdrop-blur-md shadow-sm w-full lg:w-auto">
+                    <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 rounded-2xl bg-card/80 dark:bg-card/40 border border-border/80 dark:border-primary/15 backdrop-blur-md shadow-sm overflow-x-auto max-w-full scrollbar-none">
                         <button
                             onClick={() => setActiveTab("all")}
-                            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${activeTab === "all"
+                            className={`shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap ${activeTab === "all"
                                 ? "bg-primary text-primary-foreground shadow-sm"
                                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                 }`}
                         >
+                            <Layers className="h-3.5 w-3.5" />
                             <span>All Categories</span>
-                            <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${activeTab === "all" ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                            <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${activeTab === "all" ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
                                 {totalSkillsCount}
                             </span>
                         </button>
@@ -375,67 +376,74 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                                 <button
                                     key={cat}
                                     onClick={() => setActiveTab(cat)}
-                                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${activeTab === cat
+                                    className={`shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap ${activeTab === cat
                                         ? "bg-primary text-primary-foreground shadow-sm"
                                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                                         }`}
                                 >
+                                    {getCategoryIcon(cat, "h-3.5 w-3.5")}
                                     <span>{cat}</span>
-                                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${activeTab === cat ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${activeTab === cat ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
                                         {count}
                                     </span>
                                 </button>
                             );
                         })}
                     </div>
+                </motion.div>
 
-                    {/* Right Toolbar: View Mode Toggle & Search */}
-                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
-                        {/* Mode Ringkas / Detail Toggle (Segmented Switch) */}
-                        <div className="flex items-center p-1 rounded-xl bg-card/80 dark:bg-card/40 border border-border/80 dark:border-primary/15 backdrop-blur-md shadow-sm shrink-0 w-full sm:w-auto justify-center">
+                {/* Secondary Toolbar: Search Filter & View Mode Switcher */}
+                <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    viewport={{ once: true }}
+                    className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-8 max-w-6xl mx-auto"
+                >
+                    {/* Search Input */}
+                    <div className="relative w-full sm:w-72">
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Filter skills, e.g. React, Docker..."
+                            className="w-full pl-9.5 pr-8 py-2 text-xs rounded-xl bg-card/80 dark:bg-card/40 border border-border/80 dark:border-primary/15 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all placeholder:text-muted-foreground"
+                        />
+                        {searchQuery && (
                             <button
-                                onClick={() => setViewMode("compact")}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${viewMode === "compact"
-                                    ? "bg-primary text-primary-foreground shadow-xs"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                                    }`}
-                                title="Mode Ringkas (Tampilan Ringkas & Cepat)"
+                                onClick={() => setSearchQuery("")}
+                                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
                             >
-                                <LayoutGrid className="h-3.5 w-3.5" />
-                                <span>Mode Ringkas</span>
+                                <X className="h-3.5 w-3.5" />
                             </button>
-                            <button
-                                onClick={() => setViewMode("detailed")}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${viewMode === "detailed"
-                                    ? "bg-primary text-primary-foreground shadow-xs"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                                    }`}
-                                title="Mode Detail (Spesialisasi & Tag Kompetensi)"
-                            >
-                                <SlidersHorizontal className="h-3.5 w-3.5" />
-                                <span>Mode Detail</span>
-                            </button>
-                        </div>
+                        )}
+                    </div>
 
-                        {/* Search Input */}
-                        <div className="relative w-full sm:w-64">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Filter skills, e.g. React..."
-                                className="w-full pl-9.5 pr-8 py-2 text-xs rounded-xl bg-card/80 dark:bg-card/40 border border-border/80 dark:border-primary/15 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all placeholder:text-muted-foreground"
-                            />
-                            {searchQuery && (
-                                <button
-                                    onClick={() => setSearchQuery("")}
-                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
-                                >
-                                    <X className="h-3.5 w-3.5" />
-                                </button>
-                            )}
-                        </div>
+                    {/* Mode Ringkas / Detail Toggle (Segmented Switch) */}
+                    <div className="flex items-center p-1 rounded-xl bg-card/80 dark:bg-card/40 border border-border/80 dark:border-primary/15 backdrop-blur-md shadow-sm shrink-0 w-full sm:w-auto justify-center">
+                        <button
+                            onClick={() => setViewMode("compact")}
+                            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${viewMode === "compact"
+                                ? "bg-primary text-primary-foreground shadow-xs"
+                                : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                                }`}
+                            title="Mode Ringkas (Tampilan Ringkas & Cepat)"
+                        >
+                            <LayoutGrid className="h-3.5 w-3.5" />
+                            <span>Mode Ringkas</span>
+                        </button>
+                        <button
+                            onClick={() => setViewMode("detailed")}
+                            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${viewMode === "detailed"
+                                ? "bg-primary text-primary-foreground shadow-xs"
+                                : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                                }`}
+                            title="Mode Detail (Spesialisasi & Tag Kompetensi)"
+                        >
+                            <SlidersHorizontal className="h-3.5 w-3.5" />
+                            <span>Mode Detail</span>
+                        </button>
                     </div>
                 </motion.div>
 
