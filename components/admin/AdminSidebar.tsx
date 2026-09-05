@@ -15,7 +15,9 @@ import {
     BarChart3,
     Settings,
     User,
-    Inbox
+    Inbox,
+    MailCheck,
+    Globe
 } from "lucide-react";
 
 export default function AdminSidebar() {
@@ -53,12 +55,14 @@ export default function AdminSidebar() {
                 { name: "Uses Page", href: "/admin/uses", icon: Package },
                 { name: "Guestbook", href: "/admin/guestbook", icon: MessageSquare },
                 { name: "Inquiries", href: "/admin/messages", icon: Inbox },
+                { name: "Subscribers", href: "/admin/subscribers", icon: MailCheck },
             ]
         },
         {
             title: "Admin Tools",
             items: [
                 { name: "Media Library", href: "/admin/media", icon: FolderOpen },
+                { name: "SEO Simulator", href: "/admin/seo", icon: Globe },
                 { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
                 { name: "Profile", href: "/admin/profile", icon: User },
                 { name: "Site Settings", href: "/admin/settings", icon: Settings },
