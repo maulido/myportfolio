@@ -1,118 +1,310 @@
 "use client";
 
-import { Github, Linkedin, Mail } from "lucide-react";
 import { useState } from "react";
+import Link from "next/link";
+import { 
+    Github, 
+    Linkedin, 
+    Twitter, 
+    Instagram, 
+    Mail, 
+    ArrowUp, 
+    Send, 
+    Loader2, 
+    CheckCircle2, 
+    AlertCircle, 
+    Lock,
+    MapPin,
+    Radio
+} from "lucide-react";
 import { useSettings } from "@/lib/useSettings";
 
 export function Footer({ settings: initialSettings }: { settings?: Record<string, string | undefined> }) {
     const { settings: clientSettings } = useSettings();
     const settings = { ...(initialSettings || {}), ...(clientSettings || {}) };
+
     const [email, setEmail] = useState("");
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+    const [statusMessage, setStatusMessage] = useState("");
 
+    const brandName = settings?.brandName || "Portfolio";
     const githubUrl = settings?.socialGithub || "https://github.com";
     const linkedinUrl = settings?.socialLinkedin || "https://linkedin.com";
-    const rawEmail = settings?.contactEmail || "example@example.com";
+    const twitterUrl = settings?.socialTwitter || "";
+    const instagramUrl = settings?.socialInstagram || "";
+    const rawEmail = settings?.contactEmail || "email@example.com";
     const contactEmail = rawEmail.replace(/^mailto:/i, "");
-    // const twitterUrl = settings?.socialTwitter;
-    // const instagramUrl = settings?.socialInstagram;
+    const contactLocation = settings?.contactLocation || "Jakarta, Indonesia";
+    const isWorking = settings?.isWorking !== "false";
+    const footerTagline = settings?.footerTagline || "Digital Architect specializing in resilient networks and scalable modern web applications.";
+    const copyrightText = settings?.copyrightText || "All rights reserved.";
+    const newsletterTitle = settings?.footerNewsletterTitle || "Engineering Dispatch";
+    const newsletterSubtitle = settings?.footerNewsletterSubtitle || "Subscribe for occasional updates on production architectures, networking insights, and full-stack development.";
 
     const handleSubscribe = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!email.trim()) return;
+
         setStatus("loading");
+        setStatusMessage("");
         try {
             const res = await fetch("/api/newsletter", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email }),
+                body: JSON.stringify({ email: email.trim() }),
             });
-            if (res.ok) {
+            const data = await res.json();
+            if (res.ok && data.success) {
                 setStatus("success");
+                setStatusMessage("Successfully subscribed to dispatches.");
                 setEmail("");
             } else {
                 setStatus("error");
+                setStatusMessage(data.error || "Subscription failed. Please try again.");
             }
         } catch {
             setStatus("error");
+            setStatusMessage("Transmission error. Please try again later.");
         }
     };
 
+    const scrollToTop = () => {
+        if (typeof window !== "undefined") {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+    };
+
+    const navigationLinks = [
+        { label: "Home", href: "/" },
+        { label: "About", href: "/about" },
+        { label: "Projects", href: "/projects" },
+        { label: "Certifications", href: "/certifications" },
+        { label: "Blog", href: "/blog" },
+    ];
+
+    const interactiveLinks = [
+        { label: "Visual Gallery", href: "/gallery" },
+        { label: "Tech & Uses", href: "/uses" },
+        { label: "Guestbook", href: "/guestbook" },
+        { label: "Contact", href: "/contact" },
+    ];
+
     return (
-        <footer className="relative border-t border-border bg-card dark:bg-[#030712] py-16 overflow-hidden">
-            {/* Top Glow (Dark mode only) */}
-            <div className="hidden dark:block absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-            <div className="hidden dark:block absolute top-0 left-1/2 -translate-x-1/2 w-full h-[150px] bg-primary/5 blur-[120px] -z-10" />
+        <footer className="relative border-t border-border bg-card/60 dark:bg-[#030712] overflow-hidden pt-16 pb-12">
+            {/* Subtle Gradient Glow Ambiance */}
+            <div className="hidden dark:block absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-primary/40 to-transparent pointer-events-none" />
+            <div className="hidden dark:block absolute top-0 left-1/2 -translate-x-1/2 w-full h-[180px] bg-primary/5 blur-[120px] pointer-events-none -z-10" />
 
-            <div className="container mx-auto px-4 text-center">
-                <div className="mb-8 flex justify-center space-x-6">
-                    {githubUrl && (
-                        <a
-                            href={githubUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group relative p-3 rounded-full bg-muted/60 dark:bg-white/5 hover:bg-muted dark:hover:bg-white/10 transition-all duration-300 ring-1 ring-border dark:ring-white/10 hover:ring-primary/50 shadow-sm"
-                        >
-                            <Github className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                            <span className="sr-only">GitHub</span>
-                        </a>
-                    )}
-                    {linkedinUrl && (
-                        <a
-                            href={linkedinUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group relative p-3 rounded-full bg-muted/60 dark:bg-white/5 hover:bg-muted dark:hover:bg-white/10 transition-all duration-300 ring-1 ring-border dark:ring-white/10 hover:ring-primary/50 shadow-sm"
-                        >
-                            <Linkedin className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                            <span className="sr-only">LinkedIn</span>
-                        </a>
-                    )}
-                    {contactEmail && (
-                        <a
-                            href={`mailto:${contactEmail}`}
-                            className="group relative p-3 rounded-full bg-muted/60 dark:bg-white/5 hover:bg-muted dark:hover:bg-white/10 transition-all duration-300 ring-1 ring-border dark:ring-white/10 hover:ring-primary/50 shadow-sm"
-                        >
-                            <Mail className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                            <span className="sr-only">Email</span>
-                        </a>
-                    )}
+            <div className="container mx-auto px-4 md:px-6">
+                {/* Main 4-Column Grid Layout */}
+                <div className="grid gap-10 md:gap-12 lg:grid-cols-12 pb-14 border-b border-border/70 dark:border-white/5">
+                    {/* Col 1: Brand & System Status (4 Cols) */}
+                    <div className="lg:col-span-4 space-y-4">
+                        <Link href="/" className="inline-block group">
+                            <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-foreground group-hover:text-primary transition-colors">
+                                <span className="text-gradient">{brandName}</span>
+                            </span>
+                        </Link>
+                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-sm">
+                            {footerTagline}
+                        </p>
+
+                        {/* Location & Live Availability Badge */}
+                        <div className="pt-2 space-y-2.5">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
+                                <span>Based in {contactLocation}</span>
+                            </div>
+                            {isWorking && (
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
+                                    <span className="relative flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                    </span>
+                                    <span>Systems Operational & Open for Work</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Social Icons Strip */}
+                        <div className="pt-2 flex items-center gap-2.5 flex-wrap">
+                            {githubUrl && (
+                                <a
+                                    href={githubUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-2.5 rounded-xl border border-border/80 bg-background/50 hover:bg-muted dark:hover:bg-white/10 text-muted-foreground hover:text-primary hover:border-primary/40 transition-all shadow-xs"
+                                    aria-label="GitHub Profile"
+                                >
+                                    <Github className="h-4 w-4" />
+                                </a>
+                            )}
+                            {linkedinUrl && (
+                                <a
+                                    href={linkedinUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-2.5 rounded-xl border border-border/80 bg-background/50 hover:bg-muted dark:hover:bg-white/10 text-muted-foreground hover:text-primary hover:border-primary/40 transition-all shadow-xs"
+                                    aria-label="LinkedIn Profile"
+                                >
+                                    <Linkedin className="h-4 w-4" />
+                                </a>
+                            )}
+                            {twitterUrl && (
+                                <a
+                                    href={twitterUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-2.5 rounded-xl border border-border/80 bg-background/50 hover:bg-muted dark:hover:bg-white/10 text-muted-foreground hover:text-primary hover:border-primary/40 transition-all shadow-xs"
+                                    aria-label="Twitter/X Profile"
+                                >
+                                    <Twitter className="h-4 w-4" />
+                                </a>
+                            )}
+                            {instagramUrl && (
+                                <a
+                                    href={instagramUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-2.5 rounded-xl border border-border/80 bg-background/50 hover:bg-muted dark:hover:bg-white/10 text-muted-foreground hover:text-primary hover:border-primary/40 transition-all shadow-xs"
+                                    aria-label="Instagram Profile"
+                                >
+                                    <Instagram className="h-4 w-4" />
+                                </a>
+                            )}
+                            {contactEmail && (
+                                <a
+                                    href={`mailto:${contactEmail}`}
+                                    className="p-2.5 rounded-xl border border-border/80 bg-background/50 hover:bg-muted dark:hover:bg-white/10 text-muted-foreground hover:text-primary hover:border-primary/40 transition-all shadow-xs"
+                                    aria-label="Email Direct"
+                                >
+                                    <Mail className="h-4 w-4" />
+                                </a>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Col 2: Navigation Links (2.5 Cols) */}
+                    <div className="lg:col-span-2 space-y-3">
+                        <p className="text-[11px] font-mono uppercase tracking-widest text-foreground/80 font-bold">
+                            Navigation
+                        </p>
+                        <ul className="space-y-2 text-xs sm:text-sm">
+                            {navigationLinks.map((link) => (
+                                <li key={link.href}>
+                                    <Link
+                                        href={link.href}
+                                        className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1 group"
+                                    >
+                                        <span className="h-1 w-1 rounded-full bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <span>{link.label}</span>
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* Col 3: Interactive & Resources (2.5 Cols) */}
+                    <div className="lg:col-span-2 space-y-3">
+                        <p className="text-[11px] font-mono uppercase tracking-widest text-foreground/80 font-bold">
+                            Resources
+                        </p>
+                        <ul className="space-y-2 text-xs sm:text-sm">
+                            {interactiveLinks.map((link) => (
+                                <li key={link.href}>
+                                    <Link
+                                        href={link.href}
+                                        className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1 group"
+                                    >
+                                        <span className="h-1 w-1 rounded-full bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <span>{link.label}</span>
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    {/* Col 4: Newsletter & Quick Subscription (3.5 Cols) */}
+                    <div className="lg:col-span-4 space-y-3">
+                        <div className="flex items-center gap-2">
+                            <Radio className="h-3.5 w-3.5 text-primary animate-pulse" />
+                            <p className="text-[11px] font-mono uppercase tracking-widest text-foreground/80 font-bold">
+                                {newsletterTitle}
+                            </p>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                            {newsletterSubtitle}
+                        </p>
+
+                        <form onSubmit={handleSubscribe} className="space-y-2 pt-1">
+                            <div className="flex gap-2">
+                                <input
+                                    type="email"
+                                    placeholder="Enter your email..."
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    className="flex-1 px-3.5 py-2.5 rounded-xl border border-border/80 dark:border-white/10 bg-background/80 focus:bg-background text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all disabled:opacity-50"
+                                    disabled={status === "loading" || status === "success"}
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={status === "loading" || status === "success"}
+                                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-white text-xs font-bold shadow-md shadow-primary/25 hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50 shrink-0 cursor-pointer"
+                                >
+                                    {status === "loading" ? (
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    ) : (
+                                        <Send className="h-3.5 w-3.5" />
+                                    )}
+                                    <span className="hidden sm:inline">Join</span>
+                                </button>
+                            </div>
+
+                            {status === "success" && (
+                                <p className="text-xs text-emerald-500 font-medium inline-flex items-center gap-1">
+                                    <CheckCircle2 className="h-3.5 w-3.5" /> {statusMessage}
+                                </p>
+                            )}
+                            {status === "error" && (
+                                <p className="text-xs text-red-500 font-medium inline-flex items-center gap-1">
+                                    <AlertCircle className="h-3.5 w-3.5" /> {statusMessage}
+                                </p>
+                            )}
+                        </form>
+                    </div>
                 </div>
-                <div className="space-y-4 max-w-sm mx-auto mb-12">
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-foreground/70">
-                        {settings?.footerNewsletterTitle || "Subscribe to Newsletter"}
-                    </h4>
-                    {settings?.footerNewsletterSubtitle && (
-                        <p className="text-xs text-muted-foreground">{settings.footerNewsletterSubtitle}</p>
-                    )}
-                    <form className="flex flex-col sm:flex-row gap-2.5" onSubmit={handleSubscribe}>
-                        <input
-                            type="email"
-                            placeholder="Email address"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="flex-1 rounded-xl border border-input dark:border-white/10 bg-background dark:bg-white/5 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all disabled:opacity-50"
-                            disabled={status === "loading" || status === "success"}
-                        />
+
+                {/* Bottom Bar: Copyright, Tech Specs, Admin, Back to Top */}
+                <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1">
+                        <span>
+                            &copy; {new Date().getFullYear()} <span className="font-semibold text-foreground">{brandName}</span>. {copyrightText}
+                        </span>
+                        <span className="hidden sm:inline text-muted-foreground/40">•</span>
+                        <span>Next.js 16 &amp; TypeScript</span>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <Link
+                            href="/admin"
+                            className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/70 hover:text-primary transition-colors group"
+                            title="Admin Portal Login"
+                        >
+                            <Lock className="h-3 w-3 group-hover:scale-110 transition-transform" />
+                            <span>Portal</span>
+                        </Link>
+
                         <button
-                            type="submit"
-                            disabled={status === "loading" || status === "success"}
-                            className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50 shadow-md shadow-primary/20"
+                            type="button"
+                            onClick={scrollToTop}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/80 bg-background/60 hover:bg-muted dark:hover:bg-white/10 text-foreground/80 hover:text-primary transition-all text-xs font-semibold shadow-2xs group cursor-pointer"
+                            aria-label="Scroll back to top"
                         >
-                            {status === "loading" ? "..." : status === "success" ? "Joined!" : "Join"}
+                            <span>Top</span>
+                            <ArrowUp className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5" />
                         </button>
-                    </form>
-                    {status === "error" && <p className="text-xs text-red-500 font-medium">Transmission error. Try again.</p>}
-                    {status === "success" && <p className="text-xs text-green-600 dark:text-green-400 font-medium">Welcome to the network.</p>}
-                </div>
-
-                <div className="space-y-1.5 pt-4 border-t border-border/60 dark:border-white/5">
-                    <h3 className="text-base font-bold text-gradient">{settings?.brandName || "Portfolio"}</h3>
-                    <p className="text-xs text-muted-foreground max-w-md mx-auto">
-                        {settings?.footerTagline || "Built with Next.js & TailwindCSS."}
-                    </p>
-                    <p className="text-xs text-muted-foreground/80 pt-2">
-                        &copy; {new Date().getFullYear()} {settings?.copyrightText || "All rights reserved."}
-                    </p>
+                    </div>
                 </div>
             </div>
         </footer>
