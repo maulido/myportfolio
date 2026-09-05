@@ -4,6 +4,7 @@ export interface IUsesItem extends Document {
     name: string;
     category: string;
     description: string;
+    description_id?: string;
     url?: string;
     imageUrl?: string;
     featured: boolean;
@@ -28,6 +29,9 @@ const UsesItemSchema = new Schema<IUsesItem>(
         description: {
             type: String,
             required: [true, 'Description is required']
+        },
+        description_id: {
+            type: String
         },
         url: {
             type: String,

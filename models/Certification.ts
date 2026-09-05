@@ -12,6 +12,7 @@ export interface ICertification extends Document {
     category: string;
     skills: string[];
     description?: string;
+    description_id?: string;
 }
 
 const CertificationSchema: Schema = new Schema({
@@ -26,6 +27,7 @@ const CertificationSchema: Schema = new Schema({
     category: { type: String, required: true, default: 'Other' },
     skills: [{ type: String }],
     description: { type: String },
+    description_id: { type: String },
 }, {
     timestamps: true
 });

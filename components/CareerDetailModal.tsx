@@ -2,20 +2,26 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, MapPin, Award, CheckCircle2, Briefcase } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
+import { getLocalizedField, getLocalizedArray } from "@/lib/localization";
 
 interface CareerJourney {
     _id: string;
     type: 'work' | 'education' | 'achievement';
     title: string;
+    title_id?: string;
     organization: string;
     location?: string;
     startDate: string;
     endDate?: string;
     current: boolean;
     description: string;
+    description_id?: string;
     skills: string[];
     achievements?: string[];
+    achievements_id?: string[];
     responsibilities?: string[];
+    responsibilities_id?: string[];
 }
 
 interface CareerDetailModalProps {
@@ -25,10 +31,12 @@ interface CareerDetailModalProps {
 }
 
 export default function CareerDetailModal({ career, isOpen, onClose }: CareerDetailModalProps) {
+    const { dictionary, locale } = useLanguage();
+
     if (!career) return null;
 
     const formatDate = (date: string) => {
-        return new Date(date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        return new Date(date).toLocaleDateString(locale === 'id' ? 'id-ID' : 'en-US', { month: 'short', year: 'numeric' });
     };
 
     const getTypeColor = (type: string) => {
@@ -39,6 +47,11 @@ export default function CareerDetailModal({ career, isOpen, onClose }: CareerDet
             default: return 'bg-primary/10 text-primary border-primary/20';
         }
     };
+
+    const title = getLocalizedField(career, 'title', locale, career.title);
+    const description = getLocalizedField(career, 'description', locale, career.description);
+    const responsibilities = getLocalizedArray(career, 'responsibilities', locale);
+    const achievements = getLocalizedArray(career, 'achievements', locale);
 
     return (
         <AnimatePresence>
@@ -71,11 +84,11 @@ export default function CareerDetailModal({ career, isOpen, onClose }: CareerDet
                                         </span>
                                         {career.current && (
                                             <span className="px-3 py-1 rounded-full text-xs font-bold bg-green-500/10 text-green-500 border border-green-500/20">
-                                                Current
+                                                {dictionary.experience.currentBadge}
                                             </span>
                                         )}
                                     </div>
-                                    <h2 className="text-2xl md:text-3xl font-bold mb-2">{career.title}</h2>
+                                    <h2 className="text-2xl md:text-3xl font-bold mb-2">{title}</h2>
                                     <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 text-muted-foreground">
                                         <div className="flex items-center gap-2">
                                             <Briefcase className="h-4 w-4" />
@@ -90,7 +103,7 @@ export default function CareerDetailModal({ career, isOpen, onClose }: CareerDet
                                         <div className="flex items-center gap-2">
                                             <Calendar className="h-4 w-4" />
                                             <span>
-                                                {formatDate(career.startDate)} - {career.current ? 'Present' : career.endDate ? formatDate(career.endDate) : 'N/A'}
+                                                {formatDate(career.startDate)} - {career.current ? dictionary.experience.present : career.endDate ? formatDate(career.endDate) : 'N/A'}
                                             </span>
                                         </div>
                                     </div>
@@ -110,22 +123,22 @@ export default function CareerDetailModal({ career, isOpen, onClose }: CareerDet
                             <div>
                                 <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
                                     <div className="h-1 w-8 bg-primary rounded-full" />
-                                    Description
+                                    {dictionary.experience.descriptionTitle}
                                 </h3>
                                 <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
-                                    {career.description}
+                                    {description}
                                 </p>
                             </div>
 
                             {/* Responsibilities */}
-                            {career.responsibilities && career.responsibilities.length > 0 && (
+                            {responsibilities && responsibilities.length > 0 && (
                                 <div>
                                     <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
                                         <div className="h-1 w-8 bg-blue-500 rounded-full" />
-                                        Responsibilities
+                                        {dictionary.experience.responsibilitiesTitle}
                                     </h3>
                                     <ul className="space-y-2">
-                                        {career.responsibilities.map((resp, index) => (
+                                        {responsibilities.map((resp, index) => (
                                             <li key={index} className="flex items-start gap-3 text-muted-foreground">
                                                 <CheckCircle2 className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
                                                 <span>{resp}</span>
@@ -136,14 +149,14 @@ export default function CareerDetailModal({ career, isOpen, onClose }: CareerDet
                             )}
 
                             {/* Achievements */}
-                            {career.achievements && career.achievements.length > 0 && (
+                            {achievements && achievements.length > 0 && (
                                 <div>
                                     <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
                                         <div className="h-1 w-8 bg-emerald-500 rounded-full" />
-                                        Achievements
+                                        {dictionary.experience.achievementsTitle}
                                     </h3>
                                     <ul className="space-y-2">
-                                        {career.achievements.map((achievement, index) => (
+                                        {achievements.map((achievement, index) => (
                                             <li key={index} className="flex items-start gap-3 text-muted-foreground">
                                                 <Award className="h-5 w-5 text-emerald-500 mt-0.5 flex-shrink-0" />
                                                 <span>{achievement}</span>
@@ -158,7 +171,7 @@ export default function CareerDetailModal({ career, isOpen, onClose }: CareerDet
                                 <div>
                                     <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
                                         <div className="h-1 w-8 bg-purple-500 rounded-full" />
-                                        Skills & Technologies
+                                        {dictionary.experience.skillsTitle}
                                     </h3>
                                     <div className="flex flex-wrap gap-2">
                                         {career.skills.map((skill, index) => (

@@ -8,12 +8,16 @@ import { useEffect, useState } from "react";
 import { ProjectSkeleton } from "./Skeleton";
 import { getShimmerDataUrl } from "@/lib/image-utils";
 import { SpotlightCard } from "./SpotlightCard";
+import { useLanguage } from "@/context/LanguageContext";
+import { getLocalizedField } from "@/lib/localization";
 
 interface IProject {
     _id: string;
     title: string;
+    title_id?: string;
     slug?: string;
     description: string;
+    description_id?: string;
     technologies?: string[];
     tags?: string[];
     githubUrl?: string;
@@ -27,6 +31,7 @@ interface IProject {
 export function Projects() {
     const [projects, setProjects] = useState<IProject[]>([]);
     const [loading, setLoading] = useState(true);
+    const { dictionary, locale } = useLanguage();
 
     useEffect(() => {
         async function fetchProjects() {
@@ -63,9 +68,15 @@ export function Projects() {
                     viewport={{ once: true }}
                     className="text-center mb-12"
                 >
-                    <h2 className="text-3xl font-bold tracking-tighter md:text-4xl">Featured <span className="text-gradient">Projects</span></h2>
-                    <p className="mt-4 text-muted-foreground">
-                        A selection of projects that demonstrate my skills and experience.
+                    <h2 className="text-3xl font-bold tracking-tighter md:text-4xl">
+                        {locale === 'id' ? (
+                            <>Koleksi <span className="text-gradient">Proyek Rekayasa</span></>
+                        ) : (
+                            <>Featured <span className="text-gradient">Projects</span></>
+                        )}
+                    </h2>
+                    <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
+                        {dictionary.projects.subtitle}
                     </p>
                 </motion.div>
 
@@ -81,9 +92,9 @@ export function Projects() {
                         <div className="mb-6 p-4 rounded-full bg-muted/30 text-muted-foreground">
                             <Github className="h-12 w-12" />
                         </div>
-                        <h3 className="text-xl font-bold mb-2">No Projects Yet</h3>
+                        <h3 className="text-xl font-bold mb-2">{dictionary.projects.noProjectsYet}</h3>
                         <p className="text-muted-foreground max-w-md mb-6">
-                            I&apos;m currently working on exciting projects. Check out my GitHub for the latest work!
+                            {dictionary.projects.noProjectsYetDesc}
                         </p>
                         <a
                             href="https://github.com/maulido"
@@ -92,7 +103,7 @@ export function Projects() {
                             className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
                         >
                             <Github className="h-5 w-5" />
-                            View GitHub
+                            {dictionary.projects.viewGithub}
                         </a>
                     </div>
                 ) : (
@@ -103,6 +114,8 @@ export function Projects() {
                             const tags = project.technologies || project.tags || [];
                             const githubLink = project.githubUrl || project.github;
                             const demoLink = project.demoUrl || project.demo;
+                            const title = getLocalizedField(project, 'title', locale, project.title);
+                            const description = getLocalizedField(project, 'description', locale, project.description);
 
                             return (
                                 <motion.div
@@ -120,7 +133,7 @@ export function Projects() {
                                             {imgSrc ? (
                                                 <Image
                                                     src={imgSrc}
-                                                    alt={project.title}
+                                                    alt={title}
                                                     fill
                                                     placeholder="blur"
                                                     blurDataURL={getShimmerDataUrl(600, 340)}
@@ -130,15 +143,15 @@ export function Projects() {
                                                 />
                                             ) : (
                                                 <div className="text-muted-foreground w-full h-full flex items-center justify-center group-hover:scale-108 transition-transform duration-700 font-medium text-sm">
-                                                    {project.title}
+                                                    {title}
                                                 </div>
                                             )}
                                         </div>
                                         <div className="p-6 flex flex-col flex-1 relative z-20">
                                             <Link href={`/projects/${projectSlug}`} className="hover:text-primary transition-colors">
-                                                <h3 className="text-2xl font-bold leading-none tracking-tight mb-2 group-hover:text-primary transition-colors">{project.title}</h3>
+                                                <h3 className="text-2xl font-bold leading-none tracking-tight mb-2 group-hover:text-primary transition-colors">{title}</h3>
                                             </Link>
-                                            <p className="text-sm text-muted-foreground mb-4 flex-1 line-clamp-3 group-hover:text-muted-foreground/90 transition-colors">{project.description}</p>
+                                            <p className="text-sm text-muted-foreground mb-4 flex-1 line-clamp-3 group-hover:text-muted-foreground/90 transition-colors">{description}</p>
                                             <div className="flex flex-wrap gap-2 mb-4">
                                                 {tags.map((tag) => (
                                                     <span key={tag} className="inline-flex items-center rounded-md border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-xs font-semibold text-primary/80 transition-all hover:scale-105 hover:bg-primary/15 hover:border-primary/40 cursor-default select-none">
@@ -155,7 +168,7 @@ export function Projects() {
                                                         className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors group/link"
                                                     >
                                                         <Github className="mr-2 h-4 w-4" />
-                                                        <span>Code</span>
+                                                        <span>{dictionary.projects.code}</span>
                                                     </Link>
                                                 )}
                                                 {demoLink && (
@@ -165,7 +178,7 @@ export function Projects() {
                                                         rel="noopener noreferrer"
                                                         className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors ml-auto group/link"
                                                     >
-                                                        <span>Live Demo</span>
+                                                        <span>{dictionary.projects.liveDemo}</span>
                                                         <ExternalLink className="ml-1.5 h-3.5 w-3.5 transition-transform duration-200 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5" />
                                                     </Link>
                                                 )}

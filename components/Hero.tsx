@@ -4,8 +4,9 @@ import { motion } from "framer-motion";
 import { ArrowRight, Download } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, useMemo } from "react";
+import { useLanguage } from "@/context/LanguageContext";
 
-const roles = [
+const defaultRoles = [
     "Network Specialist",
     "Software Engineer",
     "Cloud Architect",
@@ -13,18 +14,19 @@ const roles = [
 ];
 
 export function Hero() {
+    const { t, dictionary } = useLanguage();
     const [text, setText] = useState("");
     const [isDeleting, setIsDeleting] = useState(false);
     const [loopNum, setLoopNum] = useState(0);
     const [isWorking, setIsWorking] = useState(true);
-    const [activeRoles, setActiveRoles] = useState<string[]>(roles);
-    const [heroTitle, setHeroTitle] = useState<string>("Digital Architect");
-    const [heroSubtitle, setHeroSubtitle] = useState<string>("Building robust network infrastructures and scalable web applications with a focus on comprehensive digital solutions.");
-    const [heroGreetingPrefix, setHeroGreetingPrefix] = useState<string>("I'm a...");
-    const [heroAvailableText, setHeroAvailableText] = useState<string>("Available for New Projects");
-    const [heroPrimaryCtaText, setHeroPrimaryCtaText] = useState<string>("View Work");
+    const [customRoles, setCustomRoles] = useState<string[] | null>(null);
+    const [heroTitleCustom, setHeroTitleCustom] = useState<string | null>(null);
+    const [heroSubtitleCustom, setHeroSubtitleCustom] = useState<string | null>(null);
+    const [heroGreetingPrefixCustom, setHeroGreetingPrefixCustom] = useState<string | null>(null);
+    const [heroAvailableTextCustom, setHeroAvailableTextCustom] = useState<string | null>(null);
+    const [heroPrimaryCtaTextCustom, setHeroPrimaryCtaTextCustom] = useState<string | null>(null);
     const [heroPrimaryCtaLink, setHeroPrimaryCtaLink] = useState<string>("/projects");
-    const [heroSecondaryCtaText, setHeroSecondaryCtaText] = useState<string>("Download CV");
+    const [heroSecondaryCtaTextCustom, setHeroSecondaryCtaTextCustom] = useState<string | null>(null);
     const [activeTechTags, setActiveTechTags] = useState<string[]>([
         "Next.js 16",
         "React 19",
@@ -36,13 +38,26 @@ export function Hero() {
         "MongoDB",
     ]);
 
-    // Calculate greeting outside of useEffect to avoid setState in effect
+    // Active typewriter roles from language dictionary or custom
+    const activeRoles = useMemo(() => {
+        if (customRoles && customRoles.length > 0) return customRoles;
+        return dictionary.hero.roles || defaultRoles;
+    }, [customRoles, dictionary]);
+
+    // Localized dynamic greetings
     const greeting = useMemo(() => {
         const hour = new Date().getHours();
-        if (hour < 12) return "Good Morning";
-        if (hour < 18) return "Good Afternoon";
-        return "Good Evening";
-    }, []);
+        if (hour < 12) return t("hero.greetingMorning", "Good Morning");
+        if (hour < 18) return t("hero.greetingAfternoon", "Good Afternoon");
+        return t("hero.greetingEvening", "Good Evening");
+    }, [t]);
+
+    const displayTitle = heroTitleCustom || t("hero.title", "Digital Architect");
+    const displaySubtitle = heroSubtitleCustom || t("hero.subtitle");
+    const displayGreetingPrefix = heroGreetingPrefixCustom || t("hero.greetingPrefix", "I'm a...");
+    const displayAvailableText = heroAvailableTextCustom || (isWorking ? t("hero.available") : t("hero.busy"));
+    const displayPrimaryCta = heroPrimaryCtaTextCustom || t("hero.viewProjects");
+    const displaySecondaryCta = heroSecondaryCtaTextCustom || t("hero.downloadCV");
 
     useEffect(() => {
         // Fetch settings from API
@@ -55,32 +70,32 @@ export function Hero() {
                             setIsWorking(item.value === true || item.value === 'true');
                         }
                         if (item.key === 'heroTitle' && item.value) {
-                            setHeroTitle(String(item.value));
+                            setHeroTitleCustom(String(item.value));
                         }
                         if (item.key === 'heroSubtitle' && item.value) {
-                            setHeroSubtitle(String(item.value));
+                            setHeroSubtitleCustom(String(item.value));
                         }
                         if (item.key === 'heroGreetingPrefix' && item.value) {
-                            setHeroGreetingPrefix(String(item.value));
+                            setHeroGreetingPrefixCustom(String(item.value));
                         }
                         if (item.key === 'heroAvailableText' && item.value) {
-                            setHeroAvailableText(String(item.value));
+                            setHeroAvailableTextCustom(String(item.value));
                         }
                         if (item.key === 'heroPrimaryCtaText' && item.value) {
-                            setHeroPrimaryCtaText(String(item.value));
+                            setHeroPrimaryCtaTextCustom(String(item.value));
                         }
                         if (item.key === 'heroPrimaryCtaLink' && item.value) {
                             setHeroPrimaryCtaLink(String(item.value));
                         }
                         if (item.key === 'heroSecondaryCtaText' && item.value) {
-                            setHeroSecondaryCtaText(String(item.value));
+                            setHeroSecondaryCtaTextCustom(String(item.value));
                         }
                         if (item.key === 'heroRoles' && item.value) {
                             const parsed = String(item.value)
                                 .split(',')
                                 .map(r => r.trim())
                                 .filter(Boolean);
-                            if (parsed.length > 0) setActiveRoles(parsed);
+                            if (parsed.length > 0) setCustomRoles(parsed);
                         }
                         if (item.key === 'heroTechTags' && item.value) {
                             const parsed = String(item.value)
@@ -146,7 +161,7 @@ export function Hero() {
                     <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
                         <div className="inline-flex items-center gap-2 rounded-full bg-card px-4 py-1.5 text-sm font-medium text-foreground/80 border border-border shadow-sm">
                             <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary" />
-                            {greeting}, {heroGreetingPrefix}
+                            {greeting}, {displayGreetingPrefix}
                         </div>
                         {isWorking && (
                             <motion.div
@@ -158,12 +173,12 @@ export function Hero() {
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                                 </span>
-                                {heroAvailableText}
+                                {displayAvailableText}
                             </motion.div>
                         )}
                     </div>
                     <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-tight mb-6 sm:mb-8 leading-tight">
-                        <span className="text-gradient block pb-2">{heroTitle}</span>
+                        <span className="text-gradient block pb-2">{displayTitle}</span>
                         <span className="block h-[1.1em] text-foreground/90 min-h-[1.1em]">
                             {text}
                             <span className="animate-pulse text-primary font-light">|</span>
@@ -177,7 +192,7 @@ export function Hero() {
                     transition={{ duration: 0.5, delay: 0.2 }}
                     className="mx-auto max-w-[700px] text-muted-foreground text-sm sm:text-base md:text-xl mb-6 sm:mb-8 leading-relaxed px-2"
                 >
-                    {heroSubtitle}
+                    {displaySubtitle}
                 </motion.p>
 
                 <motion.div
@@ -187,14 +202,14 @@ export function Hero() {
                     className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 sm:pt-6 w-full max-w-xs sm:max-w-none mx-auto"
                 >
                     <Link href={heroPrimaryCtaLink} className="group w-full sm:w-auto inline-flex h-11 items-center justify-center rounded-full bg-primary hover:bg-primary/90 text-white px-8 text-sm font-semibold shadow-md shadow-primary/20 transition-all hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
-                        {heroPrimaryCtaText}
+                        {displayPrimaryCta}
                         <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                     </Link>
                     <button
                         onClick={() => window.dispatchEvent(new Event("open-cv-modal"))}
                         className="group w-full sm:w-auto inline-flex h-11 items-center justify-center rounded-full border border-border bg-card hover:bg-muted text-foreground px-8 text-sm font-medium shadow-sm transition-all hover:border-primary/50 hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     >
-                        {heroSecondaryCtaText}
+                        {displaySecondaryCta}
                         <Download className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:-translate-y-0.5" />
                     </button>
                 </motion.div>

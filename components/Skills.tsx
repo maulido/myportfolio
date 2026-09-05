@@ -25,6 +25,7 @@ import { useState, useEffect, useMemo } from "react";
 import { SpotlightCard } from "./SpotlightCard";
 import { SkillEndorsement } from "./SkillEndorsement";
 import Link from "next/link";
+import { useLanguage } from "@/context/LanguageContext";
 
 type SkillLevel = "Expert" | "Advanced" | "Intermediate" | "Beginner";
 type ViewMode = "compact" | "detailed";
@@ -162,6 +163,7 @@ export interface SkillsProps {
 }
 
 export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
+    const { locale, dictionary, t } = useLanguage();
     const [skills, setSkills] = useState<SkillCategory[]>([]);
     const [endorsements, setEndorsements] = useState<Record<string, number>>({});
     const [isLoading, setIsLoading] = useState(true);
@@ -171,6 +173,14 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
     
     // View mode initialized from defaultMode prop
     const [viewMode, setViewMode] = useState<ViewMode>(defaultMode);
+
+    const getCategoryDescription = (cat: string) => {
+        const c = cat.toLowerCase();
+        if (c.includes("front")) return dictionary.skills.categoryDescriptions.frontend;
+        if (c.includes("back") || c.includes("database")) return dictionary.skills.categoryDescriptions.backend;
+        if (c.includes("network") || c.includes("devops") || c.includes("infra")) return dictionary.skills.categoryDescriptions.network;
+        return CATEGORY_DESCRIPTIONS[cat] || "";
+    };
 
     useEffect(() => {
         loadData();
@@ -274,14 +284,14 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                 >
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 mb-4 shadow-sm">
                         <Sparkles className="h-3.5 w-3.5" />
-                        <span>Engineering Stack & Technical Expertise</span>
+                        <span>{t('skills.badge')}</span>
                     </div>
 
                     <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground via-primary to-accent">
-                        Technical Skills & Architecture
+                        {t('skills.title')}
                     </h2>
                     <p className="mt-4 text-muted-foreground text-sm sm:text-base md:text-lg leading-relaxed">
-                        A battle-tested repertoire of full-stack frameworks, asynchronous runtimes, databases, and network infrastructures built for performance, security, and scalability.
+                        {t('skills.subtitle')}
                     </p>
                 </motion.div>
 
@@ -302,7 +312,7 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                             <div className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
                                 {totalSkillsCount > 0 ? `${totalSkillsCount}+` : "14+"}
                             </div>
-                            <div className="text-xs text-muted-foreground font-medium">Core Technologies</div>
+                            <div className="text-xs text-muted-foreground font-medium">{t('skills.statTech')}</div>
                         </div>
                     </div>
 
@@ -313,9 +323,9 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                         </div>
                         <div>
                             <div className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                                {`${totalYearsExperience}+ Years`}
+                                {`${totalYearsExperience}+ ${locale === 'id' ? 'Tahun' : 'Years'}`}
                             </div>
-                            <div className="text-xs text-muted-foreground font-medium">Production Experience</div>
+                            <div className="text-xs text-muted-foreground font-medium">{t('skills.statExp')}</div>
                         </div>
                     </div>
 
@@ -326,9 +336,9 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                         </div>
                         <div>
                             <div className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                                {allCategories.length || 3} Domains
+                                {allCategories.length || 3} {t('skills.statDomains')}
                             </div>
-                            <div className="text-xs text-muted-foreground font-medium">Full-Stack & Infra</div>
+                            <div className="text-xs text-muted-foreground font-medium">{locale === 'id' ? 'Full-Stack & Infra' : 'Full-Stack & Infra'}</div>
                         </div>
                     </div>
 
@@ -341,7 +351,7 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                             <div className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
                                 {totalEndorsementsCount > 0 ? `${totalEndorsementsCount}` : "Active"}
                             </div>
-                            <div className="text-xs text-muted-foreground font-medium">Peer Endorsements</div>
+                            <div className="text-xs text-muted-foreground font-medium">{t('skills.statEndorsements')}</div>
                         </div>
                     </div>
                 </motion.div>
@@ -364,7 +374,7 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                                 }`}
                         >
                             <Layers className="h-3.5 w-3.5" />
-                            <span>All Categories</span>
+                            <span>{t('skills.allCategories')}</span>
                             <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${activeTab === "all" ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
                                 {totalSkillsCount}
                             </span>
@@ -407,7 +417,7 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Filter skills, e.g. React, Docker..."
+                            placeholder={locale === 'id' ? "Cari keahlian, cth. React, Docker..." : "Filter skills, e.g. React, Docker..."}
                             className="w-full pl-9.5 pr-8 py-2 text-xs rounded-xl bg-card/80 dark:bg-card/40 border border-border/80 dark:border-primary/15 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all placeholder:text-muted-foreground"
                         />
                         {searchQuery && (
@@ -428,10 +438,10 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                                 ? "bg-primary text-primary-foreground shadow-xs"
                                 : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                                 }`}
-                            title="Mode Ringkas (Tampilan Ringkas & Cepat)"
+                            title={locale === 'id' ? "Mode Ringkas (Tampilan Ringkas & Cepat)" : "Compact Mode (Fast & Clean)"}
                         >
                             <LayoutGrid className="h-3.5 w-3.5" />
-                            <span>Mode Ringkas</span>
+                            <span>{t('skills.modeCompact')}</span>
                         </button>
                         <button
                             onClick={() => setViewMode("detailed")}
@@ -439,10 +449,10 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                                 ? "bg-primary text-primary-foreground shadow-xs"
                                 : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                                 }`}
-                            title="Mode Detail (Spesialisasi & Tag Kompetensi)"
+                            title={locale === 'id' ? "Mode Detail (Spesialisasi & Tag Kompetensi)" : "Detailed Mode (Specializations & Competency Tags)"}
                         >
                             <SlidersHorizontal className="h-3.5 w-3.5" />
-                            <span>Mode Detail</span>
+                            <span>{t('skills.modeDetailed')}</span>
                         </button>
                     </div>
                 </motion.div>
@@ -493,7 +503,7 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                             <AnimatePresence mode="popLayout">
                                 {filteredCategories.map((category, categoryIndex) => {
                                     const eco = CATEGORY_ECOSYSTEM[category.category];
-                                    const desc = CATEGORY_DESCRIPTIONS[category.category];
+                                    const desc = getCategoryDescription(category.category);
 
                                     return (
                                         <motion.div
@@ -518,7 +528,7 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                                                             </h3>
                                                         </div>
                                                         <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-muted/70 text-muted-foreground border border-border/50">
-                                                            {category.skills.length} skills
+                                                            {category.skills.length} {locale === 'id' ? "keahlian" : "skills"}
                                                         </span>
                                                     </div>
 
@@ -568,6 +578,7 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                                                         <div className="space-y-3">
                                                             {category.skills.map((skill: Skill, skillIndex: number) => {
                                                                 const details = SKILL_DETAILS[skill.name];
+                                                                const translatedRole = (locale === 'id' && (dictionary.skills.skillRoles as Record<string, string>)[skill.name]) || details?.role;
 
                                                                 return (
                                                                     <motion.div
@@ -589,9 +600,9 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                                                                                     <div className="text-sm font-semibold text-foreground tracking-tight truncate">
                                                                                         {skill.name}
                                                                                     </div>
-                                                                                    {details?.role && (
+                                                                                    {translatedRole && (
                                                                                         <div className="text-[11px] text-muted-foreground truncate">
-                                                                                            {details.role}
+                                                                                            {translatedRole}
                                                                                         </div>
                                                                                     )}
                                                                                 </div>
@@ -617,7 +628,7 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                                                                             {/* Years Badge */}
                                                                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-muted/60 text-muted-foreground border border-border/40">
                                                                                 <Calendar className="h-2.5 w-2.5" />
-                                                                                {skill.years}y experience
+                                                                                {skill.years} {locale === 'id' ? 'thn pengalaman' : 'y experience'}
                                                                             </span>
                                                                         </div>
 
@@ -645,11 +656,11 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                                                 {viewMode === "compact" ? (
                                                     <div className="mt-4 pt-3 border-t border-border/50 dark:border-primary/10 flex items-center justify-between text-[11px] text-muted-foreground">
                                                         <span className="font-medium">
-                                                            {category.skills.length} tools verified
+                                                            {category.skills.length} {t('skills.toolsVerified')}
                                                         </span>
                                                         <button
                                                             onClick={() => setViewMode("detailed")}
-                                                            className="inline-flex items-center gap-1 text-primary hover:underline underline-offset-2 font-medium"
+                                                            className="inline-flex items-center gap-1 text-primary hover:underline underline-offset-2 font-medium cursor-pointer"
                                                         >
                                                             <span>Detail</span>
                                                             <ChevronRight className="h-3 w-3" />
@@ -660,7 +671,7 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                                                         <div className="mt-5 pt-4 border-t border-border/60 dark:border-primary/10">
                                                             <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground mb-2.5">
                                                                 <TerminalSquare className="h-3.5 w-3.5 text-primary" />
-                                                                <span>{eco.label}</span>
+                                                                <span>{locale === 'id' ? "Alat & Ekosistem Pendukung" : eco.label}</span>
                                                             </div>
                                                             <div className="flex flex-wrap gap-1.5">
                                                                 {eco.tools.map((tool) => (
@@ -693,10 +704,10 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                             >
                                 <button
                                     onClick={() => setViewMode("detailed")}
-                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-muted/60 hover:bg-muted text-foreground border border-border/70 shadow-2xs transition-all hover:scale-[1.02] active:scale-[0.98]"
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-muted/60 hover:bg-muted text-foreground border border-border/70 shadow-2xs transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                                 >
                                     <SlidersHorizontal className="h-3.5 w-3.5 text-primary" />
-                                    <span>Lihat Spesialisasi & Tag Arsitektur Lengkap (Mode Detail)</span>
+                                    <span>{t('skills.viewDetailedMode')}</span>
                                 </button>
                             </motion.div>
                         )}
@@ -713,13 +724,13 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                                     <div className="space-y-2 max-w-2xl">
                                         <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                                             <CheckCircle2 className="h-3 w-3" />
-                                            <span>Production Ready Architecture</span>
+                                            <span>{locale === 'id' ? "Arsitektur Siap Produksi" : "Production Ready Architecture"}</span>
                                         </div>
                                         <h3 className="text-lg md:text-xl font-bold tracking-tight text-foreground">
-                                            Looking for a specialized tech stack or network deployment?
+                                            {t('skills.ctaTitle')}
                                         </h3>
                                         <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                                            Whether designing secure enterprise VLANs, zero-downtime microservices with Docker, or high-performance Next.js web applications, I can engineer and deploy the solution.
+                                            {t('skills.ctaDesc')}
                                         </p>
                                     </div>
 
@@ -728,14 +739,14 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                                             href="#contact"
                                             className="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-md shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
                                         >
-                                            <span>Start Collaboration</span>
+                                            <span>{t('skills.ctaStart')}</span>
                                             <ArrowUpRight className="h-3.5 w-3.5" />
                                         </Link>
                                         <Link
                                             href="#projects"
                                             className="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-muted/60 hover:bg-muted text-foreground border border-border/60 transition-colors"
                                         >
-                                            <span>View Projects</span>
+                                            <span>{t('skills.ctaProjects')}</span>
                                         </Link>
                                     </div>
                                 </div>
@@ -753,7 +764,7 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                             <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 px-4 sm:px-6 py-2 rounded-2xl bg-card/80 dark:bg-card/40 backdrop-blur-md border border-border/80 dark:border-primary/10 shadow-sm text-xs">
                                 <div className="flex items-center gap-1.5 text-muted-foreground font-medium">
                                     <Award className="h-3.5 w-3.5 text-primary" />
-                                    <span>Proficiency Levels:</span>
+                                    <span>{t('skills.proficiencyLevels')}</span>
                                 </div>
                                 {(["Expert", "Advanced", "Intermediate", "Beginner"] as SkillLevel[]).map((level) => (
                                     <div key={level} className="flex items-center gap-1.5">

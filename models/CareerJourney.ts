@@ -3,6 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface ICareerJourney extends Document {
     type: 'work' | 'education' | 'achievement';
     title: string;
+    title_id?: string;
     organization: string;
     companyLogo?: string;
     location?: string;
@@ -10,9 +11,12 @@ export interface ICareerJourney extends Document {
     endDate?: Date;
     current: boolean;
     description: string;
+    description_id?: string;
     skills: string[];
     achievements?: string[];
+    achievements_id?: string[];
     responsibilities?: string[];
+    responsibilities_id?: string[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -28,6 +32,10 @@ const CareerJourneySchema = new Schema<ICareerJourney>(
         title: {
             type: String,
             required: [true, 'Title is required'],
+            trim: true
+        },
+        title_id: {
+            type: String,
             trim: true
         },
         organization: {
@@ -58,6 +66,9 @@ const CareerJourneySchema = new Schema<ICareerJourney>(
             type: String,
             required: [true, 'Description is required']
         },
+        description_id: {
+            type: String
+        },
         skills: {
             type: [String],
             default: []
@@ -66,7 +77,15 @@ const CareerJourneySchema = new Schema<ICareerJourney>(
             type: [String],
             default: []
         },
+        achievements_id: {
+            type: [String],
+            default: []
+        },
         responsibilities: {
+            type: [String],
+            default: []
+        },
+        responsibilities_id: {
             type: [String],
             default: []
         }

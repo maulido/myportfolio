@@ -20,12 +20,16 @@ import { useEffect, useState, useMemo } from "react";
 import { ProjectSkeleton } from "./Skeleton";
 import { SpotlightCard } from "./SpotlightCard";
 import { useSettings } from "@/lib/useSettings";
+import { useLanguage } from "@/context/LanguageContext";
+import { getLocalizedField } from "@/lib/localization";
 
 interface IProject {
     _id: string;
     title: string;
+    title_id?: string;
     slug?: string;
     description: string;
+    description_id?: string;
     category?: string;
     technologies?: string[];
     tags?: string[];
@@ -70,11 +74,23 @@ export function ProjectsPageContent() {
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
     const { get } = useSettings();
-    const heroBadge = get("projectsHeroBadge", "Engineering Portfolio");
-    const heroTitle = get("projectsHeroTitle", "Engineered Solutions & Projects");
-    const heroSubtitle = get("projectsHeroSubtitle", "A showcase of production network architectures, full-stack web applications, and open-source systems.");
-    const ctaTitle = get("projectsCtaTitle", "Have an ambitious project in mind?");
-    const ctaSubtitle = get("projectsCtaSubtitle", "Whether you need high-availability network infrastructure or modern full-stack web engineering, let's connect.");
+    const { dictionary, locale } = useLanguage();
+
+    const heroBadge = locale === 'id' 
+        ? get("projectsHeroBadge_id", dictionary.projects.badge) 
+        : get("projectsHeroBadge", dictionary.projects.badge);
+    const heroTitle = locale === 'id' 
+        ? get("projectsHeroTitle_id", dictionary.projects.title) 
+        : get("projectsHeroTitle", dictionary.projects.title);
+    const heroSubtitle = locale === 'id' 
+        ? get("projectsHeroSubtitle_id", dictionary.projects.subtitle) 
+        : get("projectsHeroSubtitle", dictionary.projects.subtitle);
+    const ctaTitle = locale === 'id' 
+        ? get("projectsCtaTitle_id", dictionary.projects.ctaTitle) 
+        : get("projectsCtaTitle", dictionary.projects.ctaTitle);
+    const ctaSubtitle = locale === 'id' 
+        ? get("projectsCtaSubtitle_id", dictionary.projects.ctaSubtitle) 
+        : get("projectsCtaSubtitle", dictionary.projects.ctaSubtitle);
 
     useEffect(() => {
         async function fetchProjects() {
@@ -122,10 +138,13 @@ export function ProjectsPageContent() {
     // Filter projects
     const filteredProjects = useMemo(() => {
         return projects.filter(project => {
+            const title = getLocalizedField(project, 'title', locale, project.title);
+            const description = getLocalizedField(project, 'description', locale, project.description);
+
             // Search query
             const matchesSearch = !searchQuery || 
-                project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                description.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (project.technologies || project.tags || []).some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
 
             // Category filter
@@ -140,7 +159,7 @@ export function ProjectsPageContent() {
 
             return matchesSearch && matchesCategory && matchesTech && matchesFeatured;
         });
-    }, [projects, searchQuery, selectedCategory, selectedTech, featuredOnly]);
+    }, [projects, searchQuery, selectedCategory, selectedTech, featuredOnly, locale]);
 
     const featuredCount = useMemo(() => {
         return projects.filter(p => p.featured).length;
@@ -190,7 +209,7 @@ export function ProjectsPageContent() {
                             <Layers className="h-4 w-4 text-primary" />
                             <div>
                                 <span className="font-bold text-foreground">{projects.length}</span>
-                                <span className="text-muted-foreground ml-1">Total Works</span>
+                                <span className="text-muted-foreground ml-1">{dictionary.projects.totalWorks}</span>
                             </div>
                         </div>
                         {featuredCount > 0 && (
@@ -198,7 +217,7 @@ export function ProjectsPageContent() {
                                 <Star className="h-4 w-4 text-amber-500 fill-amber-500/20" />
                                 <div>
                                     <span className="font-bold text-foreground">{featuredCount}</span>
-                                    <span className="text-muted-foreground ml-1">Featured</span>
+                                    <span className="text-muted-foreground ml-1">{dictionary.projects.featuredCount}</span>
                                 </div>
                             </div>
                         )}
@@ -206,7 +225,7 @@ export function ProjectsPageContent() {
                             <Code2 className="h-4 w-4 text-emerald-500" />
                             <div>
                                 <span className="font-bold text-foreground">{topTechnologies.length - 1}</span>
-                                <span className="text-muted-foreground ml-1">Tech Stacks</span>
+                                <span className="text-muted-foreground ml-1">{dictionary.projects.techStacks}</span>
                             </div>
                         </div>
                     </motion.div>
@@ -221,7 +240,7 @@ export function ProjectsPageContent() {
                             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <input
                                 type="text"
-                                placeholder="Search by title, description, or technology (e.g. Next.js, Cisco, Docker)..."
+                                placeholder={dictionary.projects.searchPlaceholder}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full pl-10 pr-9 py-2.5 text-sm rounded-xl border border-border/80 dark:border-white/10 bg-background/60 focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-muted-foreground/60"
@@ -249,7 +268,7 @@ export function ProjectsPageContent() {
                                 }`}
                             >
                                 <Star className={`h-3.5 w-3.5 ${featuredOnly ? "fill-amber-500" : ""}`} />
-                                <span>Featured Only</span>
+                                <span>{dictionary.projects.featuredOnly}</span>
                             </button>
 
                             {/* View Toggle */}
@@ -280,7 +299,7 @@ export function ProjectsPageContent() {
                     {categories.length > 2 && (
                         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
                             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-1 shrink-0">
-                                Category:
+                                {dictionary.projects.categoryLabel}
                             </span>
                             {categories.map((cat) => (
                                 <button
@@ -292,7 +311,7 @@ export function ProjectsPageContent() {
                                             : "bg-background/60 border border-border/60 hover:border-primary/40 text-muted-foreground hover:text-foreground"
                                     }`}
                                 >
-                                    {cat}
+                                    {cat === "All" ? dictionary.projects.filterAll : cat}
                                 </button>
                             ))}
                         </div>
@@ -301,7 +320,7 @@ export function ProjectsPageContent() {
                     {/* Top Technologies Pill Filter */}
                     <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-border/60 dark:border-white/5">
                         <span className="text-xs font-semibold text-muted-foreground mr-2 shrink-0">
-                            Tech Filter:
+                            {dictionary.projects.techFilterLabel}
                         </span>
                         {topTechnologies.map((tech) => (
                             <button
@@ -313,7 +332,7 @@ export function ProjectsPageContent() {
                                         : "bg-background/40 hover:bg-muted text-muted-foreground border border-border/40 hover:border-primary/20"
                                 }`}
                             >
-                                {tech}
+                                {tech === "All" ? dictionary.projects.filterAll : tech}
                             </button>
                         ))}
                     </div>
@@ -322,7 +341,7 @@ export function ProjectsPageContent() {
                 {/* Results Count & Active Filters Indicator */}
                 <div className="flex items-center justify-between gap-4 mb-6">
                     <p className="text-xs md:text-sm text-muted-foreground font-medium">
-                        Showing <span className="font-bold text-foreground">{filteredProjects.length}</span> of {projects.length} engineering projects
+                        {dictionary.projects.showing} <span className="font-bold text-foreground">{filteredProjects.length}</span> {dictionary.projects.of} {projects.length} {dictionary.projects.engineeringProjects}
                     </p>
                     {(searchQuery || selectedCategory !== "All" || selectedTech !== "All" || featuredOnly) && (
                         <button
@@ -335,7 +354,7 @@ export function ProjectsPageContent() {
                             className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
                         >
                             <X className="h-3.5 w-3.5" />
-                            <span>Reset All Filters</span>
+                            <span>{dictionary.projects.resetFilters}</span>
                         </button>
                     )}
                 </div>
@@ -350,9 +369,9 @@ export function ProjectsPageContent() {
                         <div className="h-14 w-14 rounded-2xl bg-muted/60 text-muted-foreground flex items-center justify-center mx-auto mb-4">
                             <FolderGit2 className="h-7 w-7" />
                         </div>
-                        <h3 className="text-xl font-bold text-foreground mb-2">No Matching Projects Found</h3>
+                        <h3 className="text-xl font-bold text-foreground mb-2">{dictionary.projects.noProjectsFound}</h3>
                         <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                            We couldn&apos;t find any projects matching your current search or filter query.
+                            {dictionary.projects.noProjectsFoundDesc}
                         </p>
                         <button
                             onClick={() => {
@@ -363,7 +382,7 @@ export function ProjectsPageContent() {
                             }}
                             className="px-5 py-2.5 bg-primary text-white rounded-xl text-xs font-bold shadow-md shadow-primary/20 hover:bg-primary/90 transition-all cursor-pointer"
                         >
-                            Clear All Filters
+                            {dictionary.projects.clearFilters}
                         </button>
                     </SpotlightCard>
                 ) : (
@@ -396,7 +415,7 @@ export function ProjectsPageContent() {
                                     href="/contact"
                                     className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/25 hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-95"
                                 >
-                                    <span>Let&apos;s Connect</span>
+                                    <span>{dictionary.projects.connectCta}</span>
                                     <ChevronRight className="h-4 w-4" />
                                 </Link>
                             </div>
@@ -417,11 +436,15 @@ function ProjectCard({
     index: number; 
     viewMode: "grid" | "list" 
 }) {
+    const { dictionary, locale } = useLanguage();
     const imgSrc = project.imageUrl || project.image;
     const projectSlug = project.slug || project._id;
     const tags = project.technologies || project.tags || [];
     const githubLink = project.githubUrl || project.github;
     const demoLink = project.demoUrl || project.demo;
+
+    const title = getLocalizedField(project, 'title', locale, project.title);
+    const description = getLocalizedField(project, 'description', locale, project.description);
 
     if (viewMode === "list") {
         return (
@@ -439,7 +462,7 @@ function ProjectCard({
                             {imgSrc ? (
                                 <Image
                                     src={imgSrc}
-                                    alt={project.title}
+                                    alt={title}
                                     fill
                                     placeholder="blur"
                                     blurDataURL={getShimmerDataUrl(400, 240)}
@@ -449,7 +472,7 @@ function ProjectCard({
                                 />
                             ) : (
                                 <div className="text-xs font-semibold text-muted-foreground p-3 text-center">
-                                    {project.title}
+                                    {title}
                                 </div>
                             )}
                             {project.category && (
@@ -464,18 +487,18 @@ function ProjectCard({
                             <div className="flex items-center gap-2 flex-wrap">
                                 <Link href={`/projects/${projectSlug}`} className="hover:text-primary transition-colors">
                                     <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                                        {project.title}
+                                        {title}
                                     </h3>
                                 </Link>
                                 {project.featured && (
                                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-500 text-[10px] font-bold border border-amber-500/20">
-                                        <Star className="h-3 w-3 fill-amber-500" /> Featured
+                                        <Star className="h-3 w-3 fill-amber-500" /> {dictionary.projects.featured}
                                     </span>
                                 )}
                             </div>
 
                             <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                                {project.description}
+                                {description}
                             </p>
 
                             <div className="flex flex-wrap gap-1.5 pt-1">
@@ -501,7 +524,7 @@ function ProjectCard({
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                                        title="Source Code"
+                                        title={dictionary.projects.sourceCode}
                                     >
                                         <Github className="h-4 w-4" />
                                     </a>
@@ -512,7 +535,7 @@ function ProjectCard({
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary transition-colors"
-                                        title="Live Demo"
+                                        title={dictionary.projects.liveDemo}
                                     >
                                         <ExternalLink className="h-4 w-4" />
                                     </a>
@@ -522,7 +545,7 @@ function ProjectCard({
                                 href={`/projects/${projectSlug}`}
                                 className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-semibold transition-all group-hover:gap-1.5"
                             >
-                                <span>Details</span>
+                                <span>{dictionary.projects.details}</span>
                                 <ChevronRight className="h-3.5 w-3.5" />
                             </Link>
                         </div>
@@ -548,7 +571,7 @@ function ProjectCard({
                     {imgSrc ? (
                         <Image
                             src={imgSrc}
-                            alt={project.title}
+                            alt={title}
                             fill
                             placeholder="blur"
                             blurDataURL={getShimmerDataUrl(600, 340)}
@@ -558,7 +581,7 @@ function ProjectCard({
                         />
                     ) : (
                         <div className="text-muted-foreground w-full h-full flex items-center justify-center font-medium text-sm p-4 text-center">
-                            {project.title}
+                            {title}
                         </div>
                     )}
 
@@ -575,7 +598,7 @@ function ProjectCard({
 
                         {project.featured && (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-500/90 backdrop-blur-md text-slate-950 text-[10px] font-extrabold shadow-sm">
-                                <Star className="h-3 w-3 fill-slate-950" /> Featured
+                                <Star className="h-3 w-3 fill-slate-950" /> {dictionary.projects.featured}
                             </span>
                         )}
                     </div>
@@ -585,12 +608,12 @@ function ProjectCard({
                 <div className="p-6 flex flex-col flex-1">
                     <Link href={`/projects/${projectSlug}`} className="hover:text-primary transition-colors mb-2">
                         <h3 className="text-xl font-bold tracking-tight text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                            {project.title}
+                            {title}
                         </h3>
                     </Link>
 
                     <p className="text-xs md:text-sm text-muted-foreground mb-4 flex-1 line-clamp-3 leading-relaxed">
-                        {project.description}
+                        {description}
                     </p>
 
                     {/* Tech Pills */}
@@ -621,7 +644,7 @@ function ProjectCard({
                                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
                                 >
                                     <Github className="h-4 w-4" />
-                                    <span>Code</span>
+                                    <span>{dictionary.projects.code}</span>
                                 </a>
                             )}
                             {demoLink && (
@@ -632,7 +655,7 @@ function ProjectCard({
                                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors"
                                 >
                                     <ExternalLink className="h-4 w-4" />
-                                    <span>Live</span>
+                                    <span>{dictionary.projects.live}</span>
                                 </a>
                             )}
                         </div>
@@ -641,7 +664,7 @@ function ProjectCard({
                             href={`/projects/${projectSlug}`}
                             className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-primary/80 transition-all group-hover:gap-1.5"
                         >
-                            <span>Details</span>
+                            <span>{dictionary.projects.details}</span>
                             <ChevronRight className="h-4 w-4" />
                         </Link>
                     </div>

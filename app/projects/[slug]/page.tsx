@@ -21,15 +21,21 @@ import { Navbar } from "@/components/Navbar";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { ShareButtons } from "@/components/ShareButtons";
 import { SpotlightCard } from "@/components/SpotlightCard";
+import { useLanguage } from "@/context/LanguageContext";
+import { getLocalizedField } from "@/lib/localization";
 
 interface Project {
     _id: string;
     title: string;
+    title_id?: string;
     slug: string;
     description: string;
+    description_id?: string;
     category?: string;
     problemStatement?: string;
+    problemStatement_id?: string;
     solutionApproach?: string;
+    solutionApproach_id?: string;
     imageUrl?: string;
     architectureDiagram?: string;
     screenshots?: string[];
@@ -47,6 +53,7 @@ export default function ProjectDetailPage() {
     const router = useRouter();
     const [project, setProject] = useState<Project | null>(null);
     const [loading, setLoading] = useState(true);
+    const { dictionary, locale } = useLanguage();
 
     const fetchProject = useCallback(async (slug: string) => {
         try {
@@ -79,7 +86,9 @@ export default function ProjectDetailPage() {
                 <div className="flex-1 flex items-center justify-center">
                     <div className="flex flex-col items-center gap-3">
                         <div className="h-10 w-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Loading Architecture...</span>
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">
+                            {locale === 'id' ? 'Memuat Arsitektur...' : 'Loading Architecture...'}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -90,12 +99,17 @@ export default function ProjectDetailPage() {
         return null;
     }
 
+    const title = getLocalizedField(project, 'title', locale, project.title);
+    const description = getLocalizedField(project, 'description', locale, project.description);
+    const problemStatement = getLocalizedField(project, 'problemStatement', locale, project.problemStatement);
+    const solutionApproach = getLocalizedField(project, 'solutionApproach', locale, project.solutionApproach);
+
     const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
     const projectJsonLd = {
         "@context": "https://schema.org",
         "@type": "SoftwareSourceCode",
-        "name": project.title,
-        "description": project.description,
+        "name": title,
+        "description": description,
         "programmingLanguage": project.technologies,
         "author": {
             "@type": "Person",
@@ -117,13 +131,13 @@ export default function ProjectDetailPage() {
                 {/* Breadcrumbs & Navigation */}
                 <div className="container mx-auto px-4 md:px-6 py-4">
                     <div className="flex items-center justify-between">
-                        <Breadcrumb items={[{ label: "Projects", href: "/projects" }, { label: project.title }]} />
+                        <Breadcrumb items={[{ label: dictionary.projects.title, href: "/projects" }, { label: title }]} />
                         <Link
                             href="/projects"
                             className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors"
                         >
                             <ArrowLeft className="h-3.5 w-3.5" />
-                            <span>All Projects</span>
+                            <span>{dictionary.projects.backToProjects}</span>
                         </Link>
                     </div>
                 </div>
@@ -144,17 +158,17 @@ export default function ProjectDetailPage() {
                             )}
                             {project.featured && (
                                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                                    <Star className="h-3.5 w-3.5 fill-amber-500" /> Featured Solution
+                                    <Star className="h-3.5 w-3.5 fill-amber-500" /> {dictionary.projects.featuredBadge}
                                 </span>
                             )}
                         </div>
 
                         <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-foreground">
-                            {project.title}
+                            {title}
                         </h1>
 
                         <p className="text-base md:text-lg text-muted-foreground max-w-3xl leading-relaxed">
-                            {project.description}
+                            {description}
                         </p>
 
                         {/* Top Action CTAs */}
@@ -166,7 +180,7 @@ export default function ProjectDetailPage() {
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-xs font-bold rounded-xl shadow-lg shadow-primary/25 hover:bg-primary/90 transition-all hover:scale-[1.02]"
                                 >
-                                    <Github className="h-4 w-4" /> View Source Code
+                                    <Github className="h-4 w-4" /> {dictionary.projects.viewSourceCode}
                                 </a>
                             )}
                             {(project.liveUrl || project.demoUrl) && (
@@ -176,7 +190,7 @@ export default function ProjectDetailPage() {
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-2 px-5 py-2.5 border border-border/80 bg-card text-foreground text-xs font-semibold rounded-xl hover:border-primary/40 hover:bg-muted/50 transition-all"
                                 >
-                                    <ExternalLink className="h-4 w-4 text-primary" /> Live Demonstration
+                                    <ExternalLink className="h-4 w-4 text-primary" /> {dictionary.projects.liveDemonstration}
                                 </a>
                             )}
                             {project.caseStudyUrl && (
@@ -186,7 +200,7 @@ export default function ProjectDetailPage() {
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-2 px-5 py-2.5 border border-border/80 bg-card text-foreground text-xs font-semibold rounded-xl hover:border-primary/40 hover:bg-muted/50 transition-all"
                                 >
-                                    <FileText className="h-4 w-4 text-accent" /> In-Depth Case Study
+                                    <FileText className="h-4 w-4 text-accent" /> {dictionary.projects.inDepthCaseStudy}
                                 </a>
                             )}
                         </div>
@@ -208,7 +222,7 @@ export default function ProjectDetailPage() {
                                 >
                                     <Image
                                         src={project.imageUrl}
-                                        alt={project.title}
+                                        alt={title}
                                         fill
                                         className="object-cover"
                                         sizes="(max-width: 1024px) 100vw, 800px"
@@ -219,28 +233,28 @@ export default function ProjectDetailPage() {
                             )}
 
                             {/* Problem & Solution Cards */}
-                            {(project.problemStatement || project.solutionApproach) && (
+                            {(problemStatement || solutionApproach) && (
                                 <div className="grid gap-6 md:grid-cols-2">
-                                    {project.problemStatement && (
+                                    {problemStatement && (
                                         <SpotlightCard className="p-6 h-full flex flex-col" spotlightColor="rgba(239, 68, 68, 0.12)">
                                             <div className="flex items-center gap-2.5 mb-3 text-red-500">
                                                 <AlertCircle className="h-5 w-5" />
-                                                <h3 className="font-bold text-base text-foreground">The Challenge & Problem</h3>
+                                                <h3 className="font-bold text-base text-foreground">{dictionary.projects.challengeTitle}</h3>
                                             </div>
                                             <p className="text-xs md:text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap flex-1">
-                                                {project.problemStatement}
+                                                {problemStatement}
                                             </p>
                                         </SpotlightCard>
                                     )}
 
-                                    {project.solutionApproach && (
+                                    {solutionApproach && (
                                         <SpotlightCard className="p-6 h-full flex flex-col" spotlightColor="rgba(16, 185, 129, 0.12)">
                                             <div className="flex items-center gap-2.5 mb-3 text-emerald-500">
                                                 <CheckCircle2 className="h-5 w-5" />
-                                                <h3 className="font-bold text-base text-foreground">Engineered Solution</h3>
+                                                <h3 className="font-bold text-base text-foreground">{dictionary.projects.solutionTitle}</h3>
                                             </div>
                                             <p className="text-xs md:text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap flex-1">
-                                                {project.solutionApproach}
+                                                {solutionApproach}
                                             </p>
                                         </SpotlightCard>
                                     )}
@@ -252,12 +266,12 @@ export default function ProjectDetailPage() {
                                 <SpotlightCard className="p-6 md:p-8" spotlightColor="rgba(59, 130, 246, 0.12)">
                                     <div className="flex items-center gap-2.5 mb-6 text-primary">
                                         <Code2 className="h-6 w-6" />
-                                        <h3 className="font-bold text-lg text-foreground">System Architecture & Topology</h3>
+                                        <h3 className="font-bold text-lg text-foreground">{dictionary.projects.architectureTitle}</h3>
                                     </div>
                                     <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-border/80 bg-background/80 flex items-center justify-center">
                                         <Image
                                             src={project.architectureDiagram}
-                                            alt="Architecture Diagram"
+                                            alt={dictionary.projects.architectureTitle}
                                             fill
                                             className="object-contain p-4"
                                             unoptimized
@@ -271,7 +285,7 @@ export default function ProjectDetailPage() {
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-2">
                                         <ImageIcon className="h-5 w-5 text-primary" />
-                                        <h3 className="text-xl font-bold text-foreground">System Interface & Implementation</h3>
+                                        <h3 className="text-xl font-bold text-foreground">{dictionary.projects.interfaceTitle}</h3>
                                     </div>
                                     <div className="grid gap-4 sm:grid-cols-2">
                                         {project.screenshots.map((shot, idx) => (
@@ -298,20 +312,20 @@ export default function ProjectDetailPage() {
                             <SpotlightCard className="p-6 space-y-6 sticky top-24">
                                 <div>
                                     <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">
-                                        Technical Specifications
+                                        {dictionary.projects.techSpecsTitle}
                                     </h3>
                                     <div className="space-y-3.5 text-xs">
                                         {project.category && (
                                             <div className="flex items-center justify-between py-2 border-b border-border/60 dark:border-white/5">
-                                                <span className="text-muted-foreground">Domain / Track</span>
+                                                <span className="text-muted-foreground">{dictionary.projects.domainTrack}</span>
                                                 <span className="font-semibold text-foreground">{project.category}</span>
                                             </div>
                                         )}
                                         <div className="flex items-center justify-between py-2 border-b border-border/60 dark:border-white/5">
-                                            <span className="text-muted-foreground">Status</span>
+                                            <span className="text-muted-foreground">{dictionary.projects.status}</span>
                                             <span className="inline-flex items-center gap-1 text-emerald-500 font-semibold">
                                                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                                Active & Maintained
+                                                {dictionary.projects.statusActive}
                                             </span>
                                         </div>
                                     </div>
@@ -321,7 +335,7 @@ export default function ProjectDetailPage() {
                                 {project.technologies && project.technologies.length > 0 && (
                                     <div className="space-y-3">
                                         <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                            Technologies & Tools
+                                            {dictionary.projects.techTools}
                                         </span>
                                         <div className="flex flex-wrap gap-1.5">
                                             {project.technologies.map((tech, idx) => (
@@ -339,9 +353,9 @@ export default function ProjectDetailPage() {
                                 {/* Share Project */}
                                 <div className="pt-4 border-t border-border/60 dark:border-white/5 space-y-2">
                                     <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                        Share Architecture
+                                        {dictionary.projects.shareArchitecture}
                                     </span>
-                                    <ShareButtons title={project.title} />
+                                    <ShareButtons title={title} />
                                 </div>
                             </SpotlightCard>
                         </div>
@@ -353,48 +367,52 @@ export default function ProjectDetailPage() {
                     <section className="container mx-auto px-4 md:px-6 pt-16">
                         <div className="flex items-center justify-between mb-8">
                             <div>
-                                <h2 className="text-2xl md:text-3xl font-bold text-foreground">Related Projects</h2>
-                                <p className="text-xs md:text-sm text-muted-foreground mt-1">Explore similar engineering solutions and implementations.</p>
+                                <h2 className="text-2xl md:text-3xl font-bold text-foreground">{dictionary.projects.relatedTitle}</h2>
+                                <p className="text-xs md:text-sm text-muted-foreground mt-1">{dictionary.projects.relatedSubtitle}</p>
                             </div>
                             <Link href="/projects" className="text-xs font-bold text-primary hover:underline inline-flex items-center gap-1">
-                                <span>View all</span>
+                                <span>{dictionary.projects.viewAll}</span>
                                 <ChevronRight className="h-3.5 w-3.5" />
                             </Link>
                         </div>
 
                         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                            {project.relatedProjects.map((rel) => (
-                                <SpotlightCard key={rel._id} className="p-5 flex flex-col justify-between group hover:scale-[1.02] transition-all">
-                                    {rel.imageUrl && (
-                                        <div className="relative w-full aspect-video mb-4 rounded-xl overflow-hidden bg-muted/20 border border-border/60">
-                                            <Image
-                                                src={rel.imageUrl}
-                                                alt={rel.title}
-                                                fill
-                                                className="object-cover group-hover:scale-105 transition-transform"
-                                                unoptimized
-                                            />
+                            {project.relatedProjects.map((rel) => {
+                                const relTitle = getLocalizedField(rel, 'title', locale, rel.title);
+                                const relDescription = getLocalizedField(rel, 'description', locale, rel.description);
+                                return (
+                                    <SpotlightCard key={rel._id} className="p-5 flex flex-col justify-between group hover:scale-[1.02] transition-all">
+                                        {rel.imageUrl && (
+                                            <div className="relative w-full aspect-video mb-4 rounded-xl overflow-hidden bg-muted/20 border border-border/60">
+                                                <Image
+                                                    src={rel.imageUrl}
+                                                    alt={relTitle}
+                                                    fill
+                                                    className="object-cover group-hover:scale-105 transition-transform"
+                                                    unoptimized
+                                                />
+                                            </div>
+                                        )}
+                                        <div>
+                                            <Link href={`/projects/${rel.slug}`} className="hover:text-primary transition-colors">
+                                                <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors line-clamp-1 mb-1">
+                                                    {relTitle}
+                                                </h3>
+                                            </Link>
+                                            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-4">
+                                                {relDescription}
+                                            </p>
                                         </div>
-                                    )}
-                                    <div>
-                                        <Link href={`/projects/${rel.slug}`} className="hover:text-primary transition-colors">
-                                            <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors line-clamp-1 mb-1">
-                                                {rel.title}
-                                            </h3>
+                                        <Link
+                                            href={`/projects/${rel.slug}`}
+                                            className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline mt-auto"
+                                        >
+                                            <span>{dictionary.projects.viewSpec}</span>
+                                            <ChevronRight className="h-3 w-3" />
                                         </Link>
-                                        <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed mb-4">
-                                            {rel.description}
-                                        </p>
-                                    </div>
-                                    <Link
-                                        href={`/projects/${rel.slug}`}
-                                        className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline mt-auto"
-                                    >
-                                        <span>View Specification</span>
-                                        <ChevronRight className="h-3 w-3" />
-                                    </Link>
-                                </SpotlightCard>
-                            ))}
+                                    </SpotlightCard>
+                                );
+                            })}
                         </div>
                     </section>
                 )}

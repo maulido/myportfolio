@@ -28,10 +28,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { SpotlightCard } from "./SpotlightCard";
+import { useLanguage } from "@/context/LanguageContext";
+import { getLocalizedField } from "@/lib/localization";
 
 interface AboutMeData {
     paragraph1?: string;
+    paragraph1_id?: string;
     paragraph2?: string;
+    paragraph2_id?: string;
     profilePhotoUrl?: string;
     name?: string;
     title?: string;
@@ -63,6 +67,7 @@ interface EducationEntry {
 }
 
 export function AboutDetail() {
+    const { locale, dictionary, t } = useLanguage();
     const [aboutData, setAboutData] = useState<AboutMeData | null>(null);
     const [education, setEducation] = useState<EducationEntry[]>([]);
     const [dynamicNetworkStack, setDynamicNetworkStack] = useState<string[]>([]);
@@ -147,29 +152,29 @@ export function AboutDetail() {
     const principles = [
         {
             icon: ShieldCheck,
-            title: settings.aboutPrinciple1Title || "Security & Zero-Trust by Default",
-            desc: settings.aboutPrinciple1Desc || "Security is never an afterthought. From strict network firewall rules and encrypted tunnels to secure authentication tokens and sanitized payloads, every layer must be hardened.",
+            title: locale === 'id' ? (settings.aboutPrinciple1Title_id || dictionary.about.principles.p1Title) : (settings.aboutPrinciple1Title || dictionary.about.principles.p1Title),
+            desc: locale === 'id' ? (settings.aboutPrinciple1Desc_id || dictionary.about.principles.p1Desc) : (settings.aboutPrinciple1Desc || dictionary.about.principles.p1Desc),
             color: "text-blue-500",
             bg: "bg-blue-500/10"
         },
         {
             icon: Server,
-            title: settings.aboutPrinciple2Title || "Reliability & High Availability",
-            desc: settings.aboutPrinciple2Desc || "Trained in real-world networking topologies, I design software architectures that gracefully handle connection drops, packet jitter, and server failovers without losing data integrity.",
+            title: locale === 'id' ? (settings.aboutPrinciple2Title_id || dictionary.about.principles.p2Title) : (settings.aboutPrinciple2Title || dictionary.about.principles.p2Title),
+            desc: locale === 'id' ? (settings.aboutPrinciple2Desc_id || dictionary.about.principles.p2Desc) : (settings.aboutPrinciple2Desc || dictionary.about.principles.p2Desc),
             color: "text-emerald-500",
             bg: "bg-emerald-500/10"
         },
         {
             icon: Terminal,
-            title: settings.aboutPrinciple3Title || "Clean Code & Automated DevOps",
-            desc: settings.aboutPrinciple3Desc || "If a workflow is executed repeatedly, it should be automated. I champion clean, self-documenting code, containerized builds, and automated CI/CD deployment pipelines.",
+            title: locale === 'id' ? (settings.aboutPrinciple3Title_id || dictionary.about.principles.p3Title) : (settings.aboutPrinciple3Title || dictionary.about.principles.p3Title),
+            desc: locale === 'id' ? (settings.aboutPrinciple3Desc_id || dictionary.about.principles.p3Desc) : (settings.aboutPrinciple3Desc || dictionary.about.principles.p3Desc),
             color: "text-purple-500",
             bg: "bg-purple-500/10"
         },
         {
             icon: Compass,
-            title: settings.aboutPrinciple4Title || "Pragmatic Architecture",
-            desc: settings.aboutPrinciple4Desc || "Choosing the optimal tool for the problem. Avoiding unnecessary architectural bloat while prioritizing latency, maintainability, and exceptional developer experience.",
+            title: locale === 'id' ? (settings.aboutPrinciple4Title_id || dictionary.about.principles.p4Title) : (settings.aboutPrinciple4Title || dictionary.about.principles.p4Title),
+            desc: locale === 'id' ? (settings.aboutPrinciple4Desc_id || dictionary.about.principles.p4Desc) : (settings.aboutPrinciple4Desc || dictionary.about.principles.p4Desc),
             color: "text-amber-500",
             bg: "bg-amber-500/10"
         }
@@ -178,23 +183,23 @@ export function AboutDetail() {
     const methodology = [
         {
             step: "01",
-            title: settings.aboutMethod1Title || "Discovery & Topology Audit",
-            desc: settings.aboutMethod1Desc || "Analyzing requirement matrices, examining packet flows, bandwidth overhead, user journeys, and bottleneck vulnerability points before writing any code."
+            title: locale === 'id' ? (settings.aboutMethod1Title_id || dictionary.about.methodology.m1Title) : (settings.aboutMethod1Title || dictionary.about.methodology.m1Title),
+            desc: locale === 'id' ? (settings.aboutMethod1Desc_id || dictionary.about.methodology.m1Desc) : (settings.aboutMethod1Desc || dictionary.about.methodology.m1Desc)
         },
         {
             step: "02",
-            title: settings.aboutMethod2Title || "Modular Architecture",
-            desc: settings.aboutMethod2Desc || "Architecting loosely coupled components, strict schema validations, hardened firewall rules, and scalable database data structures."
+            title: locale === 'id' ? (settings.aboutMethod2Title_id || dictionary.about.methodology.m2Title) : (settings.aboutMethod2Title || dictionary.about.methodology.m2Title),
+            desc: locale === 'id' ? (settings.aboutMethod2Desc_id || dictionary.about.methodology.m2Desc) : (settings.aboutMethod2Desc || dictionary.about.methodology.m2Desc)
         },
         {
             step: "03",
-            title: settings.aboutMethod3Title || "Hardening & Test Automation",
-            desc: settings.aboutMethod3Desc || "Executing rigorous type verification, zero-trust token authentication, end-to-end stress testing, and edge case resilience handling."
+            title: locale === 'id' ? (settings.aboutMethod3Title_id || dictionary.about.methodology.m3Title) : (settings.aboutMethod3Title || dictionary.about.methodology.m3Title),
+            desc: locale === 'id' ? (settings.aboutMethod3Desc_id || dictionary.about.methodology.m3Desc) : (settings.aboutMethod3Desc || dictionary.about.methodology.m3Desc)
         },
         {
             step: "04",
-            title: settings.aboutMethod4Title || "CI/CD & Continuous Telemetry",
-            desc: settings.aboutMethod4Desc || "Deploying via automated pipelines with real-time error telemetry, uptime health checks, and zero-downtime rolling updates."
+            title: locale === 'id' ? (settings.aboutMethod4Title_id || dictionary.about.methodology.m4Title) : (settings.aboutMethod4Title || dictionary.about.methodology.m4Title),
+            desc: locale === 'id' ? (settings.aboutMethod4Desc_id || dictionary.about.methodology.m4Desc) : (settings.aboutMethod4Desc || dictionary.about.methodology.m4Desc)
         }
     ];
 
@@ -228,32 +233,32 @@ export function AboutDetail() {
         {
             icon: TrendingUp,
             value: aboutData?.stats?.yearsExperience ? `${aboutData.stats.yearsExperience}+` : "4+",
-            label: "Years Experience",
-            sub: "Continuous Field Work",
+            label: t('about.stats.yearsExperience'),
+            sub: locale === 'id' ? "Pengalaman Lapangan Berkelanjutan" : "Continuous Field Work",
             color: "text-blue-500",
             bg: "bg-blue-500/10"
         },
         {
             icon: Code2,
             value: aboutData?.stats?.projectsCompleted ? `${aboutData.stats.projectsCompleted}+` : "25+",
-            label: "Systems & Projects",
-            sub: "Shipped to Production",
+            label: locale === 'id' ? "Sistem & Proyek" : "Systems & Projects",
+            sub: locale === 'id' ? "Diterapkan ke Produksi" : "Shipped to Production",
             color: "text-emerald-500",
             bg: "bg-emerald-500/10"
         },
         {
             icon: Award,
             value: aboutData?.stats?.certificationsEarned ? `${aboutData.stats.certificationsEarned}+` : "8+",
-            label: "Certifications",
-            sub: "Industry Validated",
+            label: t('about.stats.certifications'),
+            sub: locale === 'id' ? "Tervalidasi Industri" : "Industry Validated",
             color: "text-amber-500",
             bg: "bg-amber-500/10"
         },
         {
             icon: Activity,
             value: "99.9%",
-            label: "Uptime Focus",
-            sub: "Zero-Downtime Philosophy",
+            label: locale === 'id' ? "Fokus Waktu Aktif" : "Uptime Focus",
+            sub: locale === 'id' ? "Filosofi Tanpa Waktu Henti" : "Zero-Downtime Philosophy",
             color: "text-purple-500",
             bg: "bg-purple-500/10"
         }
@@ -301,24 +306,24 @@ export function AboutDetail() {
                         <div className="mt-8 w-full max-w-sm space-y-2.5">
                             <div className="flex items-center justify-between px-4 py-2.5 rounded-xl border border-border/80 dark:border-white/10 bg-card/70 backdrop-blur-sm text-xs font-medium shadow-xs">
                                 <span className="text-muted-foreground flex items-center gap-2">
-                                    <MapPin className="h-3.5 w-3.5 text-primary" /> Location
+                                    <MapPin className="h-3.5 w-3.5 text-primary" /> {locale === 'id' ? "Lokasi" : "Location"}
                                 </span>
                                 <span className="text-foreground font-semibold">{aboutData?.location || "Indonesia"}</span>
                             </div>
                             <div className="flex items-center justify-between px-4 py-2.5 rounded-xl border border-border/80 dark:border-white/10 bg-card/70 backdrop-blur-sm text-xs font-medium shadow-xs">
                                 <span className="text-muted-foreground flex items-center gap-2">
-                                    <Globe2 className="h-3.5 w-3.5 text-emerald-500" /> Availability
+                                    <Globe2 className="h-3.5 w-3.5 text-emerald-500" /> {locale === 'id' ? "Ketersediaan" : "Availability"}
                                 </span>
                                 <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold">
                                     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
-                                    Open for Opportunities
+                                    {locale === 'id' ? "Terbuka untuk Peluang" : "Open for Opportunities"}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between px-4 py-2.5 rounded-xl border border-border/80 dark:border-white/10 bg-card/70 backdrop-blur-sm text-xs font-medium shadow-xs">
                                 <span className="text-muted-foreground flex items-center gap-2">
-                                    <Layers className="h-3.5 w-3.5 text-primary" /> Focus
+                                    <Layers className="h-3.5 w-3.5 text-primary" /> {locale === 'id' ? "Fokus" : "Focus"}
                                 </span>
-                                <span className="text-foreground font-semibold">Network & Fullstack</span>
+                                <span className="text-foreground font-semibold">{locale === 'id' ? "Jaringan & Fullstack" : "Network & Fullstack"}</span>
                             </div>
                         </div>
 
@@ -366,11 +371,15 @@ export function AboutDetail() {
                             transition={{ duration: 0.5, delay: 0.1 }}
                         >
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold mb-4">
-                                <Sparkles className="h-3.5 w-3.5" /> {settings.aboutHeroBadge || "Comprehensive Biography"}
+                                <Sparkles className="h-3.5 w-3.5" /> {settings.aboutHeroBadge || (locale === 'id' ? "Biografi Lengkap" : "Comprehensive Biography")}
                             </div>
                             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight text-foreground">
                                 {settings.aboutHeroTitle ? (
                                     <span>{settings.aboutHeroTitle}</span>
+                                ) : locale === 'id' ? (
+                                    <>
+                                        Menghubungkan <span className="text-gradient">Protokol Perangkat Keras</span> dengan <span className="text-gradient">Sistem Perangkat Lunak</span> Modern
+                                    </>
                                 ) : (
                                     <>
                                         Bridging <span className="text-gradient">Hardware Protocols</span> with Modern <span className="text-gradient">Software Systems</span>
@@ -378,14 +387,10 @@ export function AboutDetail() {
                                 )}
                             </h1>
                             <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
-                                {aboutData?.paragraph1 || 
-                                    "I am a dual-discipline engineer operating at the intersection of network engineering and modern full-stack software development. With a grounded understanding of how packets travel through physical infrastructure and how cloud applications scale, I build reliable, high-performance digital solutions."
-                                }
+                                {getLocalizedField(aboutData, 'paragraph1', locale, dictionary.about.bioP1)}
                             </p>
                             <p className="mt-3 text-base text-muted-foreground leading-relaxed">
-                                {aboutData?.paragraph2 || 
-                                    "My journey began with deep curiosity for network topologies, routing algorithms, and server infrastructure. As web applications evolved into distributed cloud architectures, I expanded my expertise into TypeScript, Next.js, database optimization, and automated CI/CD deployment pipelines."
-                                }
+                                {getLocalizedField(aboutData, 'paragraph2', locale, dictionary.about.bioP2)}
                             </p>
 
                             {/* Action Buttons */}
@@ -394,19 +399,19 @@ export function AboutDetail() {
                                     onClick={() => window.dispatchEvent(new Event("open-cv-modal"))}
                                     className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/25 hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
                                 >
-                                    <Download className="h-4 w-4" /> Download Official CV
+                                    <Download className="h-4 w-4" /> {locale === 'id' ? "Unduh CV Resmi" : "Download Official CV"}
                                 </button>
                                 <Link
                                     href="/contact"
                                     className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-border/80 dark:border-white/10 bg-card text-foreground font-semibold text-sm hover:bg-muted/60 hover:border-primary/40 transition-all"
                                 >
-                                    <Mail className="h-4 w-4" /> Get in Touch
+                                    <Mail className="h-4 w-4" /> {locale === 'id' ? "Hubungi Saya" : "Get in Touch"}
                                 </Link>
                                 <Link
                                     href="/projects"
                                     className="inline-flex items-center gap-2 px-5 py-3 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
                                 >
-                                    <span>Explore Featured Work</span>
+                                    <span>{locale === 'id' ? "Jelajahi Karya Unggulan" : "Explore Featured Work"}</span>
                                     <ArrowRight className="h-3.5 w-3.5" />
                                 </Link>
                             </div>
@@ -450,13 +455,23 @@ export function AboutDetail() {
                 <div className="text-center max-w-3xl mx-auto mb-12">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 mb-3">
                         <Compass className="h-3.5 w-3.5" />
-                        <span>Core Pillars</span>
+                        <span>{locale === 'id' ? "Pilar Utama" : "Core Pillars"}</span>
                     </div>
                     <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">
-                        Core <span className="text-gradient">Engineering Principles</span>
+                        {locale === 'id' ? (
+                            <>
+                                Prinsip <span className="text-gradient">Rekayasa Inti</span>
+                            </>
+                        ) : (
+                            <>
+                                Core <span className="text-gradient">Engineering Principles</span>
+                            </>
+                        )}
                     </h2>
                     <p className="mt-3 text-muted-foreground text-sm md:text-base max-w-2xl mx-auto">
-                        The fundamental architectural tenets that govern every system I configure and every line of code I ship.
+                        {locale === 'id'
+                            ? "Prinsip arsitektur fundamental yang mendasari setiap sistem yang saya konfigurasikan dan setiap baris kode yang saya rilis."
+                            : "The fundamental architectural tenets that govern every system I configure and every line of code I ship."}
                     </p>
                 </div>
 
@@ -493,13 +508,23 @@ export function AboutDetail() {
                 <div className="text-center max-w-3xl mx-auto mb-14">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 mb-3">
                         <Terminal className="h-3.5 w-3.5" />
-                        <span>Execution Blueprint</span>
+                        <span>{locale === 'id' ? "Cetak Biru Eksekusi" : "Execution Blueprint"}</span>
                     </div>
                     <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">
-                        How I Approach <span className="text-gradient">Engineering Challenges</span>
+                        {locale === 'id' ? (
+                            <>
+                                Pendekatan Menghadapi <span className="text-gradient">Tantangan Rekayasa</span>
+                            </>
+                        ) : (
+                            <>
+                                How I Approach <span className="text-gradient">Engineering Challenges</span>
+                            </>
+                        )}
                     </h2>
                     <p className="mt-3 text-muted-foreground text-sm md:text-base max-w-2xl mx-auto">
-                        A disciplined, repeatable methodology ensuring resilience from initial network planning to cloud deployment.
+                        {locale === 'id'
+                            ? "Metodologi disiplin dan teruji yang memastikan ketahanan dari perencanaan jaringan awal hingga implementasi cloud."
+                            : "A disciplined, repeatable methodology ensuring resilience from initial network planning to cloud deployment."}
                     </p>
                 </div>
 
@@ -536,13 +561,23 @@ export function AboutDetail() {
                 <div className="text-center max-w-3xl mx-auto mb-12">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 mb-3">
                         <Layers className="h-3.5 w-3.5" />
-                        <span>Technical Breadth</span>
+                        <span>{locale === 'id' ? "Keluasan Teknis" : "Technical Breadth"}</span>
                     </div>
                     <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">
-                        Dual-Domain <span className="text-gradient">Technical Mastery</span>
+                        {locale === 'id' ? (
+                            <>
+                                Penguasaan Teknis <span className="text-gradient">Dua Domain</span>
+                            </>
+                        ) : (
+                            <>
+                                Dual-Domain <span className="text-gradient">Technical Mastery</span>
+                            </>
+                        )}
                     </h2>
                     <p className="mt-3 text-muted-foreground text-sm md:text-base max-w-2xl mx-auto">
-                        Structured competencies across both physical network routing and cloud-native software architecture.
+                        {locale === 'id'
+                            ? "Kompetensi terstruktur di bidang perutean jaringan fisik dan arsitektur perangkat lunak cloud-native."
+                            : "Structured competencies across both physical network routing and cloud-native software architecture."}
                     </p>
                 </div>
 
@@ -555,8 +590,14 @@ export function AboutDetail() {
                                     <Network className="h-6 w-6" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-foreground">Network & Infrastructure Engineering</h3>
-                                    <p className="text-xs text-muted-foreground">Routing, switching, firewalls, and server operating systems</p>
+                                    <h3 className="text-xl font-bold text-foreground">
+                                        {locale === 'id' ? "Teknik Jaringan & Infrastruktur" : "Network & Infrastructure Engineering"}
+                                    </h3>
+                                    <p className="text-xs text-muted-foreground">
+                                        {locale === 'id'
+                                            ? "Routing, switching, firewall, dan sistem operasi server"
+                                            : "Routing, switching, firewalls, and server operating systems"}
+                                    </p>
                                 </div>
                             </div>
 
@@ -579,8 +620,14 @@ export function AboutDetail() {
                                     <Code2 className="h-6 w-6" />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-bold text-foreground">Software Engineering & Modern Cloud</h3>
-                                    <p className="text-xs text-muted-foreground">Full-stack web architecture, API services, and containerized deployments</p>
+                                    <h3 className="text-xl font-bold text-foreground">
+                                        {locale === 'id' ? "Rekayasa Perangkat Lunak & Cloud Modern" : "Software Engineering & Modern Cloud"}
+                                    </h3>
+                                    <p className="text-xs text-muted-foreground">
+                                        {locale === 'id'
+                                            ? "Arsitektur web full-stack, layanan API, dan deployment berbasis kontainer"
+                                            : "Full-stack web architecture, API services, and containerized deployments"}
+                                    </p>
                                 </div>
                             </div>
 
@@ -603,20 +650,31 @@ export function AboutDetail() {
                     <div className="text-center max-w-2xl mx-auto mb-10">
                         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 mb-3">
                             <GraduationCap className="h-3.5 w-3.5" />
-                            <span>Formal Education</span>
+                            <span>{locale === 'id' ? "Pendidikan Formal" : "Formal Education"}</span>
                         </div>
                         <h2 className="text-3xl font-bold tracking-tight text-foreground">
-                            Academic <span className="text-gradient">Foundations</span>
+                            {locale === 'id' ? (
+                                <>
+                                    Fondasi <span className="text-gradient">Akademis</span>
+                                </>
+                            ) : (
+                                <>
+                                    Academic <span className="text-gradient">Foundations</span>
+                                </>
+                            )}
                         </h2>
                         <p className="mt-2 text-muted-foreground text-sm">
-                            Formal educational foundations in computer technology and systems engineering.
+                            {locale === 'id'
+                                ? "Fondasi pendidikan formal dalam teknologi komputer dan rekayasa sistem."
+                                : "Formal educational foundations in computer technology and systems engineering."}
                         </p>
                     </div>
 
                     <div className="max-w-3xl mx-auto space-y-4">
                         {education.map((edu) => {
                             const startYear = new Date(edu.startDate).getFullYear();
-                            const endYear = edu.endDate ? new Date(edu.endDate).getFullYear() : "Present";
+                            const endYear = edu.endDate ? new Date(edu.endDate).getFullYear() : (locale === 'id' ? "Sekarang" : "Present");
+                            const eduDesc = getLocalizedField(edu, 'description', locale);
 
                             return (
                                 <SpotlightCard
@@ -632,8 +690,8 @@ export function AboutDetail() {
                                             <div>
                                                 <h3 className="text-lg font-bold text-foreground">{edu.title}</h3>
                                                 <p className="text-sm text-primary font-medium">{edu.organization}</p>
-                                                {edu.description && (
-                                                    <p className="text-xs text-muted-foreground mt-1 max-w-xl leading-relaxed">{edu.description}</p>
+                                                {eduDesc && (
+                                                    <p className="text-xs text-muted-foreground mt-1 max-w-xl leading-relaxed">{eduDesc}</p>
                                                 )}
                                             </div>
                                         </div>
@@ -654,26 +712,30 @@ export function AboutDetail() {
                     <div className="max-w-2xl mx-auto space-y-4 relative z-10">
                         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
                             <Sparkles className="h-3.5 w-3.5" />
-                            <span>Let&apos;s Build Together</span>
+                            <span>{locale === 'id' ? "Mari Membangun Bersama" : "Let's Build Together"}</span>
                         </div>
                         <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight text-foreground">
-                            Have an Infrastructure or Software Project in Mind?
+                            {locale === 'id'
+                                ? "Punya Proyek Infrastruktur atau Perangkat Lunak?"
+                                : "Have an Infrastructure or Software Project in Mind?"}
                         </h2>
                         <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-                            Whether you need network architecture hardening, custom API services, or a high-performance web platform, I&apos;m always ready to collaborate.
+                            {locale === 'id'
+                                ? "Baik Anda memerlukan penguatan arsitektur jaringan, layanan API khusus, atau platform web berkinerja tinggi, saya selalu siap berkolaborasi."
+                                : "Whether you need network architecture hardening, custom API services, or a high-performance web platform, I'm always ready to collaborate."}
                         </p>
                         <div className="pt-4 flex flex-wrap items-center justify-center gap-3">
                             <Link
                                 href="/contact"
                                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/25 hover:bg-primary/90 transition-all hover:scale-[1.02]"
                             >
-                                <Mail className="h-4 w-4" /> Start a Conversation
+                                <Mail className="h-4 w-4" /> {locale === 'id' ? "Mulai Percakapan" : "Start a Conversation"}
                             </Link>
                             <Link
                                 href="/projects"
                                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-border/80 bg-card text-foreground font-semibold text-sm hover:bg-muted/60 transition-all"
                             >
-                                View Selected Works
+                                {locale === 'id' ? "Lihat Karya Terpilih" : "View Selected Works"}
                             </Link>
                         </div>
                     </div>

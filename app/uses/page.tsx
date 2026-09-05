@@ -25,12 +25,15 @@ import {
     Lock
 } from "lucide-react";
 import { useSettings } from "@/lib/useSettings";
+import { useLanguage } from "@/context/LanguageContext";
+import { getLocalizedField } from "@/lib/localization";
 
 interface UsesItem {
     _id: string;
     name: string;
     category: string;
     description: string;
+    description_id?: string;
     url?: string;
     imageUrl?: string;
     featured: boolean;
@@ -53,9 +56,17 @@ export default function UsesPage() {
     const [featuredOnly, setFeaturedOnly] = useState(false);
 
     const { get } = useSettings();
-    const heroBadge = get("usesHeroBadge", "Workspace, Lab & Daily Drivers");
-    const heroTitle = get("usesHeroTitle", "Tech Stack, Gear & Lab Equipment");
-    const heroSubtitle = get("usesHeroSubtitle", "A comprehensive, living catalog of the hardware, developer tooling, networking lab routers, cloud services, and ergonomics that power my engineering workflow.");
+    const { dictionary, locale } = useLanguage();
+
+    const heroBadge = locale === 'id'
+        ? get("usesHeroBadge_id", dictionary.uses.badge)
+        : get("usesHeroBadge", dictionary.uses.badge);
+    const heroTitle = locale === 'id'
+        ? get("usesHeroTitle_id", dictionary.uses.title)
+        : get("usesHeroTitle", dictionary.uses.title);
+    const heroSubtitle = locale === 'id'
+        ? get("usesHeroSubtitle_id", dictionary.uses.subtitle)
+        : get("usesHeroSubtitle", dictionary.uses.subtitle);
 
     useEffect(() => {
         fetchUsesItems();
@@ -100,26 +111,27 @@ export default function UsesPage() {
             }
         });
         return [
-            { key: "All", label: "All Equipment", count: items.length, icon: SlidersHorizontal },
-            { key: "Hardware", label: "Hardware & Rig", count: counts.Hardware || 0, icon: Laptop },
-            { key: "Software", label: "Dev Software & IDEs", count: counts.Software || 0, icon: Code },
-            { key: "Services", label: "Cloud & Services", count: counts.Services || 0, icon: Server },
-            { key: "Desk Setup", label: "Desk & Ergonomics", count: counts["Desk Setup"] || 0, icon: Armchair },
+            { key: "All", label: dictionary.uses.allEquipment, count: items.length, icon: SlidersHorizontal },
+            { key: "Hardware", label: dictionary.uses.hardwareLabel, count: counts.Hardware || 0, icon: Laptop },
+            { key: "Software", label: dictionary.uses.softwareLabel, count: counts.Software || 0, icon: Code },
+            { key: "Services", label: dictionary.uses.servicesLabel, count: counts.Services || 0, icon: Server },
+            { key: "Desk Setup", label: dictionary.uses.deskLabel, count: counts["Desk Setup"] || 0, icon: Armchair },
         ];
-    }, [items]);
+    }, [items, dictionary]);
 
     // Filtered Items based on Search, Category, and Featured Toggle
     const filteredItems = useMemo(() => {
         return items.filter((item) => {
+            const desc = getLocalizedField(item, 'description', locale, item.description);
             const matchesCategory = selectedCategory === "All" || item.category === selectedCategory;
             const matchesFeatured = !featuredOnly || item.featured;
             const matchesSearch =
                 item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                desc.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 item.category.toLowerCase().includes(searchQuery.toLowerCase());
             return matchesCategory && matchesFeatured && matchesSearch;
         });
-    }, [items, selectedCategory, featuredOnly, searchQuery]);
+    }, [items, selectedCategory, featuredOnly, searchQuery, locale]);
 
     // Group items by category when viewing "All" with empty search
     const isGroupedView = selectedCategory === "All" && !searchQuery.trim() && !featuredOnly;
@@ -130,7 +142,7 @@ export default function UsesPage() {
             <main className="flex-1 pt-20 pb-24">
                 {/* Breadcrumbs */}
                 <div className="container mx-auto px-4 md:px-6 py-4 max-w-6xl">
-                    <Breadcrumb items={[{ label: "Uses & Setup" }]} />
+                    <Breadcrumb items={[{ label: dictionary.uses.title }]} />
                 </div>
 
                 {/* Hero Header */}
@@ -174,29 +186,29 @@ export default function UsesPage() {
                         {[
                             {
                                 icon: Cpu,
-                                title: "Compute & Rig",
-                                subtitle: "Primary Workstation",
+                                title: dictionary.uses.matrix.computeTitle,
+                                subtitle: dictionary.uses.matrix.computeSubtitle,
                                 spec: 'Apple M3 Max · 64GB RAM · NVMe',
                                 tag: "ARM64 Unix"
                             },
                             {
                                 icon: Monitor,
-                                title: "Visual Workspace",
-                                subtitle: "Displays & KVM",
+                                title: dictionary.uses.matrix.visualTitle,
+                                subtitle: dictionary.uses.matrix.visualSubtitle,
                                 spec: 'Dell UltraSharp 32" 4K + KVM',
                                 tag: "IPS Color Calibrated"
                             },
                             {
                                 icon: Wifi,
-                                title: "Network Core & Lab",
-                                subtitle: "Enterprise Routing",
+                                title: dictionary.uses.matrix.networkTitle,
+                                subtitle: dictionary.uses.matrix.networkSubtitle,
                                 spec: "MikroTik RB5009 + Cisco 2960-X",
                                 tag: "BGP / VLANs / 10G"
                             },
                             {
                                 icon: Terminal,
-                                title: "Environment & CLI",
-                                subtitle: "IDE & Terminal",
+                                title: dictionary.uses.matrix.envTitle,
+                                subtitle: dictionary.uses.matrix.envSubtitle,
                                 spec: "VS Code + Neovim · Warp · Starship",
                                 tag: "Tokyo Night / Vim"
                             }
@@ -237,7 +249,7 @@ export default function UsesPage() {
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Search gear, tools, routers, frameworks, monitors..."
+                                    placeholder={dictionary.uses.searchPlaceholder}
                                     className="w-full h-11 pl-10 pr-10 rounded-2xl bg-background/80 border border-input focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm text-foreground placeholder:text-muted-foreground/60 transition-all outline-none"
                                 />
                                 {searchQuery && (
@@ -262,7 +274,7 @@ export default function UsesPage() {
                                 )}
                             >
                                 <Sparkles className={'h-3.5 w-3.5 ' + (featuredOnly ? "text-amber-300" : "")} />
-                                <span>Daily Drivers Only</span>
+                                <span>{dictionary.uses.dailyDriversOnly}</span>
                             </button>
                         </div>
 
@@ -316,9 +328,9 @@ export default function UsesPage() {
                                 <Package className="h-7 w-7 opacity-60" />
                             </div>
                             <div className="space-y-1">
-                                <h3 className="text-lg font-bold text-foreground">No equipment matched</h3>
+                                <h3 className="text-lg font-bold text-foreground">{dictionary.uses.noEquipmentMatched}</h3>
                                 <p className="text-xs text-muted-foreground">
-                                    Try clearing your search query or selecting another category filter.
+                                    {dictionary.uses.noEquipmentMatchedDesc}
                                 </p>
                             </div>
                             <button
@@ -329,7 +341,7 @@ export default function UsesPage() {
                                 }}
                                 className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors"
                             >
-                                Reset Filters
+                                {dictionary.uses.resetFilters}
                             </button>
                         </div>
                     ) : isGroupedView ? (
@@ -340,6 +352,12 @@ export default function UsesPage() {
                                 if (groupItems.length === 0) return null;
                                 const CategoryIcon = categoryIcons[categoryName] || Package;
 
+                                const categoryLabel = 
+                                    categoryName === "Hardware" ? dictionary.uses.hardwareLabel :
+                                    categoryName === "Software" ? dictionary.uses.softwareLabel :
+                                    categoryName === "Services" ? dictionary.uses.servicesLabel :
+                                    categoryName === "Desk Setup" ? dictionary.uses.deskLabel : categoryName;
+
                                 return (
                                     <div key={categoryName} className="space-y-6">
                                         <div className="flex items-center gap-3 pb-3 border-b border-border/70">
@@ -347,9 +365,9 @@ export default function UsesPage() {
                                                 <CategoryIcon className="h-5 w-5" />
                                             </div>
                                             <div>
-                                                <h2 className="text-xl font-bold text-foreground">{categoryName}</h2>
+                                                <h2 className="text-xl font-bold text-foreground">{categoryLabel}</h2>
                                                 <p className="text-xs text-muted-foreground">
-                                                    {groupItems.length} {groupItems.length === 1 ? "item" : "items"} configured
+                                                    {groupItems.length} {dictionary.uses.itemsConfigured}
                                                 </p>
                                             </div>
                                         </div>
@@ -367,7 +385,7 @@ export default function UsesPage() {
                         /* Filtered / Searched Flat Grid */
                         <div className="space-y-4">
                             <p className="text-xs font-semibold text-muted-foreground">
-                                Showing {filteredItems.length} {filteredItems.length === 1 ? "result" : "results"}
+                                {dictionary.uses.showing} {filteredItems.length} {filteredItems.length === 1 ? dictionary.uses.result : dictionary.uses.results}
                             </p>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {filteredItems.map((item, index) => (
@@ -383,10 +401,10 @@ export default function UsesPage() {
                     <div className="p-8 rounded-3xl bg-card/60 backdrop-blur-md border border-border relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6 shadow-md">
                         <div className="space-y-2 max-w-xl text-center sm:text-left">
                             <h3 className="text-lg font-bold text-foreground">
-                                Tooling & Equipment Philosophy
+                                {dictionary.uses.philosophyTitle}
                             </h3>
                             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                                I invest in dependable, enterprise-grade hardware and ergonomic gear to minimize cognitive friction, optimize system latency, and guarantee resilient software delivery. Have questions regarding network setups or dev tools?
+                                {dictionary.uses.philosophyDesc}
                             </p>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
@@ -394,7 +412,7 @@ export default function UsesPage() {
                                 href="/contact"
                                 className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-all shadow-md shadow-primary/25"
                             >
-                                <span>Inquire About Gear</span>
+                                <span>{dictionary.uses.inquireGear}</span>
                                 <ArrowUpRight className="h-4 w-4" />
                             </Link>
                             <Link
@@ -414,7 +432,9 @@ export default function UsesPage() {
 }
 
 function UsesItemCard({ item, index }: { item: UsesItem; index: number }) {
+    const { dictionary, locale } = useLanguage();
     const CategoryIcon = categoryIcons[item.category] || Package;
+    const description = getLocalizedField(item, 'description', locale, item.description);
 
     return (
         <motion.div
@@ -457,7 +477,7 @@ function UsesItemCard({ item, index }: { item: UsesItem; index: number }) {
                     {item.featured && (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                             <Sparkles className="h-3 w-3" />
-                            <span>Daily Driver</span>
+                            <span>{dictionary.uses.dailyDriver}</span>
                         </span>
                     )}
                 </div>
@@ -468,7 +488,7 @@ function UsesItemCard({ item, index }: { item: UsesItem; index: number }) {
                         {item.name}
                     </h3>
                     <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
-                        {item.description}
+                        {description}
                     </p>
                 </div>
             </div>
@@ -482,12 +502,12 @@ function UsesItemCard({ item, index }: { item: UsesItem; index: number }) {
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline group-hover:translate-x-0.5 transition-transform"
                     >
-                        <span>Official Website</span>
+                        <span>{dictionary.uses.officialWebsite}</span>
                         <ExternalLink className="h-3.5 w-3.5" />
                     </a>
                 ) : (
                     <span className="text-[11px] text-muted-foreground/60 font-mono">
-                        Workflow Verified
+                        {dictionary.uses.workflowVerified}
                     </span>
                 )}
                 <span className="text-[10px] font-mono text-muted-foreground/60">

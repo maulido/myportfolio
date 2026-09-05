@@ -2,11 +2,15 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IProject extends Document {
     title: string;
+    title_id?: string;
     slug: string;
     description: string;
+    description_id?: string;
     category: string;
     problemStatement?: string;
+    problemStatement_id?: string;
     solutionApproach?: string;
+    solutionApproach_id?: string;
     imageUrl?: string;
     architectureDiagram?: string;
     screenshots?: string[];
@@ -23,11 +27,15 @@ export interface IProject extends Document {
 
 const ProjectSchema = new Schema({
     title: { type: String, required: true },
+    title_id: { type: String },
     slug: { type: String, required: true, unique: true },
     description: { type: String, required: true },
+    description_id: { type: String },
     category: { type: String, required: true, default: "Uncategorized" },
     problemStatement: { type: String },
+    problemStatement_id: { type: String },
     solutionApproach: { type: String },
+    solutionApproach_id: { type: String },
     imageUrl: { type: String },
     architectureDiagram: { type: String },
     screenshots: [{ type: String }],

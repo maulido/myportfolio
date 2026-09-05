@@ -5,6 +5,8 @@ import { Briefcase, Calendar, MapPin, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { SpotlightCard } from "./SpotlightCard";
+import { useLanguage } from "@/context/LanguageContext";
+import { getLocalizedField } from "@/lib/localization";
 
 const CareerDetailModal = dynamic(() => import("./CareerDetailModal"), { ssr: false });
 
@@ -12,15 +14,19 @@ interface CareerEntry {
     _id: string;
     type: 'work' | 'education' | 'achievement';
     title: string;
+    title_id?: string;
     organization: string;
     location?: string;
     startDate: string;
     endDate?: string;
     current: boolean;
     description: string;
+    description_id?: string;
     skills: string[];
     achievements?: string[];
+    achievements_id?: string[];
     responsibilities?: string[];
+    responsibilities_id?: string[];
 }
 
 export function Experience() {
@@ -28,6 +34,7 @@ export function Experience() {
     const [isLoading, setIsLoading] = useState(true);
     const [selectedCareer, setSelectedCareer] = useState<CareerEntry | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const { dictionary, locale } = useLanguage();
 
     const handleCareerClick = (career: CareerEntry) => {
         setSelectedCareer(career);
@@ -58,7 +65,7 @@ export function Experience() {
 
     const formatPeriod = (startDate: string, endDate: string | undefined, current: boolean) => {
         const start = new Date(startDate).getFullYear();
-        const end = current ? 'Present' : endDate ? new Date(endDate).getFullYear() : '';
+        const end = current ? dictionary.experience.present : endDate ? new Date(endDate).getFullYear() : '';
         return `${start} - ${end}`;
     };
 
@@ -96,9 +103,11 @@ export function Experience() {
                     viewport={{ once: true }}
                     className="text-center mb-16"
                 >
-                    <h2 className="text-3xl font-bold tracking-tighter md:text-4xl">Career Journey</h2>
-                    <p className="mt-4 text-muted-foreground">
-                        My professional milestones and growth over the years.
+                    <h2 className="text-3xl font-bold tracking-tighter md:text-4xl">
+                        {dictionary.experience.title}
+                    </h2>
+                    <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
+                        {dictionary.experience.subtitle}
                     </p>
                 </motion.div>
 
@@ -107,86 +116,91 @@ export function Experience() {
                     <div className="absolute left-6 md:left-1/2 -translate-x-1/2 h-full w-[2px] bg-gradient-to-b from-primary/50 via-primary/20 to-transparent" />
 
                     <div className="space-y-12 md:space-y-0">
-                        {experience.map((item, index) => (
-                            <motion.div
-                                key={item._id}
-                                initial={{ opacity: 0, y: 30 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.6, delay: index * 0.1 }}
-                                viewport={{ once: true }}
-                                className={`relative flex flex-col md:flex-row items-center justify-between mb-8 md:mb-16 ${index % 2 === 0 ? "md:flex-row-reverse" : ""
-                                    }`}
-                            >
-                                {/* Glowing Dot */}
-                                <div className="absolute left-6 md:left-1/2 -translate-x-1/2 top-6 z-10 flex items-center justify-center">
-                                    <span className="absolute h-5 w-5 rounded-full bg-primary/30 animate-ping" />
-                                    <span className="h-4 w-4 rounded-full bg-background border-4 border-primary shadow-[0_0_12px_theme(colors.primary.DEFAULT)]" />
-                                </div>
+                        {experience.map((item, index) => {
+                            const title = getLocalizedField(item, 'title', locale, item.title);
+                            const description = getLocalizedField(item, 'description', locale, item.description);
 
-                                {/* Content Card with Spotlight */}
-                                <div className="w-full md:w-[45%] pl-14 md:pl-0">
-                                    <SpotlightCard
-                                        onClick={() => handleCareerClick(item)}
-                                        className="group p-6 cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
-                                        spotlightColor="rgba(56, 189, 248, 0.12)"
-                                    >
-                                        <div className="flex flex-col gap-2 mb-3">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">{item.title}</h3>
-                                                <span className="hidden sm:inline-flex items-center text-[10px] font-bold uppercase tracking-wider text-accent bg-accent/10 px-2 py-0.5 rounded border border-accent/20 flex-shrink-0">
-                                                    {formatPeriod(item.startDate, item.endDate, item.current)}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center text-primary/85 font-medium text-sm">
-                                                <Briefcase className="mr-2 h-4 w-4 text-primary flex-shrink-0" />
-                                                <span>{item.organization}</span>
-                                            </div>
-                                        </div>
+                            return (
+                                <motion.div
+                                    key={item._id}
+                                    initial={{ opacity: 0, y: 30 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.6, delay: index * 0.1 }}
+                                    viewport={{ once: true }}
+                                    className={`relative flex flex-col md:flex-row items-center justify-between mb-8 md:mb-16 ${index % 2 === 0 ? "md:flex-row-reverse" : ""
+                                        }`}
+                                >
+                                    {/* Glowing Dot */}
+                                    <div className="absolute left-6 md:left-1/2 -translate-x-1/2 top-6 z-10 flex items-center justify-center">
+                                        <span className="absolute h-5 w-5 rounded-full bg-primary/30 animate-ping" />
+                                        <span className="h-4 w-4 rounded-full bg-background border-4 border-primary shadow-[0_0_12px_theme(colors.primary.DEFAULT)]" />
+                                    </div>
 
-                                        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                                            {item.description}
-                                        </p>
-
-                                        {item.skills && item.skills.length > 0 && (
-                                            <div className="flex flex-wrap gap-1.5 mb-4">
-                                                {item.skills.slice(0, 4).map((skill, sIdx) => (
-                                                    <span
-                                                        key={sIdx}
-                                                        className="text-[11px] px-2 py-0.5 rounded-md bg-muted/60 dark:bg-muted/40 text-muted-foreground border border-border/50 group-hover:border-primary/30 group-hover:text-primary transition-colors"
-                                                    >
-                                                        {skill}
+                                    {/* Content Card with Spotlight */}
+                                    <div className="w-full md:w-[45%] pl-14 md:pl-0">
+                                        <SpotlightCard
+                                            onClick={() => handleCareerClick(item)}
+                                            className="group p-6 cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+                                            spotlightColor="rgba(56, 189, 248, 0.12)"
+                                        >
+                                            <div className="flex flex-col gap-2 mb-3">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">{title}</h3>
+                                                    <span className="hidden sm:inline-flex items-center text-[10px] font-bold uppercase tracking-wider text-accent bg-accent/10 px-2 py-0.5 rounded border border-accent/20 flex-shrink-0">
+                                                        {formatPeriod(item.startDate, item.endDate, item.current)}
                                                     </span>
-                                                ))}
-                                                {item.skills.length > 4 && (
-                                                    <span className="text-[10px] px-1.5 py-0.5 rounded text-muted-foreground/60 self-center">
-                                                        +{item.skills.length - 4} more
-                                                    </span>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        <div className="flex items-center justify-between pt-4 border-t border-border/60 dark:border-white/5">
-                                            <div className="flex items-center text-[11px] text-muted-foreground/70">
-                                                <MapPin className="mr-1 h-3.5 w-3.5" />
-                                                <span>{item.location || 'Remote'}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex items-center text-[11px] text-muted-foreground/70 sm:hidden">
-                                                    <Calendar className="mr-1 h-3.5 w-3.5" />
-                                                    <span>{formatPeriod(item.startDate, item.endDate, item.current)}</span>
                                                 </div>
-                                                <div className="flex items-center text-xs text-primary font-semibold group-hover:gap-1.5 transition-all">
-                                                    <span>View Details</span>
-                                                    <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+                                                <div className="flex items-center text-primary/85 font-medium text-sm">
+                                                    <Briefcase className="mr-2 h-4 w-4 text-primary flex-shrink-0" />
+                                                    <span>{item.organization}</span>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </SpotlightCard>
-                                </div>
-                                {/* Spacer for the other side on desktop */}
-                                <div className="hidden md:block md:w-[45%]" />
-                            </motion.div>
-                        ))}
+
+                                            <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                                                {description}
+                                            </p>
+
+                                            {item.skills && item.skills.length > 0 && (
+                                                <div className="flex flex-wrap gap-1.5 mb-4">
+                                                    {item.skills.slice(0, 4).map((skill, sIdx) => (
+                                                        <span
+                                                            key={sIdx}
+                                                            className="text-[11px] px-2 py-0.5 rounded-md bg-muted/60 dark:bg-muted/40 text-muted-foreground border border-border/50 group-hover:border-primary/30 group-hover:text-primary transition-colors"
+                                                        >
+                                                            {skill}
+                                                        </span>
+                                                    ))}
+                                                    {item.skills.length > 4 && (
+                                                        <span className="text-[10px] px-1.5 py-0.5 rounded text-muted-foreground/60 self-center">
+                                                            +{item.skills.length - 4} more
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            <div className="flex items-center justify-between pt-4 border-t border-border/60 dark:border-white/5">
+                                                <div className="flex items-center text-[11px] text-muted-foreground/70">
+                                                    <MapPin className="mr-1 h-3.5 w-3.5" />
+                                                    <span>{item.location || 'Remote'}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex items-center text-[11px] text-muted-foreground/70 sm:hidden">
+                                                        <Calendar className="mr-1 h-3.5 w-3.5" />
+                                                        <span>{formatPeriod(item.startDate, item.endDate, item.current)}</span>
+                                                    </div>
+                                                    <div className="flex items-center text-xs text-primary font-semibold group-hover:gap-1.5 transition-all">
+                                                        <span>{dictionary.experience.viewDetails}</span>
+                                                        <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </SpotlightCard>
+                                    </div>
+                                    {/* Spacer for the other side on desktop */}
+                                    <div className="hidden md:block md:w-[45%]" />
+                                </motion.div>
+                            );
+                        })}
                     </div>
                 </div>
             </div>

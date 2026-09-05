@@ -5,10 +5,14 @@ import { Download, ShieldCheck, Bot, MapPin, Mail, Phone, Github, Linkedin, Twit
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useLanguage } from "@/context/LanguageContext";
+import { getLocalizedField } from "@/lib/localization";
 
 interface AboutMeContent {
     paragraph1: string;
+    paragraph1_id?: string;
     paragraph2: string;
+    paragraph2_id?: string;
     profilePhotoUrl?: string;
     name?: string;
     title?: string;
@@ -39,6 +43,7 @@ interface EducationEntry {
 }
 
 export function About() {
+    const { t, locale } = useLanguage();
     const [aboutMe, setAboutMe] = useState<AboutMeContent>({
         paragraph1: '',
         paragraph2: ''
@@ -83,25 +88,25 @@ export function About() {
         {
             icon: TrendingUp,
             value: aboutMe.stats?.yearsExperience || 0,
-            label: "Years Experience",
+            label: t('about.stats.yearsExperience'),
             color: "text-blue-500"
         },
         {
             icon: Briefcase,
             value: aboutMe.stats?.projectsCompleted || 0,
-            label: "Projects Completed",
+            label: t('about.stats.projectsCompleted'),
             color: "text-green-500"
         },
         {
             icon: Code,
             value: aboutMe.stats?.technologiesMastered || 0,
-            label: "Technologies",
+            label: t('about.stats.technologies'),
             color: "text-purple-500"
         },
         {
             icon: Award,
             value: aboutMe.stats?.certificationsEarned || 0,
-            label: "Certifications",
+            label: t('about.stats.certifications'),
             color: "text-orange-500"
         }
     ];
@@ -145,7 +150,7 @@ export function About() {
                                             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
                                             <div className="flex flex-col items-center justify-center text-primary/60 h-full w-full">
                                                 <Bot className="h-20 w-20 md:h-32 md:w-32 mb-4 animate-pulse" />
-                                                <span className="text-sm font-bold tracking-widest uppercase">Identity Protected</span>
+                                                <span className="text-sm font-bold tracking-widest uppercase">{locale === 'id' ? "Identitas Terlindungi" : "Identity Protected"}</span>
                                             </div>
                                         </>
                                     )}
@@ -164,9 +169,11 @@ export function About() {
                     >
                         <div>
                             <h2 className="text-3xl font-bold tracking-tighter md:text-5xl mb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
-                                About Me
+                                {locale === 'id' ? "Tentang Saya" : "About Me"}
                             </h2>
-                            <p className="text-sm md:text-base font-semibold text-foreground/90 mb-4">{homeAboutHeadline}</p>
+                            <p className="text-sm md:text-base font-semibold text-foreground/90 mb-4">
+                                {homeAboutHeadline === "Architecting Scalable Code & High-Performance Networks" ? t('about.homeHeadline') : homeAboutHeadline}
+                            </p>
                             <div className="h-1.5 w-20 bg-primary rounded-full mb-6"></div>
 
                             {/* Name & Title */}
@@ -222,10 +229,10 @@ export function About() {
                         ) : (
                             <>
                                 <p className="text-muted-foreground text-lg leading-relaxed">
-                                    {aboutMe.paragraph1}
+                                    {getLocalizedField(aboutMe, 'paragraph1', locale, t('about.bioP1'))}
                                 </p>
                                 <p className="text-muted-foreground text-lg leading-relaxed">
-                                    {aboutMe.paragraph2}
+                                    {getLocalizedField(aboutMe, 'paragraph2', locale, t('about.bioP2'))}
                                 </p>
                             </>
                         )}
@@ -256,7 +263,7 @@ export function About() {
                                 href="/about"
                                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-xs md:text-sm font-bold shadow-md shadow-primary/20 hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-95 group"
                             >
-                                Read Full Story & Engineering Philosophy
+                                {locale === 'id' ? "Baca Kisah Lengkap & Filosofi Rekayasa" : "Read Full Story & Engineering Philosophy"}
                                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                             </Link>
                         </div>
@@ -286,13 +293,13 @@ export function About() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
                                 <div className="p-5 rounded-2xl bg-card/90 dark:bg-card/40 border border-border/80 dark:border-primary/20 shadow-xs">
                                     <h3 className="font-bold text-sm mb-3 text-primary flex items-center gap-2">
-                                        <ShieldCheck className="h-4 w-4" /> Education
+                                        <ShieldCheck className="h-4 w-4" /> {t('about.education')}
                                     </h3>
                                     <ul className="space-y-2 text-xs text-muted-foreground">
                                         {education.length > 0 ? (
                                             education.map((edu) => {
                                                 const startYear = new Date(edu.startDate).getFullYear();
-                                                const endYear = edu.endDate ? new Date(edu.endDate).getFullYear() : 'Present';
+                                                const endYear = edu.endDate ? new Date(edu.endDate).getFullYear() : (locale === 'id' ? 'Sekarang' : 'Present');
                                                 return (
                                                     <li key={edu._id} className="flex items-start gap-2">
                                                         <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0"></div>
@@ -304,7 +311,7 @@ export function About() {
                                         ) : (
                                             <li className="flex items-start gap-2">
                                                 <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0"></div>
-                                                <span>No education entries yet</span>
+                                                <span>{locale === 'id' ? "Belum ada riwayat pendidikan" : "No education entries yet"}</span>
                                             </li>
                                         )}
                                     </ul>
@@ -317,8 +324,12 @@ export function About() {
                                     <div className="p-3 rounded-2xl bg-primary/10 text-primary mb-2.5 group-hover:scale-110 transition-transform">
                                         <Download className="h-5 w-5" />
                                     </div>
-                                    <h3 className="font-bold text-xs sm:text-sm text-foreground group-hover:text-primary transition-colors">Download My CV</h3>
-                                    <p className="text-[11px] text-muted-foreground mt-0.5">Instant PDF via email verification</p>
+                                    <h3 className="font-bold text-xs sm:text-sm text-foreground group-hover:text-primary transition-colors">
+                                        {locale === 'id' ? "Unduh CV Saya" : "Download My CV"}
+                                    </h3>
+                                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                                        {locale === 'id' ? "PDF Instan melalui verifikasi email" : "Instant PDF via email verification"}
+                                    </p>
                                 </div>
                             </div>
                         )}
