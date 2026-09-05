@@ -71,6 +71,9 @@ export async function PUT(req: Request) {
             'aboutMe.paragraph2': body.paragraph2
         };
 
+        if (body.paragraph1_id !== undefined) updateFields['aboutMe.paragraph1_id'] = body.paragraph1_id;
+        if (body.paragraph2_id !== undefined) updateFields['aboutMe.paragraph2_id'] = body.paragraph2_id;
+
         // Add optional fields if provided
         if (body.profilePhotoUrl !== undefined) updateFields['aboutMe.profilePhotoUrl'] = body.profilePhotoUrl;
         if (body.name !== undefined) updateFields['aboutMe.name'] = body.name;

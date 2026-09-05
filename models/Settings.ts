@@ -6,7 +6,9 @@ export interface ISettings extends Document {
     value: any;
     aboutMe?: {
         paragraph1: string;
+        paragraph1_id?: string;
         paragraph2: string;
+        paragraph2_id?: string;
         profilePhotoUrl?: string;
         name?: string;
         title?: string;
@@ -34,7 +36,9 @@ const SettingsSchema: Schema = new Schema({
     value: { type: Schema.Types.Mixed, required: true },
     aboutMe: {
         paragraph1: { type: String, default: '' },
+        paragraph1_id: { type: String, default: '' },
         paragraph2: { type: String, default: '' },
+        paragraph2_id: { type: String, default: '' },
         profilePhotoUrl: { type: String, default: '' },
         name: { type: String, default: '' },
         title: { type: String, default: '' },

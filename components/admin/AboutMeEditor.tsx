@@ -4,12 +4,14 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Edit, Save, X, User, Briefcase, MapPin, Mail, Phone, Github, Linkedin, Twitter, Globe, Instagram, FileText, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
-// import { useRouter } from "next/navigation";
 import { UploadButton } from "@/lib/uploadthing";
+import { AdminLangTabs } from "@/components/AdminLangTabs";
 
 export interface AboutMeData {
     paragraph1: string;
+    paragraph1_id?: string;
     paragraph2: string;
+    paragraph2_id?: string;
     profilePhotoUrl?: string;
     name?: string;
     title?: string;
@@ -39,9 +41,12 @@ interface AboutMeEditorProps {
 export default function AboutMeEditor({ initialData, onSave }: AboutMeEditorProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [langTab, setLangTab] = useState<"en" | "id">("en");
     const [editData, setEditData] = useState<AboutMeData>(initialData || {
         paragraph1: '',
+        paragraph1_id: '',
         paragraph2: '',
+        paragraph2_id: '',
         profilePhotoUrl: '',
         name: '',
         title: '',
@@ -270,32 +275,71 @@ export default function AboutMeEditor({ initialData, onSave }: AboutMeEditorProp
 
                     {/* About Me Paragraphs */}
                     <div className="space-y-4">
-                        <div>
-                            <label className="text-sm font-medium flex items-center gap-2 mb-2">
-                                <FileText className="h-4 w-4" />
-                                About Me - Paragraph 1 *
-                            </label>
-                            <textarea
-                                value={editData.paragraph1}
-                                onChange={(e) => setEditData({ ...editData, paragraph1: e.target.value })}
-                                rows={4}
-                                className="w-full rounded-lg border border-input/50 bg-background/50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                                placeholder="First paragraph..."
-                            />
-                        </div>
-                        <div>
-                            <label className="text-sm font-medium flex items-center gap-2 mb-2">
-                                <FileText className="h-4 w-4" />
-                                About Me - Paragraph 2 *
-                            </label>
-                            <textarea
-                                value={editData.paragraph2}
-                                onChange={(e) => setEditData({ ...editData, paragraph2: e.target.value })}
-                                rows={4}
-                                className="w-full rounded-lg border border-input/50 bg-background/50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-                                placeholder="Second paragraph..."
-                            />
-                        </div>
+                        <AdminLangTabs
+                            activeTab={langTab}
+                            onChange={setLangTab}
+                            label="About Me Biographies"
+                        />
+
+                        {langTab === "en" ? (
+                            <>
+                                <div>
+                                    <label className="text-sm font-medium flex items-center gap-2 mb-2">
+                                        <FileText className="h-4 w-4 text-primary" />
+                                        About Me - Paragraph 1 (English) *
+                                    </label>
+                                    <textarea
+                                        value={editData.paragraph1}
+                                        onChange={(e) => setEditData({ ...editData, paragraph1: e.target.value })}
+                                        rows={4}
+                                        className="w-full rounded-lg border border-input/50 bg-background/50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                        placeholder="First paragraph in English..."
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium flex items-center gap-2 mb-2">
+                                        <FileText className="h-4 w-4 text-primary" />
+                                        About Me - Paragraph 2 (English) *
+                                    </label>
+                                    <textarea
+                                        value={editData.paragraph2}
+                                        onChange={(e) => setEditData({ ...editData, paragraph2: e.target.value })}
+                                        rows={4}
+                                        className="w-full rounded-lg border border-input/50 bg-background/50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                        placeholder="Second paragraph in English..."
+                                    />
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div>
+                                    <label className="text-sm font-medium flex items-center gap-2 mb-2">
+                                        <FileText className="h-4 w-4 text-primary" />
+                                        About Me - Paragraf 1 (Bahasa Indonesia - Opsional)
+                                    </label>
+                                    <textarea
+                                        value={editData.paragraph1_id || ""}
+                                        onChange={(e) => setEditData({ ...editData, paragraph1_id: e.target.value })}
+                                        rows={4}
+                                        className="w-full rounded-lg border border-input/50 bg-background/50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                        placeholder="Paragraf pertama dalam Bahasa Indonesia (fallback ke versi English jika kosong)..."
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium flex items-center gap-2 mb-2">
+                                        <FileText className="h-4 w-4 text-primary" />
+                                        About Me - Paragraf 2 (Bahasa Indonesia - Opsional)
+                                    </label>
+                                    <textarea
+                                        value={editData.paragraph2_id || ""}
+                                        onChange={(e) => setEditData({ ...editData, paragraph2_id: e.target.value })}
+                                        rows={4}
+                                        className="w-full rounded-lg border border-input/50 bg-background/50 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                                        placeholder="Paragraf kedua dalam Bahasa Indonesia (fallback ke versi English jika kosong)..."
+                                    />
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     {/* Social Links */}
@@ -473,6 +517,13 @@ export default function AboutMeEditor({ initialData, onSave }: AboutMeEditorProp
                     <div className="space-y-4 text-sm text-muted-foreground">
                         <p className="leading-relaxed">{initialData?.paragraph1 || 'No content yet'}</p>
                         <p className="leading-relaxed">{initialData?.paragraph2 || ''}</p>
+                        {initialData?.paragraph1_id && (
+                            <div className="pt-3 border-t border-border/40 text-xs italic text-muted-foreground/80 space-y-1.5">
+                                <span className="font-semibold text-primary block not-italic">[Versi Indonesia]</span>
+                                <p>{initialData.paragraph1_id}</p>
+                                {initialData.paragraph2_id && <p>{initialData.paragraph2_id}</p>}
+                            </div>
+                        )}
                     </div>
 
                     {(editData.socialLinks?.github || editData.socialLinks?.linkedin || editData.socialLinks?.twitter) && (
