@@ -250,10 +250,16 @@ export default function AdminSettingsPage() {
 
     useEffect(() => {
         checkTabsScroll();
+        const t1 = setTimeout(checkTabsScroll, 100);
+        const t2 = setTimeout(checkTabsScroll, 400);
         const handleResize = () => checkTabsScroll();
         window.addEventListener("resize", handleResize);
 
-        return () => window.removeEventListener("resize", handleResize);
+        return () => {
+            clearTimeout(t1);
+            clearTimeout(t2);
+            window.removeEventListener("resize", handleResize);
+        };
     }, [checkTabsScroll, activeTab]);
 
     const scrollTabs = (direction: "left" | "right") => {
@@ -340,40 +346,25 @@ export default function AdminSettingsPage() {
                     ))}
                 </div>
 
-                {/* Tabs Navigation with Sleek Horizontal Scrolling */}
-                <div className="relative group/tabs">
-                    {/* Left Scroll Button */}
-                    {canScrollLeft && (
-                        <button
-                            type="button"
-                            onClick={() => scrollTabs("left")}
-                            className="absolute left-1 top-1/2 -translate-y-1/2 z-20 h-7 w-7 rounded-full bg-background/95 border border-border shadow-md flex items-center justify-center text-foreground hover:bg-card hover:scale-105 transition-all cursor-pointer"
-                            aria-label="Scroll tabs left"
-                        >
-                            <ChevronLeft className="h-3.5 w-3.5" />
-                        </button>
-                    )}
+                {/* Tabs Navigation with Dedicated Arrow Controls */}
+                <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-card/60 backdrop-blur-md border border-border/80 shadow-xs">
+                    {/* Left Arrow Button */}
+                    <button
+                        type="button"
+                        onClick={() => scrollTabs("left")}
+                        disabled={!canScrollLeft}
+                        className={`shrink-0 h-9 w-9 rounded-xl border flex items-center justify-center transition-all cursor-pointer ${
+                            canScrollLeft
+                                ? "bg-background hover:bg-primary hover:text-white hover:border-primary border-border text-foreground shadow-xs active:scale-95"
+                                : "bg-muted/30 border-border/40 text-muted-foreground/30 cursor-not-allowed opacity-40"
+                        }`}
+                        title="Geser tab ke kiri"
+                        aria-label="Scroll left"
+                    >
+                        <ChevronLeft className="h-4 w-4" />
+                    </button>
 
-                    {/* Right Scroll Button */}
-                    {canScrollRight && (
-                        <button
-                            type="button"
-                            onClick={() => scrollTabs("right")}
-                            className="absolute right-1 top-1/2 -translate-y-1/2 z-20 h-7 w-7 rounded-full bg-background/95 border border-border shadow-md flex items-center justify-center text-foreground hover:bg-card hover:scale-105 transition-all cursor-pointer"
-                            aria-label="Scroll tabs right"
-                        >
-                            <ChevronRight className="h-3.5 w-3.5" />
-                        </button>
-                    )}
-
-                    {/* Edge Fade Gradients to hint scrollability */}
-                    {canScrollLeft && (
-                        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10" />
-                    )}
-                    {canScrollRight && (
-                        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10" />
-                    )}
-
+                    {/* Scrollable Tabs Track */}
                     <div
                         ref={tabsRef}
                         onScroll={checkTabsScroll}
@@ -383,7 +374,7 @@ export default function AdminSettingsPage() {
                                 checkTabsScroll();
                             }
                         }}
-                        className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-border/70 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden scroll-smooth px-1"
+                        className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden scroll-smooth py-0.5 px-1"
                     >
                         {tabs.map((tab) => {
                             const Icon = tab.icon;
@@ -396,7 +387,7 @@ export default function AdminSettingsPage() {
                                     className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all shrink-0 cursor-pointer ${
                                         active
                                             ? "bg-primary text-white shadow-md shadow-primary/25 scale-[1.02]"
-                                            : "bg-card/70 border border-border/70 text-muted-foreground hover:text-foreground hover:bg-card"
+                                            : "bg-background/80 border border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted"
                                     }`}
                                 >
                                     <Icon className="h-3.5 w-3.5" />
@@ -405,6 +396,22 @@ export default function AdminSettingsPage() {
                             );
                         })}
                     </div>
+
+                    {/* Right Arrow Button */}
+                    <button
+                        type="button"
+                        onClick={() => scrollTabs("right")}
+                        disabled={!canScrollRight}
+                        className={`shrink-0 h-9 w-9 rounded-xl border flex items-center justify-center transition-all cursor-pointer ${
+                            canScrollRight
+                                ? "bg-background hover:bg-primary hover:text-white hover:border-primary border-primary/40 text-primary shadow-xs active:scale-95"
+                                : "bg-muted/30 border-border/40 text-muted-foreground/30 cursor-not-allowed opacity-40"
+                        }`}
+                        title="Geser tab ke kanan"
+                        aria-label="Scroll right"
+                    >
+                        <ChevronRight className="h-4 w-4" />
+                    </button>
                 </div>
 
                 {/* Tab Content Panels */}
