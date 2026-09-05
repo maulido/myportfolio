@@ -5,17 +5,23 @@ import { motion } from "framer-motion";
 import { Mail, MapPin, Phone, Send, Copy, Check, Radio, Loader2, CheckCircle2 } from "lucide-react";
 import toast, { Toaster } from 'react-hot-toast';
 import { useSettings } from "@/lib/useSettings";
+import { useLanguage } from "@/context/LanguageContext";
 
 export function Contact({ settings: initialSettings }: { settings?: Record<string, string | undefined> }) {
     const { settings: clientSettings } = useSettings();
     const settings = { ...(initialSettings || {}), ...(clientSettings || {}) };
+    const { dictionary, locale } = useLanguage();
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-    const title = settings?.contactSectionTitle || "Let's Build Something Exceptional Together";
-    const subtitle = settings?.contactSectionSubtitle || "Have an engineering challenge or project inquiry? I'm always open to discussing modern network infrastructure and scalable full-stack web applications.";
+    const title = locale === 'id' 
+        ? (settings?.contactSectionTitle_id || dictionary.contact.heroTitle)
+        : (settings?.contactSectionTitle || dictionary.contact.heroTitle);
+    const subtitle = locale === 'id'
+        ? (settings?.contactSectionSubtitle_id || dictionary.contact.heroSubtitle)
+        : (settings?.contactSectionSubtitle || dictionary.contact.heroSubtitle);
     
     const rawEmail = settings?.contactEmail || "email@example.com";
     const contactEmail = rawEmail.replace(/^mailto:/i, "");
@@ -27,7 +33,7 @@ export function Contact({ settings: initialSettings }: { settings?: Record<strin
         e.stopPropagation();
         navigator.clipboard.writeText(text);
         setCopiedKey(label);
-        toast.success(`${label} copied to clipboard!`, {
+        toast.success(`${label} ${dictionary.contact.copiedToast}`, {
             duration: 2500,
             style: {
                 background: '#0f172a',
@@ -92,7 +98,7 @@ export function Contact({ settings: initialSettings }: { settings?: Record<strin
                         <div>
                             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold mb-4">
                                 <Radio className="h-3.5 w-3.5 animate-pulse text-emerald-500" />
-                                <span>Direct Communication Channel</span>
+                                <span>{dictionary.contact.badge}</span>
                             </div>
 
                             <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl mb-4">
@@ -114,9 +120,9 @@ export function Contact({ settings: initialSettings }: { settings?: Record<strin
 
                         <div className="space-y-3.5">
                             {[
-                                { icon: <Mail className="h-5 w-5" />, label: "Email", value: contactEmail, href: `mailto:${contactEmail}`, canCopy: true },
-                                { icon: <Phone className="h-5 w-5" />, label: "Phone & WhatsApp", value: rawPhone, href: `tel:${rawPhone.replace(/[^0-9+]/g, '')}`, canCopy: true },
-                                { icon: <MapPin className="h-5 w-5" />, label: "Base Location", value: contactLocation, href: "#", canCopy: false }
+                                { icon: <Mail className="h-5 w-5" />, label: dictionary.contact.email, value: contactEmail, href: `mailto:${contactEmail}`, canCopy: true },
+                                { icon: <Phone className="h-5 w-5" />, label: dictionary.contact.phone, value: rawPhone, href: `tel:${rawPhone.replace(/[^0-9+]/g, '')}`, canCopy: true },
+                                { icon: <MapPin className="h-5 w-5" />, label: dictionary.contact.location, value: contactLocation, href: "#", canCopy: false }
                             ].map((item, i) => (
                                 <motion.div
                                     key={i}
@@ -163,34 +169,34 @@ export function Contact({ settings: initialSettings }: { settings?: Record<strin
                                 <div className="h-12 w-12 mx-auto rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
                                     <CheckCircle2 className="h-6 w-6" />
                                 </div>
-                                <h3 className="text-xl font-bold">Message Received</h3>
-                                <p className="text-sm text-muted-foreground">Thank you for getting in touch. I will review your message promptly.</p>
+                                <h3 className="text-xl font-bold">{locale === 'id' ? "Pesan Diterima" : "Message Received"}</h3>
+                                <p className="text-sm text-muted-foreground">{dictionary.contact.successMessage}</p>
                                 <button
                                     onClick={() => setIsSuccess(false)}
                                     className="px-5 py-2 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors"
                                 >
-                                    Send Another
+                                    {locale === 'id' ? "Kirim Pesan Lain" : "Send Another"}
                                 </button>
                             </div>
                         ) : (
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div className="space-y-1.5">
-                                        <label htmlFor="first-name" className="text-xs font-semibold text-muted-foreground">First Name</label>
-                                        <input id="first-name" name="firstName" className="flex h-11 w-full rounded-xl border border-input bg-background/60 px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200" required placeholder="First name" />
+                                        <label htmlFor="first-name" className="text-xs font-semibold text-muted-foreground">{dictionary.contact.firstName}</label>
+                                        <input id="first-name" name="firstName" className="flex h-11 w-full rounded-xl border border-input bg-background/60 px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200" required placeholder={dictionary.contact.firstNamePlaceholder} />
                                     </div>
                                     <div className="space-y-1.5">
-                                        <label htmlFor="last-name" className="text-xs font-semibold text-muted-foreground">Last Name</label>
-                                        <input id="last-name" name="lastName" className="flex h-11 w-full rounded-xl border border-input bg-background/60 px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200" placeholder="Last name" />
+                                        <label htmlFor="last-name" className="text-xs font-semibold text-muted-foreground">{dictionary.contact.lastName}</label>
+                                        <input id="last-name" name="lastName" className="flex h-11 w-full rounded-xl border border-input bg-background/60 px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200" placeholder={dictionary.contact.lastNamePlaceholder} />
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label htmlFor="email" className="text-xs font-semibold text-muted-foreground">Email</label>
-                                    <input id="email" name="email" type="email" className="flex h-11 w-full rounded-xl border border-input bg-background/60 px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200" required placeholder="name@example.com" />
+                                    <label htmlFor="email" className="text-xs font-semibold text-muted-foreground">{dictionary.contact.emailLabel}</label>
+                                    <input id="email" name="email" type="email" className="flex h-11 w-full rounded-xl border border-input bg-background/60 px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200" required placeholder={dictionary.contact.emailPlaceholder} />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label htmlFor="message" className="text-xs font-semibold text-muted-foreground">Message</label>
-                                    <textarea id="message" name="message" className="flex min-h-[120px] w-full rounded-xl border border-input bg-background/60 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200 resize-y" required placeholder="Describe your project or inquiry..." />
+                                    <label htmlFor="message" className="text-xs font-semibold text-muted-foreground">{dictionary.contact.messageLabel}</label>
+                                    <textarea id="message" name="message" className="flex min-h-[120px] w-full rounded-xl border border-input bg-background/60 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200 resize-y" required placeholder={dictionary.contact.messagePlaceholder} />
                                 </div>
                                 <button
                                     type="submit"
@@ -200,11 +206,11 @@ export function Contact({ settings: initialSettings }: { settings?: Record<strin
                                     {isSubmitting ? (
                                         <>
                                             <Loader2 className="h-4 w-4 animate-spin" />
-                                            <span>Sending...</span>
+                                            <span>{dictionary.contact.sending}</span>
                                         </>
                                     ) : (
                                         <>
-                                            <span>Send Message</span>
+                                            <span>{dictionary.contact.sendButton}</span>
                                             <Send className="h-4 w-4" />
                                         </>
                                     )}

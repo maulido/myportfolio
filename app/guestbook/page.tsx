@@ -27,6 +27,7 @@ import {
     PenTool
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface GuestbookEntry {
     _id: string;
@@ -46,12 +47,20 @@ interface Stats {
     totalLikes: number;
 }
 
-const QUICK_GREETINGS = [
+const QUICK_GREETINGS_EN = [
     "Inspiring portfolio & engineering projects!",
     "Loved the network lab and gear setup.",
     "Great blog articles and deep dives.",
     "Clean, ultra-smooth and responsive UI.",
     "Greetings from the tech community!"
+];
+
+const QUICK_GREETINGS_ID = [
+    "Portofolio dan proyek rekayasa yang sangat menginspirasi!",
+    "Suka sekali dengan setup lab jaringan dan perangkatnya.",
+    "Artikel blog dan ulasan teknisnya sangat mendalam.",
+    "UI sangat bersih, mulus, dan responsif.",
+    "Salam hangat dari komunitas teknologi!"
 ];
 
 const AVATAR_GRADIENTS = [
@@ -81,6 +90,9 @@ function getInitials(name: string) {
 }
 
 export default function GuestbookPage() {
+    const { dictionary, locale } = useLanguage();
+    const quickGreetings = locale === 'id' ? QUICK_GREETINGS_ID : QUICK_GREETINGS_EN;
+
     const [entries, setEntries] = useState<GuestbookEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -276,7 +288,7 @@ export default function GuestbookPage() {
                             className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 shadow-xs"
                         >
                             <Sparkles className="h-3.5 w-3.5" />
-                            <span>Community & Visitor Signatures</span>
+                            <span>{dictionary.guestbook.badge}</span>
                         </motion.div>
 
                         <motion.h1
@@ -285,7 +297,7 @@ export default function GuestbookPage() {
                             transition={{ duration: 0.4, delay: 0.1 }}
                             className="text-4xl sm:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground to-primary"
                         >
-                            Guestbook & Wall of Notes
+                            {dictionary.guestbook.title}
                         </motion.h1>
 
                         <motion.p
@@ -294,7 +306,7 @@ export default function GuestbookPage() {
                             transition={{ duration: 0.4, delay: 0.15 }}
                             className="text-base sm:text-lg text-muted-foreground leading-relaxed"
                         >
-                            Welcome to my digital corner! Leave a message, share thoughts on my engineering projects, feedback on the network lab, or just say hello from around the globe.
+                            {dictionary.guestbook.subtitle}
                         </motion.p>
 
                         {/* Live Community Counters */}
@@ -310,7 +322,7 @@ export default function GuestbookPage() {
                                 </div>
                                 <div className="text-[11px] text-muted-foreground font-medium flex items-center justify-center gap-1 mt-0.5">
                                     <MessageSquare className="h-3 w-3" />
-                                    <span>Signatures</span>
+                                    <span>{dictionary.guestbook.signatures}</span>
                                 </div>
                             </div>
                             <div className="p-3 rounded-2xl bg-card/80 dark:bg-white/[0.03] border border-border/80 dark:border-white/10 shadow-xs">
@@ -319,7 +331,7 @@ export default function GuestbookPage() {
                                 </div>
                                 <div className="text-[11px] text-muted-foreground font-medium flex items-center justify-center gap-1 mt-0.5">
                                     <Pin className="h-3 w-3" />
-                                    <span>Featured</span>
+                                    <span>{dictionary.guestbook.pinnedEntries}</span>
                                 </div>
                             </div>
                             <div className="p-3 rounded-2xl bg-card/80 dark:bg-white/[0.03] border border-border/80 dark:border-white/10 shadow-xs">
@@ -328,7 +340,7 @@ export default function GuestbookPage() {
                                 </div>
                                 <div className="text-[11px] text-muted-foreground font-medium flex items-center justify-center gap-1 mt-0.5">
                                     <Heart className="h-3 w-3" />
-                                    <span>Reactions</span>
+                                    <span>{dictionary.guestbook.totalEndorsements}</span>
                                 </div>
                             </div>
                         </motion.div>
@@ -347,8 +359,8 @@ export default function GuestbookPage() {
                                     <PenTool className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-bold tracking-tight">Sign the Guestbook</h2>
-                                    <p className="text-xs text-muted-foreground">Signatures appear publicly after a quick automated & spam check.</p>
+                                    <h2 className="text-xl font-bold tracking-tight">{dictionary.guestbook.signGuestbook}</h2>
+                                    <p className="text-xs text-muted-foreground">{dictionary.guestbook.signGuestbookDesc}</p>
                                 </div>
                             </div>
                         </div>
@@ -362,15 +374,15 @@ export default function GuestbookPage() {
                                 <div className="h-12 w-12 rounded-full bg-primary/20 text-primary flex items-center justify-center mx-auto">
                                     <CheckCircle2 className="h-6 w-6" />
                                 </div>
-                                <h3 className="text-lg font-bold text-foreground">Signature Received!</h3>
+                                <h3 className="text-lg font-bold text-foreground">{locale === 'id' ? "Tanda Tangan Diterima!" : "Signature Received!"}</h3>
                                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                                    Thank you for leaving a note! It will be reviewed and published to the wall shortly.
+                                    {dictionary.guestbook.moderationNote}
                                 </p>
                                 <button
                                     onClick={() => setSubmittedSuccess(false)}
                                     className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-all shadow-xs"
                                 >
-                                    Sign Another Message
+                                    {locale === 'id' ? "Kirim Catatan Lain" : "Sign Another Message"}
                                 </button>
                             </motion.div>
                         ) : (
@@ -379,7 +391,7 @@ export default function GuestbookPage() {
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                                             <User className="h-3.5 w-3.5 text-primary" />
-                                            Your Name <span className="text-primary">*</span>
+                                            {dictionary.guestbook.nameLabel} <span className="text-primary">*</span>
                                         </label>
                                         <input
                                             required
@@ -388,14 +400,14 @@ export default function GuestbookPage() {
                                             onChange={handleChange}
                                             maxLength={100}
                                             className="w-full h-11 px-3.5 rounded-xl border border-input/80 bg-background/80 dark:bg-white/[0.04] text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                                            placeholder="e.g. Maya Lin"
+                                            placeholder={dictionary.guestbook.namePlaceholder}
                                         />
                                     </div>
 
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                                             <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-                                            Website / GitHub / LinkedIn <span className="text-muted-foreground text-[10px] font-normal">(optional)</span>
+                                            {dictionary.guestbook.websiteLabel}
                                         </label>
                                         <input
                                             name="website"
@@ -403,7 +415,7 @@ export default function GuestbookPage() {
                                             value={formData.website}
                                             onChange={handleChange}
                                             className="w-full h-11 px-3.5 rounded-xl border border-input/80 bg-background/80 dark:bg-white/[0.04] text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
-                                            placeholder="https://github.com/yourhandle"
+                                            placeholder={dictionary.guestbook.websitePlaceholder}
                                         />
                                     </div>
                                 </div>
@@ -411,7 +423,7 @@ export default function GuestbookPage() {
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                                         <span>Email</span>
-                                        <span className="text-muted-foreground text-[10px] font-normal">(optional, stays private, never published)</span>
+                                        <span className="text-muted-foreground text-[10px] font-normal">{locale === 'id' ? "(opsional, tetap privat)" : "(optional, stays private, never published)"}</span>
                                     </label>
                                     <input
                                         name="email"
@@ -426,10 +438,10 @@ export default function GuestbookPage() {
                                 {/* Quick Greeting Pills */}
                                 <div className="pt-1">
                                     <span className="text-[11px] font-medium text-muted-foreground block mb-2">
-                                        Need ideas? Tap a greeting to append:
+                                        {dictionary.guestbook.quickPrompts}
                                     </span>
                                     <div className="flex flex-wrap gap-1.5">
-                                        {QUICK_GREETINGS.map((pill, i) => (
+                                        {quickGreetings.map((pill, i) => (
                                             <button
                                                 key={i}
                                                 type="button"
@@ -446,7 +458,7 @@ export default function GuestbookPage() {
                                     <div className="flex items-center justify-between">
                                         <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                                             <MessageSquare className="h-3.5 w-3.5 text-primary" />
-                                            Your Message <span className="text-primary">*</span>
+                                            {dictionary.guestbook.messageLabel} <span className="text-primary">*</span>
                                         </label>
                                         <span className={`text-[11px] font-mono ${charCount > maxChars * 0.9 ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
                                             {charCount} / {maxChars}
@@ -459,13 +471,13 @@ export default function GuestbookPage() {
                                         onChange={handleChange}
                                         rows={4}
                                         className="w-full p-3.5 rounded-xl border border-input/80 bg-background/80 dark:bg-white/[0.04] text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-y min-h-[110px]"
-                                        placeholder="Write something memorable, share feedback, or leave a warm greeting..."
+                                        placeholder={dictionary.guestbook.messagePlaceholder}
                                     />
                                 </div>
 
                                 <div className="flex items-center justify-between pt-2">
                                     <span className="text-[11px] text-muted-foreground hidden sm:inline">
-                                        Protected with rate limiting and anti-spam verification.
+                                        {dictionary.guestbook.moderationNote}
                                     </span>
                                     <button
                                         type="submit"
@@ -475,12 +487,12 @@ export default function GuestbookPage() {
                                         {submitting ? (
                                             <>
                                                 <RefreshCw className="h-4 w-4 animate-spin" />
-                                                <span>Submitting...</span>
+                                                <span>{dictionary.guestbook.submitting}</span>
                                             </>
                                         ) : (
                                             <>
                                                 <Send className="h-4 w-4" />
-                                                <span>Sign Wall</span>
+                                                <span>{dictionary.guestbook.postSignature}</span>
                                             </>
                                         )}
                                     </button>
@@ -501,7 +513,7 @@ export default function GuestbookPage() {
                                     setSearchQuery(e.target.value);
                                     setPage(1);
                                 }}
-                                placeholder="Search signatures or names..."
+                                placeholder={dictionary.guestbook.searchPlaceholder}
                                 className="w-full h-10 pl-9 pr-8 rounded-full border border-border/80 dark:border-white/10 bg-card/60 dark:bg-white/[0.03] text-xs focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
                             />
                             {searchQuery && (
@@ -531,7 +543,7 @@ export default function GuestbookPage() {
                                 }`}
                             >
                                 <Clock className="h-3.5 w-3.5" />
-                                <span>Newest</span>
+                                <span>{locale === 'id' ? "Terbaru" : "Newest"}</span>
                             </button>
                             <button
                                 onClick={() => {
@@ -545,7 +557,7 @@ export default function GuestbookPage() {
                                 }`}
                             >
                                 <Flame className="h-3.5 w-3.5 text-amber-300" />
-                                <span>Most Liked</span>
+                                <span>{locale === 'id' ? "Paling Disukai" : "Most Liked"}</span>
                             </button>
                             <button
                                 onClick={() => {
@@ -558,7 +570,7 @@ export default function GuestbookPage() {
                                         : "text-muted-foreground hover:text-foreground"
                                 }`}
                             >
-                                <span>Oldest</span>
+                                <span>{locale === 'id' ? "Terlama" : "Oldest"}</span>
                             </button>
                         </div>
                     </div>
@@ -568,7 +580,7 @@ export default function GuestbookPage() {
                         {loading ? (
                             <div className="py-20 flex flex-col items-center justify-center gap-3 text-muted-foreground">
                                 <div className="h-10 w-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                                <span className="text-xs font-medium">Loading signatures...</span>
+                                <span className="text-xs font-medium">{locale === 'id' ? "Memuat tanda tangan..." : "Loading signatures..."}</span>
                             </div>
                         ) : entries.length > 0 ? (
                             <div className="grid gap-4">
@@ -592,7 +604,7 @@ export default function GuestbookPage() {
                                                 {entry.pinned && (
                                                     <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 mb-3 shadow-2xs">
                                                         <Pin className="h-3 w-3" />
-                                                        <span>Pinned Signature</span>
+                                                        <span>{dictionary.guestbook.pinnedBadge}</span>
                                                     </div>
                                                 )}
 
@@ -621,7 +633,7 @@ export default function GuestbookPage() {
                                                             <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
                                                                 <Calendar className="h-3 w-3" />
                                                                 <span>
-                                                                    {new Date(entry.createdAt).toLocaleDateString("en-US", {
+                                                                    {new Date(entry.createdAt).toLocaleDateString(locale === 'id' ? "id-ID" : "en-US", {
                                                                         month: "short",
                                                                         day: "numeric",
                                                                         year: "numeric"
@@ -639,7 +651,7 @@ export default function GuestbookPage() {
                                                                 ? "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30"
                                                                 : "bg-muted/50 dark:bg-white/[0.04] text-muted-foreground hover:text-rose-500 hover:border-rose-500/30 border-border/60 dark:border-white/10"
                                                         }`}
-                                                        title={isLiked ? "You loved this note" : "Send love"}
+                                                        title={isLiked ? (locale === 'id' ? "Anda menyukai catatan ini" : "You loved this note") : (locale === 'id' ? "Kirim apresiasi" : "Send love")}
                                                     >
                                                         <Heart className={`h-3.5 w-3.5 transition-transform ${isLiked ? 'fill-rose-500 text-rose-500 scale-110' : ''}`} />
                                                         <span>{entry.likes || 0}</span>
@@ -659,9 +671,9 @@ export default function GuestbookPage() {
                                                         </div>
                                                         <div className="space-y-1 text-xs">
                                                             <div className="flex items-center gap-2">
-                                                                <span className="font-bold text-foreground">Maulana (Author)</span>
+                                                                <span className="font-bold text-foreground">Maulana ({locale === 'id' ? "Penulis" : "Author"})</span>
                                                                 <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-primary/15 text-primary border border-primary/20">
-                                                                    Owner Reply
+                                                                    {dictionary.guestbook.adminReplyBadge}
                                                                 </span>
                                                             </div>
                                                             <p className="text-muted-foreground leading-relaxed">
@@ -684,11 +696,11 @@ export default function GuestbookPage() {
                                             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border border-border/80 dark:border-white/10 bg-card/60 hover:bg-muted/70 text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                                         >
                                             <ChevronLeft className="h-4 w-4" />
-                                            <span>Previous</span>
+                                            <span>{locale === 'id' ? "Sebelumnya" : "Previous"}</span>
                                         </button>
 
                                         <span className="text-xs text-muted-foreground font-medium">
-                                            Page <strong className="text-foreground">{page}</strong> of {totalPages}
+                                            {locale === 'id' ? "Halaman" : "Page"} <strong className="text-foreground">{page}</strong> {locale === 'id' ? "dari" : "of"} {totalPages}
                                         </span>
 
                                         <button
@@ -696,7 +708,7 @@ export default function GuestbookPage() {
                                             disabled={page === totalPages}
                                             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border border-border/80 dark:border-white/10 bg-card/60 hover:bg-muted/70 text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                                         >
-                                            <span>Next</span>
+                                            <span>{locale === 'id' ? "Selanjutnya" : "Next"}</span>
                                             <ChevronRight className="h-4 w-4" />
                                         </button>
                                     </div>
@@ -707,16 +719,16 @@ export default function GuestbookPage() {
                                 <div className="h-12 w-12 rounded-2xl bg-muted/60 dark:bg-white/5 flex items-center justify-center mx-auto mb-3 text-muted-foreground">
                                     <MessageSquare className="h-6 w-6" />
                                 </div>
-                                <h3 className="text-base font-bold text-foreground">No signatures found</h3>
+                                <h3 className="text-base font-bold text-foreground">{dictionary.guestbook.emptyStateTitle}</h3>
                                 <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-                                    {searchQuery ? "No entries match your search keyword. Try clearing your search." : "Be the very first friend or engineer to sign this digital guestbook!"}
+                                    {searchQuery ? (locale === 'id' ? "Tidak ada catatan yang cocok dengan kata kunci pencarian." : "No entries match your search keyword. Try clearing your search.") : dictionary.guestbook.emptyStateDesc}
                                 </p>
                                 {searchQuery && (
                                     <button
                                         onClick={() => setSearchQuery("")}
                                         className="mt-4 px-4 py-1.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                                     >
-                                        Clear Search Filter
+                                        {locale === 'id' ? "Hapus Filter Pencarian" : "Clear Search Filter"}
                                     </button>
                                 )}
                             </div>

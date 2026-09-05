@@ -18,10 +18,14 @@ import {
     Radio
 } from "lucide-react";
 import { useSettings } from "@/lib/useSettings";
+import { useLanguage } from "@/context/LanguageContext";
 
 export function Footer({ settings: initialSettings }: { settings?: Record<string, string | undefined> }) {
     const { settings: clientSettings } = useSettings();
     const settings = { ...(initialSettings || {}), ...(clientSettings || {}) };
+    const { locale, dictionary } = useLanguage();
+    const t = dictionary.footer;
+    const tNav = dictionary.nav;
 
     const [email, setEmail] = useState("");
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -36,10 +40,21 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
     const contactEmail = rawEmail.replace(/^mailto:/i, "");
     const contactLocation = settings?.contactLocation || "Jakarta, Indonesia";
     const isWorking = settings?.isWorking !== "false";
-    const footerTagline = settings?.footerTagline || "Digital Architect specializing in resilient networks and scalable modern web applications.";
-    const copyrightText = settings?.copyrightText || "All rights reserved.";
-    const newsletterTitle = settings?.footerNewsletterTitle || "Engineering Dispatch";
-    const newsletterSubtitle = settings?.footerNewsletterSubtitle || "Subscribe for occasional updates on production architectures, networking insights, and full-stack development.";
+    
+    // Dynamic localization fallback for tagline, copyright, and newsletter
+    const footerTagline = (locale === "id" && (!settings?.footerTagline || settings?.footerTagline.includes("Digital Architect specializing")))
+        ? t.tagline
+        : (settings?.footerTagline || t.tagline);
+
+    const copyrightText = settings?.copyrightText || t.rights;
+
+    const newsletterTitle = (locale === "id" && (!settings?.footerNewsletterTitle || settings?.footerNewsletterTitle === "Engineering Dispatch"))
+        ? t.newsletterTitle
+        : (settings?.footerNewsletterTitle || t.newsletterTitle);
+
+    const newsletterSubtitle = (locale === "id" && (!settings?.footerNewsletterSubtitle || settings?.footerNewsletterSubtitle.includes("Subscribe for occasional updates")))
+        ? t.newsletterSubtitle
+        : (settings?.footerNewsletterSubtitle || t.newsletterSubtitle);
 
     const handleSubscribe = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -56,15 +71,15 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
             const data = await res.json();
             if (res.ok && data.success) {
                 setStatus("success");
-                setStatusMessage("Successfully subscribed to dispatches.");
+                setStatusMessage(t.newsletterSuccess);
                 setEmail("");
             } else {
                 setStatus("error");
-                setStatusMessage(data.error || "Subscription failed. Please try again.");
+                setStatusMessage(data.error || (locale === "id" ? "Gagal berlangganan. Silakan coba lagi." : "Subscription failed. Please try again."));
             }
         } catch {
             setStatus("error");
-            setStatusMessage("Transmission error. Please try again later.");
+            setStatusMessage(locale === "id" ? "Kesalahan transmisi. Silakan coba lagi nanti." : "Transmission error. Please try again later.");
         }
     };
 
@@ -75,18 +90,18 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
     };
 
     const navigationLinks = [
-        { label: "Home", href: "/" },
-        { label: "About", href: "/about" },
-        { label: "Projects", href: "/projects" },
-        { label: "Certifications", href: "/certifications" },
-        { label: "Blog", href: "/blog" },
+        { label: tNav.home, href: "/" },
+        { label: tNav.about, href: "/about" },
+        { label: tNav.projects, href: "/projects" },
+        { label: tNav.certifications, href: "/certifications" },
+        { label: tNav.blog, href: "/blog" },
     ];
 
     const interactiveLinks = [
-        { label: "Visual Gallery", href: "/gallery" },
-        { label: "Tech & Uses", href: "/uses" },
-        { label: "Guestbook", href: "/guestbook" },
-        { label: "Contact", href: "/contact" },
+        { label: tNav.gallery, href: "/gallery" },
+        { label: tNav.uses, href: "/uses" },
+        { label: tNav.guestbook, href: "/guestbook" },
+        { label: tNav.contact, href: "/contact" },
     ];
 
     return (
@@ -113,7 +128,7 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
                         <div className="pt-2 space-y-2.5">
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
-                                <span>Based in {contactLocation}</span>
+                                <span>{locale === "id" ? `Berbasis di ${contactLocation}` : `Based in ${contactLocation}`}</span>
                             </div>
                             {isWorking && (
                                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
@@ -121,7 +136,7 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                         <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                                     </span>
-                                    <span>Systems Operational & Open for Work</span>
+                                    <span>{t.statusAvailable}</span>
                                 </div>
                             )}
                         </div>
@@ -187,7 +202,7 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
                     {/* Col 2: Navigation Links (2.5 Cols) */}
                     <div className="lg:col-span-2 space-y-3">
                         <p className="text-[11px] font-mono uppercase tracking-widest text-foreground/80 font-bold">
-                            Navigation
+                            {locale === "id" ? "Navigasi" : "Navigation"}
                         </p>
                         <ul className="space-y-2 text-xs sm:text-sm">
                             {navigationLinks.map((link) => (
@@ -207,7 +222,7 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
                     {/* Col 3: Interactive & Resources (2.5 Cols) */}
                     <div className="lg:col-span-2 space-y-3">
                         <p className="text-[11px] font-mono uppercase tracking-widest text-foreground/80 font-bold">
-                            Resources
+                            {locale === "id" ? "Sumber Daya" : "Resources"}
                         </p>
                         <ul className="space-y-2 text-xs sm:text-sm">
                             {interactiveLinks.map((link) => (
@@ -240,7 +255,7 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
                             <div className="flex gap-2">
                                 <input
                                     type="email"
-                                    placeholder="Enter your email..."
+                                    placeholder={t.newsletterPlaceholder}
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
@@ -257,7 +272,7 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
                                     ) : (
                                         <Send className="h-3.5 w-3.5" />
                                     )}
-                                    <span className="hidden sm:inline">Join</span>
+                                    <span className="hidden sm:inline">{status === "loading" ? t.newsletterSubscribing : (locale === "id" ? "Gabung" : "Join")}</span>
                                 </button>
                             </div>
 
@@ -301,7 +316,7 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/80 bg-background/60 hover:bg-muted dark:hover:bg-white/10 text-foreground/80 hover:text-primary transition-all text-xs font-semibold shadow-2xs group cursor-pointer"
                             aria-label="Scroll back to top"
                         >
-                            <span>Top</span>
+                            <span>{locale === "id" ? "Atas" : "Top"}</span>
                             <ArrowUp className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5" />
                         </button>
                     </div>

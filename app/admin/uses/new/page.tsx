@@ -5,15 +5,18 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import ImageUpload from "@/components/ImageUpload";
+import { AdminLangTabs } from "@/components/AdminLangTabs";
 
 const categories = ["Hardware", "Software", "Services", "Desk Setup", "Other"];
 
 export default function NewUsesItemPage() {
     const router = useRouter();
+    const [langTab, setLangTab] = useState<"en" | "id">("en");
     const [formData, setFormData] = useState({
         name: "",
         category: "Hardware",
         description: "",
+        description_id: "",
         url: "",
         imageUrl: "",
         featured: false,
@@ -69,6 +72,12 @@ export default function NewUsesItemPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-8 rounded-xl border border-primary/10 bg-card/10 backdrop-blur-sm p-8">
+                    <AdminLangTabs
+                        activeTab={langTab}
+                        onChange={setLangTab}
+                        label="Uses Item Localization"
+                    />
+
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
                             <label className="text-sm font-medium leading-none">Name *</label>
@@ -98,16 +107,29 @@ export default function NewUsesItemPage() {
                         </div>
 
                         <div className="space-y-2 md:col-span-2">
-                            <label className="text-sm font-medium leading-none">Description *</label>
-                            <textarea
-                                required
-                                name="description"
-                                value={formData.description}
-                                onChange={handleChange}
-                                rows={4}
-                                className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="Describe this item and why you use it..."
-                            />
+                            <label className="text-sm font-medium leading-none">
+                                {langTab === "en" ? "Description (EN) *" : "Deskripsi Penggunaan (ID)"}
+                            </label>
+                            {langTab === "en" ? (
+                                <textarea
+                                    required
+                                    name="description"
+                                    value={formData.description}
+                                    onChange={handleChange}
+                                    rows={4}
+                                    className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="Describe this item and why you use it..."
+                                />
+                            ) : (
+                                <textarea
+                                    name="description_id"
+                                    value={formData.description_id}
+                                    onChange={handleChange}
+                                    rows={4}
+                                    className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="Jelaskan peran alat/perangkat ini dalam workflow Anda (opsional, fallback ke EN)..."
+                                />
+                            )}
                         </div>
 
                         <div className="space-y-2">

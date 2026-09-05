@@ -5,15 +5,21 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, X } from "lucide-react";
 import Link from "next/link";
 import ImageUpload from "@/components/ImageUpload";
+import { AdminLangTabs } from "@/components/AdminLangTabs";
 
 export default function NewProjectPage() {
     const router = useRouter();
+    const [langTab, setLangTab] = useState<"en" | "id">("en");
     const [formData, setFormData] = useState({
         title: "",
+        title_id: "",
         slug: "",
         description: "",
+        description_id: "",
         problemStatement: "",
+        problemStatement_id: "",
         solutionApproach: "",
+        solutionApproach_id: "",
         imageUrl: "",
         architectureDiagram: "",
         screenshots: [] as string[],
@@ -107,21 +113,39 @@ export default function NewProjectPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-8 rounded-xl border border-primary/10 bg-card/10 backdrop-blur-sm p-8">
+                    <AdminLangTabs
+                        activeTab={langTab}
+                        onChange={setLangTab}
+                        label="Project Localization"
+                    />
+
                     {/* Basic Info */}
                     <div className="space-y-4">
                         <h2 className="text-xl font-semibold">Basic Information</h2>
 
                         <div className="grid gap-4 md:grid-cols-2">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium leading-none">Title *</label>
-                                <input
-                                    required
-                                    name="title"
-                                    value={formData.title}
-                                    onChange={handleTitleChange}
-                                    className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                    placeholder="Project Name"
-                                />
+                                <label className="text-sm font-medium leading-none">
+                                    {langTab === "en" ? "Title (EN) *" : "Judul Proyek (ID)"}
+                                </label>
+                                {langTab === "en" ? (
+                                    <input
+                                        required
+                                        name="title"
+                                        value={formData.title}
+                                        onChange={handleTitleChange}
+                                        className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        placeholder="Project Name (English)"
+                                    />
+                                ) : (
+                                    <input
+                                        name="title_id"
+                                        value={formData.title_id}
+                                        onChange={handleChange}
+                                        className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        placeholder="Nama Proyek (Bahasa Indonesia - Opsional)"
+                                    />
+                                )}
                             </div>
 
                             <div className="space-y-2">
@@ -139,16 +163,29 @@ export default function NewProjectPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Description *</label>
-                            <textarea
-                                required
-                                name="description"
-                                value={formData.description}
-                                onChange={handleChange}
-                                rows={4}
-                                className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="Brief overview of the project"
-                            />
+                            <label className="text-sm font-medium leading-none">
+                                {langTab === "en" ? "Description (EN) *" : "Deskripsi Proyek (ID)"}
+                            </label>
+                            {langTab === "en" ? (
+                                <textarea
+                                    required
+                                    name="description"
+                                    value={formData.description}
+                                    onChange={handleChange}
+                                    rows={4}
+                                    className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="Brief overview of the project"
+                                />
+                            ) : (
+                                <textarea
+                                    name="description_id"
+                                    value={formData.description_id}
+                                    onChange={handleChange}
+                                    rows={4}
+                                    className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="Ringkasan proyek dalam Bahasa Indonesia (opsional, fallback ke EN jika kosong)"
+                                />
+                            )}
                         </div>
 
                         <div className="space-y-2">
@@ -227,30 +264,58 @@ export default function NewProjectPage() {
 
                     {/* Case Study */}
                     <div className="space-y-4">
-                        <h2 className="text-xl font-semibold">Case Study (Optional)</h2>
+                        <h2 className="text-xl font-semibold">
+                            {langTab === "en" ? "Case Study (Optional - EN)" : "Studi Kasus (Opsional - ID)"}
+                        </h2>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Problem Statement</label>
-                            <textarea
-                                name="problemStatement"
-                                value={formData.problemStatement}
-                                onChange={handleChange}
-                                rows={4}
-                                className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="What problem does this project solve?"
-                            />
+                            <label className="text-sm font-medium leading-none">
+                                {langTab === "en" ? "Problem Statement (EN)" : "Deskripsi Masalah (ID)"}
+                            </label>
+                            {langTab === "en" ? (
+                                <textarea
+                                    name="problemStatement"
+                                    value={formData.problemStatement}
+                                    onChange={handleChange}
+                                    rows={4}
+                                    className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="What problem does this project solve?"
+                                />
+                            ) : (
+                                <textarea
+                                    name="problemStatement_id"
+                                    value={formData.problemStatement_id}
+                                    onChange={handleChange}
+                                    rows={4}
+                                    className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="Masalah apa yang diselesaikan oleh proyek ini? (opsional)"
+                                />
+                            )}
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Solution Approach</label>
-                            <textarea
-                                name="solutionApproach"
-                                value={formData.solutionApproach}
-                                onChange={handleChange}
-                                rows={4}
-                                className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="How did you solve it?"
-                            />
+                            <label className="text-sm font-medium leading-none">
+                                {langTab === "en" ? "Solution Approach (EN)" : "Pendekatan Solusi (ID)"}
+                            </label>
+                            {langTab === "en" ? (
+                                <textarea
+                                    name="solutionApproach"
+                                    value={formData.solutionApproach}
+                                    onChange={handleChange}
+                                    rows={4}
+                                    className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="How did you solve it?"
+                                />
+                            ) : (
+                                <textarea
+                                    name="solutionApproach_id"
+                                    value={formData.solutionApproach_id}
+                                    onChange={handleChange}
+                                    rows={4}
+                                    className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="Bagaimana arsitektur atau solusi tersebut diterapkan? (opsional)"
+                                />
+                            )}
                         </div>
                     </div>
 

@@ -5,11 +5,14 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, X, FileText } from "lucide-react";
 import Link from "next/link";
 import { UploadButton } from "@/lib/uploadthing";
+import { AdminLangTabs } from "@/components/AdminLangTabs";
 
 export default function NewCertificationPage() {
     const router = useRouter();
+    const [langTab, setLangTab] = useState<"en" | "id">("en");
     const [formData, setFormData] = useState({
         title: "",
+        title_id: "",
         issuer: "",
         issueDate: new Date().toISOString().split('T')[0],
         expiryDate: "",
@@ -19,6 +22,7 @@ export default function NewCertificationPage() {
         certificateFileUrl: "",
         category: "",
         description: "",
+        description_id: "",
         skills: "",
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -128,17 +132,35 @@ export default function NewCertificationPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-8 rounded-xl border border-primary/10 bg-card/10 backdrop-blur-sm p-8">
+                    <AdminLangTabs
+                        activeTab={langTab}
+                        onChange={setLangTab}
+                        label="Certification Localization"
+                    />
+
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Title</label>
-                            <input
-                                required
-                                name="title"
-                                value={formData.title}
-                                onChange={handleChange}
-                                className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="Certificate Name"
-                            />
+                            <label className="text-sm font-medium leading-none">
+                                {langTab === "en" ? "Title (EN) *" : "Judul Sertifikasi (ID)"}
+                            </label>
+                            {langTab === "en" ? (
+                                <input
+                                    required
+                                    name="title"
+                                    value={formData.title}
+                                    onChange={handleChange}
+                                    className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="Certificate Name (English)"
+                                />
+                            ) : (
+                                <input
+                                    name="title_id"
+                                    value={formData.title_id}
+                                    onChange={handleChange}
+                                    className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="Nama Sertifikasi (Bahasa Indonesia - Opsional)"
+                                />
+                            )}
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium leading-none">Issuer</label>
@@ -309,6 +331,31 @@ export default function NewCertificationPage() {
                                 Upload the certificate PDF file (max 8MB)
                             </p>
                         </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium leading-none">
+                            {langTab === "en" ? "Description & Summary (EN)" : "Deskripsi Sertifikasi (ID)"}
+                        </label>
+                        {langTab === "en" ? (
+                            <textarea
+                                name="description"
+                                value={formData.description}
+                                onChange={handleChange}
+                                rows={3}
+                                className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                placeholder="Brief overview of credential, syllabus, or verified competencies..."
+                            />
+                        ) : (
+                            <textarea
+                                name="description_id"
+                                value={formData.description_id}
+                                onChange={handleChange}
+                                rows={3}
+                                className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                placeholder="Rangkuman kompetensi yang diverifikasi dalam Bahasa Indonesia (opsional)..."
+                            />
+                        )}
                     </div>
 
                     <div className="space-y-2">

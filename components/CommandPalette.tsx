@@ -44,7 +44,9 @@ export default function CommandPalette() {
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
     const { theme, setTheme } = useTheme();
-    const { t, locale, toggleLocale } = useLanguage();
+    const { t, locale, toggleLocale, dictionary } = useLanguage();
+    const cp = dictionary.commandPalette;
+    const nav = dictionary.nav;
 
     // Fetch projects and blog posts on mount for fast instant searching
     useEffect(() => {
@@ -117,21 +119,21 @@ export default function CommandPalette() {
     // Build search items dynamically
     const allItems: SearchItem[] = [
         // Navigation
-        { id: "nav-home", title: "Home", subtitle: "Return to the main page", category: "Navigation", icon: Home, action: () => navigateTo("/") },
-        { id: "nav-about", title: "About & Philosophy", subtitle: "Full career journey & engineering principles", category: "Navigation", icon: User, action: () => navigateTo("/about") },
-        { id: "nav-projects", title: "Projects", subtitle: "Browse all software & network builds", category: "Navigation", icon: Briefcase, action: () => navigateTo("/projects") },
-        { id: "nav-blog", title: "Blog & Articles", subtitle: "Engineering writeups & tutorials", category: "Navigation", icon: FileText, action: () => navigateTo("/blog") },
-        { id: "nav-cert", title: "Certifications", subtitle: "Verified industry credentials & licenses", category: "Navigation", icon: Award, action: () => navigateTo("/certifications") },
-        { id: "nav-gallery", title: "Gallery", subtitle: "Visual milestones & tech events", category: "Navigation", icon: ImageIcon, action: () => navigateTo("/gallery") },
-        { id: "nav-uses", title: "Uses & Setup", subtitle: "Hardware, tools, and software stack", category: "Navigation", icon: Package, action: () => navigateTo("/uses") },
-        { id: "nav-contact", title: "Contact", subtitle: "Send an inquiry or project proposal", category: "Navigation", icon: Mail, action: () => navigateTo("/contact") },
-        { id: "nav-guestbook", title: "Guestbook", subtitle: "Leave a friendly note for the community", category: "Navigation", icon: MessageSquare, action: () => navigateTo("/guestbook") },
+        { id: "nav-home", title: nav.home, subtitle: locale === "id" ? "Kembali ke halaman utama" : "Return to the main page", category: "Navigation", icon: Home, action: () => navigateTo("/") },
+        { id: "nav-about", title: nav.about, subtitle: locale === "id" ? "Perjalanan karir & filosofi rekayasa" : "Full career journey & engineering principles", category: "Navigation", icon: User, action: () => navigateTo("/about") },
+        { id: "nav-projects", title: nav.projects, subtitle: locale === "id" ? "Jelajahi karya perangkat lunak & jaringan" : "Browse all software & network builds", category: "Navigation", icon: Briefcase, action: () => navigateTo("/projects") },
+        { id: "nav-blog", title: nav.blog, subtitle: locale === "id" ? "Tulisan rekayasa & tutorial teknis" : "Engineering writeups & tutorials", category: "Navigation", icon: FileText, action: () => navigateTo("/blog") },
+        { id: "nav-cert", title: nav.certifications, subtitle: locale === "id" ? "Kredensial & lisensi terverifikasi" : "Verified industry credentials & licenses", category: "Navigation", icon: Award, action: () => navigateTo("/certifications") },
+        { id: "nav-gallery", title: nav.gallery, subtitle: locale === "id" ? "Milestone visual & dokumentasi kegiatan" : "Visual milestones & tech events", category: "Navigation", icon: ImageIcon, action: () => navigateTo("/gallery") },
+        { id: "nav-uses", title: nav.uses, subtitle: locale === "id" ? "Perangkat keras, tools, & alur kerja" : "Hardware, tools, and software stack", category: "Navigation", icon: Package, action: () => navigateTo("/uses") },
+        { id: "nav-contact", title: nav.contact, subtitle: locale === "id" ? "Kirim pertanyaan atau proposal proyek" : "Send an inquiry or project proposal", category: "Navigation", icon: Mail, action: () => navigateTo("/contact") },
+        { id: "nav-guestbook", title: nav.guestbook, subtitle: locale === "id" ? "Tinggalkan pesan di buku tamu publik" : "Leave a friendly note for the community", category: "Navigation", icon: MessageSquare, action: () => navigateTo("/guestbook") },
 
         // Quick Actions
         {
             id: "act-theme",
-            title: `Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`,
-            subtitle: "Toggle visual color theme",
+            title: theme === "dark" ? cp.switchThemeLight : cp.switchThemeDark,
+            subtitle: locale === "id" ? "Beralih mode warna tampilan" : "Toggle visual color theme",
             category: "Actions",
             icon: theme === "dark" ? Sun : Moon,
             action: () => {
@@ -141,7 +143,7 @@ export default function CommandPalette() {
         },
         {
             id: "act-lang",
-            title: locale === "en" ? "Ganti ke Bahasa Indonesia" : "Switch to English",
+            title: cp.switchLanguage,
             subtitle: locale === "en" ? "Ubah bahasa antarmuka situs ke Bahasa Indonesia" : "Change site interface language to English",
             category: "Actions",
             icon: Globe,
@@ -152,8 +154,8 @@ export default function CommandPalette() {
         },
         {
             id: "act-cv",
-            title: "Download Official CV / Resume",
-            subtitle: "View credentials & resume document",
+            title: cp.downloadCV,
+            subtitle: locale === "id" ? "Lihat dokumen resmi riwayat hidup" : "View credentials & resume document",
             category: "Actions",
             icon: Download,
             action: () => {
@@ -163,8 +165,8 @@ export default function CommandPalette() {
         },
         {
             id: "act-ai",
-            title: "Ask AI Portfolio Assistant",
-            subtitle: "Interactive chat with embedded AI",
+            title: cp.askAI,
+            subtitle: locale === "id" ? "Percakapan interaktif dengan asisten AI" : "Interactive chat with embedded AI",
             category: "Actions",
             icon: Bot,
             action: () => {
@@ -174,8 +176,8 @@ export default function CommandPalette() {
         },
         {
             id: "act-wa",
-            title: "Chat via WhatsApp",
-            subtitle: "Direct messaging with site owner",
+            title: cp.whatsapp,
+            subtitle: locale === "id" ? "Kirim pesan langsung via WhatsApp" : "Direct messaging with site owner",
             category: "Actions",
             icon: MessageCircle,
             action: () => {
@@ -188,7 +190,7 @@ export default function CommandPalette() {
         ...projects.map(p => ({
             id: `proj-${p.slug}`,
             title: p.title,
-            subtitle: p.description || "Portfolio Project",
+            subtitle: p.description || (locale === "id" ? "Proyek Portofolio" : "Portfolio Project"),
             category: "Projects" as const,
             icon: Briefcase,
             action: () => navigateTo(`/projects/${p.slug}`)
@@ -198,7 +200,7 @@ export default function CommandPalette() {
         ...posts.map(p => ({
             id: `post-${p.slug}`,
             title: p.title,
-            subtitle: p.excerpt || "Engineering Article",
+            subtitle: p.excerpt || (locale === "id" ? "Artikel Rekayasa" : "Engineering Article"),
             category: "Blog" as const,
             icon: FileText,
             action: () => navigateTo(`/blog/${p.slug}`)
@@ -316,7 +318,13 @@ export default function CommandPalette() {
 
                                             <div className="flex items-center gap-2 shrink-0">
                                                 <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-muted text-muted-foreground">
-                                                    {item.category}
+                                                    {item.category === "Navigation"
+                                                        ? cp.navigationCategory
+                                                        : item.category === "Projects"
+                                                        ? cp.projectsCategory
+                                                        : item.category === "Blog"
+                                                        ? cp.blogCategory
+                                                        : cp.actionsCategory}
                                                 </span>
                                                 {isSelected && (
                                                     <CornerDownLeft className="h-3.5 w-3.5 text-primary shrink-0 hidden sm:block" />
@@ -335,7 +343,7 @@ export default function CommandPalette() {
                                 <span><kbd className="px-1.5 py-0.5 rounded bg-muted font-mono">↵</kbd> {t("commandPalette.selectHint", "Select")}</span>
                                 <span><kbd className="px-1.5 py-0.5 rounded bg-muted font-mono">ESC</kbd> {t("commandPalette.closeHint", "Close")}</span>
                             </div>
-                            <span className="hidden sm:inline">Spotlight Search</span>
+                            <span className="hidden sm:inline">{locale === "id" ? "Pencarian Cepat" : "Spotlight Search"}</span>
                         </div>
                     </motion.div>
                 </div>

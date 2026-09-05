@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { useSettings } from "@/lib/useSettings";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ContactPageContentProps {
     initialSettings?: Record<string, string | undefined>;
@@ -32,19 +33,26 @@ interface ContactPageContentProps {
 export function ContactPageContent({ initialSettings }: ContactPageContentProps) {
     const { settings: clientSettings } = useSettings();
     const settings = { ...(initialSettings || {}), ...(clientSettings || {}) };
+    const { dictionary, locale } = useLanguage();
 
     // Settings fields with sensible fallbacks
-    const heroBadge = settings?.contactHeroBadge || "Direct Channel & Technical Advisory";
-    const heroTitle = settings?.contactHeroTitle || "Let's Build Something Exceptional Together";
-    const heroSubtitle = settings?.contactHeroSubtitle || "Have an engineering challenge, architectural consultation, or a collaborative project in mind? Reach out directly via the form or my primary communication channels.";
+    const heroBadge = locale === 'id' 
+        ? (settings?.contactHeroBadge_id || dictionary.contact.badge)
+        : (settings?.contactHeroBadge || dictionary.contact.badge);
+    const heroTitle = locale === 'id'
+        ? (settings?.contactHeroTitle_id || dictionary.contact.heroTitle)
+        : (settings?.contactHeroTitle || dictionary.contact.heroTitle);
+    const heroSubtitle = locale === 'id'
+        ? (settings?.contactHeroSubtitle_id || dictionary.contact.heroSubtitle)
+        : (settings?.contactHeroSubtitle || dictionary.contact.heroSubtitle);
     
     const rawEmail = settings?.contactEmail || "email@example.com";
     const contactEmail = rawEmail.replace(/^mailto:/i, "");
     const rawPhone = settings?.contactPhone || "+62 812-3456-7890";
     const rawWhatsapp = settings?.whatsappNumber || rawPhone.replace(/[^0-9]/g, "");
     const contactLocation = settings?.contactLocation || "Jakarta, Indonesia";
-    const responseTime = settings?.contactResponseTime || "Within 2 to 4 hours";
-    const workingHours = settings?.contactWorkingHours || "Mon - Fri, 09:00 - 18:00 WIB (UTC+7)";
+    const responseTime = settings?.contactResponseTime || dictionary.contact.responseTimeValue;
+    const workingHours = settings?.contactWorkingHours || dictionary.contact.workingHoursValue;
     const meetingUrl = settings?.contactMeetingUrl || "";
 
     // Live Jakarta Local Clock
@@ -523,26 +531,26 @@ export function ContactPageContent({ initialSettings }: ContactPageContentProps)
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="space-y-1.5">
                                             <label className="text-xs font-semibold text-foreground">
-                                                First Name <span className="text-destructive">*</span>
+                                                {dictionary.contact.firstName} <span className="text-destructive">*</span>
                                             </label>
                                             <input
                                                 type="text"
                                                 required
                                                 value={firstName}
                                                 onChange={(e) => setFirstName(e.target.value)}
-                                                placeholder="e.g. Alex"
+                                                placeholder={dictionary.contact.firstNamePlaceholder}
                                                 className="w-full h-11 px-3.5 rounded-xl bg-background/60 border border-input focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm text-foreground placeholder:text-muted-foreground/60 transition-all outline-none"
                                             />
                                         </div>
                                         <div className="space-y-1.5">
                                             <label className="text-xs font-semibold text-foreground">
-                                                Last Name
+                                                {dictionary.contact.lastName}
                                             </label>
                                             <input
                                                 type="text"
                                                 value={lastName}
                                                 onChange={(e) => setLastName(e.target.value)}
-                                                placeholder="e.g. Morgan"
+                                                placeholder={dictionary.contact.lastNamePlaceholder}
                                                 className="w-full h-11 px-3.5 rounded-xl bg-background/60 border border-input focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm text-foreground placeholder:text-muted-foreground/60 transition-all outline-none"
                                             />
                                         </div>
@@ -551,14 +559,14 @@ export function ContactPageContent({ initialSettings }: ContactPageContentProps)
                                     {/* Email */}
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-semibold text-foreground">
-                                            Your Email Address <span className="text-destructive">*</span>
+                                            {dictionary.contact.emailLabel} <span className="text-destructive">*</span>
                                         </label>
                                         <input
                                             type="email"
                                             required
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
-                                            placeholder="alex@company.com"
+                                            placeholder={dictionary.contact.emailPlaceholder}
                                             className="w-full h-11 px-3.5 rounded-xl bg-background/60 border border-input focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm text-foreground placeholder:text-muted-foreground/60 transition-all outline-none"
                                         />
                                     </div>
@@ -567,7 +575,7 @@ export function ContactPageContent({ initialSettings }: ContactPageContentProps)
                                     <div className="space-y-2">
                                         <label className="text-xs font-bold text-foreground uppercase tracking-wider flex items-center gap-1.5">
                                             <Calendar className="h-3.5 w-3.5 text-primary" />
-                                            <span>Estimated Timeline</span>
+                                            <span>{locale === 'id' ? "Estimasi Linimasa" : "Estimated Timeline"}</span>
                                         </label>
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                             {timelines.map((t) => {
@@ -605,7 +613,7 @@ export function ContactPageContent({ initialSettings }: ContactPageContentProps)
                                     <div className="space-y-1.5">
                                         <div className="flex items-center justify-between">
                                             <label className="text-xs font-semibold text-foreground">
-                                                Project Details / Message <span className="text-destructive">*</span>
+                                                {dictionary.contact.messageLabel} <span className="text-destructive">*</span>
                                             </label>
                                             <span className="text-[11px] text-muted-foreground">
                                                 {message.length} chars
@@ -616,7 +624,7 @@ export function ContactPageContent({ initialSettings }: ContactPageContentProps)
                                             rows={5}
                                             value={message}
                                             onChange={(e) => setMessage(e.target.value)}
-                                            placeholder="Tell me about your project goals, technical constraints, current stack, or the specific architectural problem you'd like to solve..."
+                                            placeholder={dictionary.contact.messagePlaceholder}
                                             className="w-full p-3.5 rounded-xl bg-background/60 border border-input focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm text-foreground placeholder:text-muted-foreground/60 transition-all outline-none resize-y"
                                         />
                                     </div>
@@ -630,11 +638,11 @@ export function ContactPageContent({ initialSettings }: ContactPageContentProps)
                                         {isSubmitting ? (
                                             <>
                                                 <Loader2 className="h-4 w-4 animate-spin" />
-                                                <span>Transmitting Message...</span>
+                                                <span>{dictionary.contact.sending}</span>
                                             </>
                                         ) : (
                                             <>
-                                                <span>Transmit Inquiry</span>
+                                                <span>{dictionary.contact.sendButton}</span>
                                                 <Send className="h-4 w-4" />
                                             </>
                                         )}

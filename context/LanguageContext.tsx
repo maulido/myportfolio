@@ -26,18 +26,27 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         if (typeof window !== "undefined") {
             const savedLang = localStorage.getItem("portfolio_lang") as Language | null;
             if (savedLang === "en" || savedLang === "id") return savedLang;
+
+            const cookieMatch = document.cookie.match(/(?:^|;\s*)portfolio_lang=([^;]+)/);
+            if (cookieMatch && (cookieMatch[1] === "en" || cookieMatch[1] === "id")) {
+                return cookieMatch[1] as Language;
+            }
         }
         return "en";
     });
 
     useEffect(() => {
         document.documentElement.lang = locale;
+        if (typeof window !== "undefined") {
+            document.cookie = `portfolio_lang=${locale}; path=/; max-age=31536000; SameSite=Lax`;
+        }
     }, [locale]);
 
     const setLocale = useCallback((newLocale: Language) => {
         setLocaleState(newLocale);
         if (typeof window !== "undefined") {
             localStorage.setItem("portfolio_lang", newLocale);
+            document.cookie = `portfolio_lang=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
             document.documentElement.lang = newLocale;
         }
     }, []);

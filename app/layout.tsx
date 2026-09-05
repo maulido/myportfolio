@@ -27,8 +27,10 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = settings.siteTitle || "Professional Portfolio | Network & Software Engineer";
   const description = settings.siteDescription || "Explore the portfolio of a dedicated Network and Software Engineer specializing in modern web apps and robust network solutions.";
 
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
   return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'),
+    metadataBase: new URL(baseUrl),
     title: {
       default: title,
       template: `%s | ${title.split('|')[0].trim()}`
@@ -36,6 +38,14 @@ export async function generateMetadata(): Promise<Metadata> {
     description: description,
     keywords: ["Software Engineer", "Network Engineer", "Portfolio", "Next.js", "React", "Cisco"],
     authors: [{ name: "Maulido" }],
+    alternates: {
+      canonical: baseUrl,
+      languages: {
+        'en': baseUrl,
+        'id': `${baseUrl}?lang=id`,
+        'x-default': baseUrl,
+      },
+    },
     openGraph: {
       title: title,
       description: description,
@@ -118,6 +128,9 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <link rel="preconnect" href="https://utfs.io" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://utfs.io" />
+        <link rel="alternate" hrefLang="x-default" href={baseUrl} />
+        <link rel="alternate" hrefLang="en" href={baseUrl} />
+        <link rel="alternate" hrefLang="id" href={`${baseUrl}?lang=id`} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

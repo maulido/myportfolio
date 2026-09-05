@@ -21,11 +21,15 @@ import {
 import CertificationDetailModal from "@/components/CertificationDetailModal";
 import { SpotlightCard } from "@/components/SpotlightCard";
 import { useSettings } from "@/lib/useSettings";
+import { useLanguage } from "@/context/LanguageContext";
+import { getLocalizedField } from "@/lib/localization";
 
 interface ICertification {
     _id: string;
     title: string;
+    title_id?: string;
     issuer: string;
+    issuer_id?: string;
     issueDate: string;
     expiryDate?: string;
     credentialId?: string;
@@ -35,6 +39,7 @@ interface ICertification {
     category: string;
     skills: string[];
     description?: string;
+    description_id?: string;
 }
 
 const shimmer = (w: number, h: number) => `
@@ -69,11 +74,23 @@ export default function CertificationsPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const { get } = useSettings();
-    const heroBadge = get("certificationsHeroBadge", "Verified Credentials & Accreditations");
-    const heroTitle = get("certificationsHeroTitle", "Industry-Recognized Certifications");
-    const heroSubtitle = get("certificationsHeroSubtitle", "Formally accredited competencies across enterprise networking, cloud architecture, and modern full-stack development.");
-    const trustTitle = get("certificationsTrustTitle", "Authenticity & Verification Guaranteed");
-    const trustDesc = get("certificationsTrustDesc", "All industry certifications listed are backed by official digital credential IDs, cryptographic verification URLs, and direct issuing portal references (Cisco, MikroTik, AWS, Google Cloud, CompTIA).");
+    const { dictionary, locale } = useLanguage();
+
+    const heroBadge = locale === 'id'
+        ? get("certificationsHeroBadge_id", dictionary.certifications.badge)
+        : get("certificationsHeroBadge", dictionary.certifications.badge);
+    const heroTitle = locale === 'id'
+        ? get("certificationsHeroTitle_id", dictionary.certifications.title)
+        : get("certificationsHeroTitle", dictionary.certifications.title);
+    const heroSubtitle = locale === 'id'
+        ? get("certificationsHeroSubtitle_id", dictionary.certifications.subtitle)
+        : get("certificationsHeroSubtitle", dictionary.certifications.subtitle);
+    const trustTitle = locale === 'id'
+        ? get("certificationsTrustTitle_id", "Otentisitas & Verifikasi Terjamin")
+        : get("certificationsTrustTitle", "Authenticity & Verification Guaranteed");
+    const trustDesc = locale === 'id'
+        ? get("certificationsTrustDesc_id", "Seluruh sertifikasi industri didukung oleh ID kredensial digital resmi, URL verifikasi kriptografis, dan portal penerbit langsung (Cisco, MikroTik, AWS, Google Cloud, CompTIA).")
+        : get("certificationsTrustDesc", "All industry certifications listed are backed by official digital credential IDs, cryptographic verification URLs, and direct issuing portal references (Cisco, MikroTik, AWS, Google Cloud, CompTIA).");
 
     useEffect(() => {
         async function fetchCerts() {
@@ -118,9 +135,11 @@ export default function CertificationsPage() {
     // Filter certifications
     const filteredCerts = useMemo(() => {
         return certs.filter(c => {
+            const locTitle = getLocalizedField(c, "title", locale, c.title);
+            const locIssuer = getLocalizedField(c, "issuer", locale, c.issuer);
             const matchesSearch = !searchQuery ||
-                c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                c.issuer.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                locTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                locIssuer.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (c.skills || []).some(s => s.toLowerCase().includes(searchQuery.toLowerCase()));
 
             const matchesCategory = selectedCategory === "All" || c.category === selectedCategory;
@@ -130,7 +149,7 @@ export default function CertificationsPage() {
 
             return matchesSearch && matchesCategory && matchesActive;
         });
-    }, [certs, searchQuery, selectedCategory, activeOnly]);
+    }, [certs, searchQuery, selectedCategory, activeOnly, locale]);
 
     const handleCertClick = (cert: ICertification) => {
         setSelectedCert(cert);
@@ -295,7 +314,7 @@ export default function CertificationsPage() {
                                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <input
                                     type="text"
-                                    placeholder="Search certifications by title, issuing organization (e.g. Cisco, MikroTik), or skill..."
+                                    placeholder={dictionary.certifications.searchPlaceholder}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="w-full pl-10 pr-9 py-2.5 text-sm rounded-xl border border-border/80 dark:border-white/10 bg-background/60 focus:bg-background focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-muted-foreground/60"
@@ -321,7 +340,7 @@ export default function CertificationsPage() {
                                 }`}
                             >
                                 <CheckCircle2 className="h-3.5 w-3.5" />
-                                <span>Active & Valid Only</span>
+                                <span>{dictionary.certifications.activeStatus} {locale === 'id' ? "Saja" : "Only"}</span>
                             </button>
                         </div>
 
@@ -340,7 +359,7 @@ export default function CertificationsPage() {
                                             : "bg-background/60 border border-border/60 hover:border-primary/40 text-muted-foreground hover:text-foreground"
                                     }`}
                                 >
-                                    {cat}
+                                    {cat === "All" ? dictionary.certifications.filterAll : cat}
                                 </button>
                             ))}
                         </div>
@@ -349,7 +368,7 @@ export default function CertificationsPage() {
                     {/* Results Count & Reset Indicator */}
                     <div className="flex items-center justify-between gap-4 mt-6">
                         <p className="text-xs md:text-sm text-muted-foreground font-medium">
-                            Showing <span className="font-bold text-foreground">{filteredCerts.length}</span> of {certs.length} certifications
+                            {dictionary.certifications.showing} <span className="font-bold text-foreground">{filteredCerts.length}</span> {dictionary.certifications.of} {certs.length} {dictionary.certifications.credentialsCount}
                         </p>
                         {(searchQuery || selectedCategory !== "All" || activeOnly) && (
                             <button
@@ -361,7 +380,7 @@ export default function CertificationsPage() {
                                 className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
                             >
                                 <X className="h-3.5 w-3.5" />
-                                <span>Reset Filters</span>
+                                <span>{dictionary.certifications.clearFilters}</span>
                             </button>
                         )}
                     </div>
@@ -380,9 +399,9 @@ export default function CertificationsPage() {
                             <div className="h-14 w-14 rounded-2xl bg-muted/60 text-muted-foreground flex items-center justify-center mx-auto mb-4">
                                 <Award className="h-7 w-7" />
                             </div>
-                            <h3 className="text-xl font-bold text-foreground mb-2">No Certifications Found</h3>
+                            <h3 className="text-xl font-bold text-foreground mb-2">{dictionary.certifications.noCertificationsFound}</h3>
                             <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                                No certifications matched your active search query or selected category filter.
+                                {dictionary.certifications.noCertificationsDesc}
                             </p>
                             <button
                                 onClick={() => {
@@ -392,7 +411,7 @@ export default function CertificationsPage() {
                                 }}
                                 className="px-5 py-2.5 bg-primary text-white rounded-xl text-xs font-bold shadow-md shadow-primary/20 hover:bg-primary/90 transition-all cursor-pointer"
                             >
-                                Clear Filters
+                                {dictionary.certifications.clearFilters}
                             </button>
                         </SpotlightCard>
                     ) : (
@@ -401,6 +420,8 @@ export default function CertificationsPage() {
                                 {filteredCerts.map((cert, index) => {
                                     const isExpired = cert.expiryDate && new Date(cert.expiryDate) <= new Date();
                                     const isLifetime = !cert.expiryDate;
+                                    const certTitle = getLocalizedField(cert, "title", locale, cert.title);
+                                    const certIssuer = getLocalizedField(cert, "issuer", locale, cert.issuer);
 
                                     return (
                                         <motion.div
@@ -423,7 +444,7 @@ export default function CertificationsPage() {
                                                         <div className="aspect-video relative mb-5 rounded-xl overflow-hidden bg-muted/20 border border-border/60">
                                                             <Image
                                                                 src={cert.imageUrl}
-                                                                alt={cert.title}
+                                                                alt={certTitle}
                                                                 fill
                                                                 placeholder="blur"
                                                                 blurDataURL={getShimmerDataUrl(400, 240)}
@@ -434,15 +455,15 @@ export default function CertificationsPage() {
                                                             <div className="absolute top-2 right-2 z-10">
                                                                 {isLifetime ? (
                                                                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/90 backdrop-blur-md text-slate-950 text-[10px] font-bold shadow-xs">
-                                                                        <CheckCircle2 className="h-3 w-3" /> Lifetime
+                                                                        <CheckCircle2 className="h-3 w-3" /> {dictionary.certifications.doesNotExpire}
                                                                     </span>
                                                                 ) : isExpired ? (
                                                                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-500/90 backdrop-blur-md text-white text-[10px] font-bold shadow-xs">
-                                                                        <Clock className="h-3 w-3" /> Expired
+                                                                        <Clock className="h-3 w-3" /> {dictionary.certifications.expiredStatus}
                                                                     </span>
                                                                 ) : (
                                                                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/90 backdrop-blur-md text-slate-950 text-[10px] font-bold shadow-xs">
-                                                                        <CheckCircle2 className="h-3 w-3" /> Valid
+                                                                        <CheckCircle2 className="h-3 w-3" /> {dictionary.certifications.activeStatus}
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -454,15 +475,15 @@ export default function CertificationsPage() {
                                                             </div>
                                                             {isLifetime ? (
                                                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
-                                                                    <CheckCircle2 className="h-3 w-3" /> Lifetime Valid
+                                                                    <CheckCircle2 className="h-3 w-3" /> {dictionary.certifications.doesNotExpire}
                                                                 </span>
                                                             ) : isExpired ? (
                                                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-500/10 text-red-500 text-[10px] font-bold border border-red-500/20">
-                                                                    <Clock className="h-3 w-3" /> Expired
+                                                                    <Clock className="h-3 w-3" /> {dictionary.certifications.expiredStatus}
                                                                 </span>
                                                             ) : (
                                                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold border border-emerald-500/20">
-                                                                    <CheckCircle2 className="h-3 w-3" /> Valid
+                                                                    <CheckCircle2 className="h-3 w-3" /> {dictionary.certifications.activeStatus}
                                                                 </span>
                                                             )}
                                                         </div>
@@ -470,10 +491,10 @@ export default function CertificationsPage() {
 
                                                     {/* Title and Issuer */}
                                                     <h3 className="text-xl font-bold tracking-tight text-foreground group-hover:text-primary transition-colors line-clamp-2 leading-snug mb-1.5">
-                                                        {cert.title}
+                                                        {certTitle}
                                                     </h3>
                                                     <p className="text-xs text-primary/80 font-bold uppercase tracking-wider mb-3">
-                                                        {cert.issuer}
+                                                        {certIssuer}
                                                     </p>
 
                                                     {/* Category */}
@@ -498,7 +519,7 @@ export default function CertificationsPage() {
                                                             ))}
                                                             {cert.skills.length > 3 && (
                                                                 <span className="text-[10px] text-muted-foreground/60 self-center">
-                                                                    +{cert.skills.length - 3} more
+                                                                    +{cert.skills.length - 3} {locale === 'id' ? "lagi" : "more"}
                                                                 </span>
                                                             )}
                                                         </div>
@@ -509,11 +530,11 @@ export default function CertificationsPage() {
                                                 <div className="pt-4 mt-auto border-t border-border/60 dark:border-white/5 flex items-center justify-between text-xs">
                                                     <span className="text-muted-foreground/70 flex items-center gap-1 text-[11px]">
                                                         <Calendar className="h-3.5 w-3.5" />
-                                                        {new Date(cert.issueDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short' })}
+                                                        {new Date(cert.issueDate).toLocaleDateString(locale === 'id' ? "id-ID" : "en-US", { year: 'numeric', month: 'short' })}
                                                     </span>
 
                                                     <div className="inline-flex items-center gap-1 font-bold text-primary group-hover:gap-1.5 transition-all">
-                                                        <span>View Details</span>
+                                                        <span>{dictionary.certifications.viewCredential}</span>
                                                         <ChevronRight className="h-3.5 w-3.5" />
                                                     </div>
                                                 </div>
