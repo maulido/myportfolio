@@ -63,10 +63,47 @@ export function ContactPageContent({ initialSettings, initialFaqs }: ContactPage
     const contactEmail = rawEmail.replace(/^mailto:/i, "");
     const rawPhone = settings?.contactPhone || "+62 812-3456-7890";
     const rawWhatsapp = settings?.whatsappNumber || rawPhone.replace(/[^0-9]/g, "");
-    const contactLocation = settings?.contactLocation || "Jakarta, Indonesia";
-    const responseTime = settings?.contactResponseTime || dictionary.contact.responseTimeValue;
-    const workingHours = settings?.contactWorkingHours || dictionary.contact.workingHoursValue;
+    const rawLocation = settings?.contactLocation || "Jakarta, Indonesia";
+    const contactLocation = rawLocation;
+    const responseTime = locale === 'id'
+        ? (settings?.contactResponseTime_id || settings?.contactResponseTime || dictionary.contact.responseTimeValue)
+        : (settings?.contactResponseTime || dictionary.contact.responseTimeValue);
+    const slaSuffix = locale === 'id'
+        ? (settings?.contactSlaSuffix_id || "pada hari kerja reguler.")
+        : (settings?.contactSlaSuffix || "during regular working days.");
+    const workingHours = locale === 'id'
+        ? (settings?.contactWorkingHours_id || settings?.contactWorkingHours || dictionary.contact.workingHoursValue)
+        : (settings?.contactWorkingHours || dictionary.contact.workingHoursValue);
     const meetingUrl = settings?.contactMeetingUrl || "";
+
+    // Operational Protocol & Base of Operations Settings
+    const protocolTitle = locale === 'id'
+        ? (settings?.contactProtocolTitle_id || "Protokol Operasional")
+        : (settings?.contactProtocolTitle || "Operational Protocol");
+    const protocolSubtitle = locale === 'id'
+        ? (settings?.contactProtocolSubtitle_id || "Standar rekayasa & komitmen klien")
+        : (settings?.contactProtocolSubtitle || "Engineering standards & client commitments");
+    const ndaTitle = locale === 'id'
+        ? (settings?.contactNdaTitle_id || "Kerahasiaan & Non-Disclosure")
+        : (settings?.contactNdaTitle || "Confidentiality & Non-Disclosure");
+    const ndaDesc = locale === 'id'
+        ? (settings?.contactNdaDesc_id || "Siap menandatangani Mutual NDA untuk perlindungan codebase dan spesifikasi proprietary enterprise.")
+        : (settings?.contactNdaDesc || "Mutual NDA execution ready for enterprise codebases and proprietary specs.");
+    const advisoryTitle = locale === 'id'
+        ? (settings?.contactAdvisoryTitle_id || "Fokus Konsultasi Utama")
+        : (settings?.contactAdvisoryTitle || "Core Advisory Focus");
+
+    const rawSkillsStr = locale === 'id' && settings?.contactAdvisorySkills_id
+        ? settings.contactAdvisorySkills_id
+        : (settings?.contactAdvisorySkills || "Enterprise Networking, Full-Stack Next.js 16, BGP & OSPF Routing, Microservices & APIs, Cloud Architecture, Security & Hardening");
+    const advisorySkills = rawSkillsStr.split(",").map(s => s.trim()).filter(Boolean);
+
+    const baseTitle = locale === 'id'
+        ? (settings?.contactBaseTitle_id || "Pusat Operasional")
+        : (settings?.contactBaseTitle || "Base of Operations");
+    const baseDesc = locale === 'id'
+        ? (settings?.contactBaseDesc_id || "Beroperasi dari Jakarta, Indonesia (UTC+7). Terbuka untuk kontrak kerja remote penuh waktu, kepemimpinan teknis hybrid, dan konsultasi on-site global.")
+        : (settings?.contactBaseDesc || "Operating from Jakarta, Indonesia (UTC+7). Open to full-time remote contracts, hybrid technical leadership, and global on-site consultations.");
 
     // Live Jakarta Local Clock
     const [jakartaTime, setJakartaTime] = useState<string>("");
@@ -418,8 +455,8 @@ export function ContactPageContent({ initialSettings, initialFaqs }: ContactPage
                                     <Building2 className="h-6 w-6" />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-bold text-foreground">Operational Protocol</h3>
-                                    <p className="text-xs text-muted-foreground">Engineering standards & client commitments</p>
+                                    <h3 className="text-lg font-bold text-foreground">{protocolTitle}</h3>
+                                    <p className="text-xs text-muted-foreground">{protocolSubtitle}</p>
                                 </div>
                             </div>
 
@@ -427,15 +464,15 @@ export function ContactPageContent({ initialSettings, initialFaqs }: ContactPage
                                 <div className="flex items-start gap-3 p-3 rounded-xl bg-background/50 border border-border/50">
                                     <Clock className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                                     <div>
-                                        <p className="font-semibold text-foreground">Response SLA</p>
-                                        <p className="text-muted-foreground text-xs mt-0.5">{responseTime} during regular working days.</p>
+                                        <p className="font-semibold text-foreground">{locale === 'id' ? "Respon SLA" : "Response SLA"}</p>
+                                        <p className="text-muted-foreground text-xs mt-0.5">{responseTime} {slaSuffix}</p>
                                     </div>
                                 </div>
 
                                 <div className="flex items-start gap-3 p-3 rounded-xl bg-background/50 border border-border/50">
                                     <Globe className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                                     <div>
-                                        <p className="font-semibold text-foreground">Working Hours & Timezone</p>
+                                        <p className="font-semibold text-foreground">{locale === 'id' ? "Jam Kerja & Zona Waktu" : "Working Hours & Timezone"}</p>
                                         <p className="text-muted-foreground text-xs mt-0.5">{workingHours}</p>
                                     </div>
                                 </div>
@@ -443,8 +480,8 @@ export function ContactPageContent({ initialSettings, initialFaqs }: ContactPage
                                 <div className="flex items-start gap-3 p-3 rounded-xl bg-background/50 border border-border/50">
                                     <ShieldCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                                     <div>
-                                        <p className="font-semibold text-foreground">Confidentiality & Non-Disclosure</p>
-                                        <p className="text-muted-foreground text-xs mt-0.5">Mutual NDA execution ready for enterprise codebases and proprietary specs.</p>
+                                        <p className="font-semibold text-foreground">{ndaTitle}</p>
+                                        <p className="text-muted-foreground text-xs mt-0.5">{ndaDesc}</p>
                                     </div>
                                 </div>
                             </div>
@@ -452,17 +489,10 @@ export function ContactPageContent({ initialSettings, initialFaqs }: ContactPage
                             {/* Core Engineering Competencies */}
                             <div className="pt-2 border-t border-border/60">
                                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                                    Core Advisory Focus
+                                    {advisoryTitle}
                                 </p>
                                 <div className="flex flex-wrap gap-1.5">
-                                    {[
-                                        "Enterprise Networking",
-                                        "Full-Stack Next.js 16",
-                                        "BGP & OSPF Routing",
-                                        "Microservices & APIs",
-                                        "Cloud Architecture",
-                                        "Security & Hardening"
-                                    ].map((skill, idx) => (
+                                    {advisorySkills.map((skill, idx) => (
                                         <span
                                             key={idx}
                                             className="px-2.5 py-1 rounded-lg bg-primary/5 border border-primary/15 text-foreground/90 text-xs font-medium"
@@ -481,12 +511,12 @@ export function ContactPageContent({ initialSettings, initialFaqs }: ContactPage
                                     <MapPin className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <h4 className="text-sm font-bold text-foreground">Base of Operations</h4>
+                                    <h4 className="text-sm font-bold text-foreground">{baseTitle}</h4>
                                     <p className="text-xs text-muted-foreground">{contactLocation}</p>
                                 </div>
                             </div>
                             <p className="text-xs text-muted-foreground leading-relaxed">
-                                Operating from Jakarta, Indonesia (UTC+7). Open to full-time remote contracts, hybrid technical leadership, and global on-site consultations.
+                                {baseDesc}
                             </p>
                         </div>
                     </motion.div>

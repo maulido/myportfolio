@@ -20,14 +20,17 @@ import {
     Shield, 
     Layers, 
     Terminal,
-    MessageSquare
+    MessageSquare,
+    Building2,
+    MapPin,
+    Clock
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 import { mutateSettingsCache } from "@/lib/useSettings";
 
-type TabKey = "global" | "home" | "about" | "projects" | "certifications" | "blog" | "gallery_uses" | "footer";
+type TabKey = "global" | "home" | "about" | "projects" | "certifications" | "blog" | "gallery_uses" | "contact" | "footer";
 
 export default function AdminSettingsPage() {
     const [loading, setLoading] = useState(true);
@@ -69,10 +72,33 @@ export default function AdminSettingsPage() {
 
         // Contact Page (/contact)
         contactHeroBadge: "Direct Channel & Technical Advisory",
+        contactHeroBadge_id: "Saluran Langsung & Konsultasi Teknis",
         contactHeroTitle: "Let's Build Something Exceptional Together",
+        contactHeroTitle_id: "Mari Bangun Solusi Luar Biasa Bersama",
         contactHeroSubtitle: "Have an engineering challenge, architectural consultation, or a collaborative project in mind? Reach out directly via the form or my primary communication channels.",
+        contactHeroSubtitle_id: "Memiliki tantangan rekayasa, konsultasi arsitektur, atau proyek kolaborasi? Hubungi langsung melalui formulir atau saluran komunikasi utama.",
+        contactProtocolTitle: "Operational Protocol",
+        contactProtocolTitle_id: "Protokol Operasional",
+        contactProtocolSubtitle: "Engineering standards & client commitments",
+        contactProtocolSubtitle_id: "Standar rekayasa & komitmen klien",
         contactResponseTime: "Within 2 to 4 hours",
+        contactResponseTime_id: "Dalam 2 hingga 4 jam",
+        contactSlaSuffix: "during regular working days.",
+        contactSlaSuffix_id: "pada hari kerja reguler.",
         contactWorkingHours: "Mon - Fri, 09:00 - 18:00 WIB (UTC+7)",
+        contactWorkingHours_id: "Sen - Jum, 09:00 - 18:00 WIB (UTC+7)",
+        contactNdaTitle: "Confidentiality & Non-Disclosure",
+        contactNdaTitle_id: "Kerahasiaan & Non-Disclosure",
+        contactNdaDesc: "Mutual NDA execution ready for enterprise codebases and proprietary specs.",
+        contactNdaDesc_id: "Siap menandatangani Mutual NDA untuk perlindungan codebase dan spesifikasi proprietary enterprise.",
+        contactAdvisoryTitle: "Core Advisory Focus",
+        contactAdvisoryTitle_id: "Fokus Konsultasi Utama",
+        contactAdvisorySkills: "Enterprise Networking, Full-Stack Next.js 16, BGP & OSPF Routing, Microservices & APIs, Cloud Architecture, Security & Hardening",
+        contactAdvisorySkills_id: "Infrastruktur Jaringan Enterprise, Rekayasa Full-Stack Next.js 16, Routing BGP & OSPF, Microservices & APIs, Arsitektur Cloud, Keamanan & Hardening",
+        contactBaseTitle: "Base of Operations",
+        contactBaseTitle_id: "Pusat Operasional",
+        contactBaseDesc: "Operating from Jakarta, Indonesia (UTC+7). Open to full-time remote contracts, hybrid technical leadership, and global on-site consultations.",
+        contactBaseDesc_id: "Beroperasi dari Jakarta, Indonesia (UTC+7). Terbuka untuk kontrak kerja remote penuh waktu, kepemimpinan teknis hybrid, dan konsultasi on-site global.",
         contactMeetingUrl: "",
 
         // About Page
@@ -196,6 +222,7 @@ export default function AdminSettingsPage() {
         { key: "certifications", label: "Certifications Page", icon: Award },
         { key: "blog", label: "Blog Page", icon: FileCode },
         { key: "gallery_uses", label: "Gallery & Uses", icon: Camera },
+        { key: "contact", label: "Contact Page", icon: MessageSquare },
         { key: "footer", label: "Footer & Legal", icon: Layers }
     ];
 
@@ -410,80 +437,26 @@ export default function AdminSettingsPage() {
                                 </div>
                             </div>
 
-                            {/* Contact Page (/contact) & SLA Details */}
-                            <div className="bg-card/40 backdrop-blur-md border border-border rounded-2xl p-6 shadow-sm">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="p-2 bg-primary/10 rounded-lg">
-                                        <MessageSquare className="h-5 w-5 text-primary" />
+                            {/* Contact Page Settings Callout */}
+                            <div className="bg-card/40 backdrop-blur-md border border-primary/20 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2.5 bg-primary/10 rounded-xl text-primary shrink-0">
+                                        <MessageSquare className="h-5 w-5" />
                                     </div>
                                     <div>
-                                        <h2 className="text-lg font-bold">Contact Page (/contact) & Response Protocol</h2>
-                                        <p className="text-xs text-muted-foreground">Kustomisasi judul, SLA respon, jam kerja, dan tautan booking konsultasi pada halaman /contact</p>
+                                        <h3 className="text-sm font-bold text-foreground">Contact Page & Operational Protocol</h3>
+                                        <p className="text-xs text-muted-foreground mt-0.5">
+                                            Kelola teks Operational Protocol, Response SLA, Working Hours, NDA, Core Advisory Focus, dan Base of Operations pada tab khusus.
+                                        </p>
                                     </div>
                                 </div>
-                                <div className="grid gap-4 sm:grid-cols-2">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-foreground">Contact Hero Badge</label>
-                                        <input
-                                            name="contactHeroBadge"
-                                            value={settings.contactHeroBadge || ""}
-                                            onChange={handleChange}
-                                            placeholder="Direct Channel & Technical Advisory"
-                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-foreground">Response Time SLA</label>
-                                        <input
-                                            name="contactResponseTime"
-                                            value={settings.contactResponseTime || ""}
-                                            onChange={handleChange}
-                                            placeholder="Within 2 to 4 hours"
-                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-foreground">Working Hours & Timezone</label>
-                                        <input
-                                            name="contactWorkingHours"
-                                            value={settings.contactWorkingHours || ""}
-                                            onChange={handleChange}
-                                            placeholder="Mon - Fri, 09:00 - 18:00 WIB (UTC+7)"
-                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-foreground">Meeting / Cal.com Booking URL</label>
-                                        <input
-                                            name="contactMeetingUrl"
-                                            value={settings.contactMeetingUrl || ""}
-                                            onChange={handleChange}
-                                            placeholder="https://cal.com/yourname (opsional)"
-                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                                        />
-                                    </div>
-                                    <div className="space-y-2 sm:col-span-2">
-                                        <label className="text-xs font-semibold text-foreground">Contact Page Headline</label>
-                                        <input
-                                            name="contactHeroTitle"
-                                            value={settings.contactHeroTitle || ""}
-                                            onChange={handleChange}
-                                            placeholder="Let's Build Something Exceptional Together"
-                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
-                                        />
-                                    </div>
-                                    <div className="space-y-2 sm:col-span-2">
-                                        <label className="text-xs font-semibold text-foreground">Contact Page Subtitle / Invitation</label>
-                                        <textarea
-                                            name="contactHeroSubtitle"
-                                            value={settings.contactHeroSubtitle || ""}
-                                            onChange={handleChange}
-                                            rows={2}
-                                            placeholder="Subjudul ajakan kontak pada halaman /contact..."
-                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
-                                        />
-                                    </div>
-                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveTab("contact")}
+                                    className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-xs hover:bg-primary/90 transition-all cursor-pointer whitespace-nowrap shrink-0"
+                                >
+                                    Buka Pengaturan Contact
+                                </button>
                             </div>
 
                             <div className="bg-card/40 backdrop-blur-md border border-border rounded-2xl p-6 shadow-sm">
@@ -1277,6 +1250,468 @@ export default function AdminSettingsPage() {
                                             rows={2}
                                             placeholder="Deskripsi katalog perangkat kerja..."
                                             className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* TAB: CONTACT PAGE & OPERATIONAL PROTOCOL */}
+                    {activeTab === "contact" && (
+                        <div className="grid gap-6">
+                            {/* Card 1: Operational Protocol */}
+                            <div className="bg-card/40 backdrop-blur-md border border-border rounded-2xl p-6 shadow-sm">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                                        <Building2 className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-bold">Operational Protocol</h2>
+                                        <p className="text-xs text-muted-foreground">Kustomisasi judul protokol, standar rekayasa, SLA respon, jam kerja, dan NDA</p>
+                                    </div>
+                                </div>
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-primary/10 text-primary text-[10px] font-mono font-bold">EN</span>
+                                            <span>Protocol Title</span>
+                                        </label>
+                                        <input
+                                            name="contactProtocolTitle"
+                                            value={settings.contactProtocolTitle || ""}
+                                            onChange={handleChange}
+                                            placeholder="Operational Protocol"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-mono font-bold">ID</span>
+                                            <span>Judul Protokol (Indonesia)</span>
+                                        </label>
+                                        <input
+                                            name="contactProtocolTitle_id"
+                                            value={settings.contactProtocolTitle_id || ""}
+                                            onChange={handleChange}
+                                            placeholder="Protokol Operasional"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-semibold"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-primary/10 text-primary text-[10px] font-mono font-bold">EN</span>
+                                            <span>Protocol Subtitle</span>
+                                        </label>
+                                        <input
+                                            name="contactProtocolSubtitle"
+                                            value={settings.contactProtocolSubtitle || ""}
+                                            onChange={handleChange}
+                                            placeholder="Engineering standards & client commitments"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-mono font-bold">ID</span>
+                                            <span>Subjudul Protokol (Indonesia)</span>
+                                        </label>
+                                        <input
+                                            name="contactProtocolSubtitle_id"
+                                            value={settings.contactProtocolSubtitle_id || ""}
+                                            onChange={handleChange}
+                                            placeholder="Standar rekayasa & komitmen klien"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                                        />
+                                    </div>
+
+                                    {/* Response SLA */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-primary/10 text-primary text-[10px] font-mono font-bold">EN</span>
+                                            <span>Response SLA Time</span>
+                                        </label>
+                                        <input
+                                            name="contactResponseTime"
+                                            value={settings.contactResponseTime || ""}
+                                            onChange={handleChange}
+                                            placeholder="Within 2 to 4 hours"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-mono font-bold">ID</span>
+                                            <span>Waktu Respon SLA (Indonesia)</span>
+                                        </label>
+                                        <input
+                                            name="contactResponseTime_id"
+                                            value={settings.contactResponseTime_id || ""}
+                                            onChange={handleChange}
+                                            placeholder="Dalam 2 hingga 4 jam"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-primary/10 text-primary text-[10px] font-mono font-bold">EN</span>
+                                            <span>SLA Days Note / Suffix</span>
+                                        </label>
+                                        <input
+                                            name="contactSlaSuffix"
+                                            value={settings.contactSlaSuffix || ""}
+                                            onChange={handleChange}
+                                            placeholder="during regular working days."
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-mono font-bold">ID</span>
+                                            <span>Catatan Hari SLA (Indonesia)</span>
+                                        </label>
+                                        <input
+                                            name="contactSlaSuffix_id"
+                                            value={settings.contactSlaSuffix_id || ""}
+                                            onChange={handleChange}
+                                            placeholder="pada hari kerja reguler."
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                                        />
+                                    </div>
+
+                                    {/* Working Hours & Timezone */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-primary/10 text-primary text-[10px] font-mono font-bold">EN</span>
+                                            <span>Working Hours & Timezone</span>
+                                        </label>
+                                        <input
+                                            name="contactWorkingHours"
+                                            value={settings.contactWorkingHours || ""}
+                                            onChange={handleChange}
+                                            placeholder="Mon - Fri, 09:00 - 18:00 WIB (UTC+7)"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-mono font-bold">ID</span>
+                                            <span>Jam Kerja & Zona Waktu (Indonesia)</span>
+                                        </label>
+                                        <input
+                                            name="contactWorkingHours_id"
+                                            value={settings.contactWorkingHours_id || ""}
+                                            onChange={handleChange}
+                                            placeholder="Sen - Jum, 09:00 - 18:00 WIB (UTC+7)"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                                        />
+                                    </div>
+
+                                    {/* Confidentiality & Non-Disclosure */}
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-primary/10 text-primary text-[10px] font-mono font-bold">EN</span>
+                                            <span>Confidentiality & NDA Title</span>
+                                        </label>
+                                        <input
+                                            name="contactNdaTitle"
+                                            value={settings.contactNdaTitle || ""}
+                                            onChange={handleChange}
+                                            placeholder="Confidentiality & Non-Disclosure"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-mono font-bold">ID</span>
+                                            <span>Judul Kerahasiaan & NDA (Indonesia)</span>
+                                        </label>
+                                        <input
+                                            name="contactNdaTitle_id"
+                                            value={settings.contactNdaTitle_id || ""}
+                                            onChange={handleChange}
+                                            placeholder="Kerahasiaan & Non-Disclosure"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-semibold"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-primary/10 text-primary text-[10px] font-mono font-bold">EN</span>
+                                            <span>NDA Commitment Description</span>
+                                        </label>
+                                        <textarea
+                                            name="contactNdaDesc"
+                                            value={settings.contactNdaDesc || ""}
+                                            onChange={handleChange}
+                                            rows={2}
+                                            placeholder="Mutual NDA execution ready for enterprise codebases and proprietary specs."
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-mono font-bold">ID</span>
+                                            <span>Deskripsi Komitmen NDA (Indonesia)</span>
+                                        </label>
+                                        <textarea
+                                            name="contactNdaDesc_id"
+                                            value={settings.contactNdaDesc_id || ""}
+                                            onChange={handleChange}
+                                            rows={2}
+                                            placeholder="Siap menandatangani Mutual NDA untuk perlindungan codebase dan spesifikasi proprietary enterprise."
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm resize-none"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Card 2: Core Advisory Focus */}
+                            <div className="bg-card/40 backdrop-blur-md border border-border rounded-2xl p-6 shadow-sm">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                                        <Terminal className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-bold">Core Advisory Focus</h2>
+                                        <p className="text-xs text-muted-foreground">Tagline keahlian dan lencana domain teknologi di bawah kartu protokol</p>
+                                    </div>
+                                </div>
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-primary/10 text-primary text-[10px] font-mono font-bold">EN</span>
+                                            <span>Section Title</span>
+                                        </label>
+                                        <input
+                                            name="contactAdvisoryTitle"
+                                            value={settings.contactAdvisoryTitle || ""}
+                                            onChange={handleChange}
+                                            placeholder="Core Advisory Focus"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-mono font-bold">ID</span>
+                                            <span>Judul Bagian (Indonesia)</span>
+                                        </label>
+                                        <input
+                                            name="contactAdvisoryTitle_id"
+                                            value={settings.contactAdvisoryTitle_id || ""}
+                                            onChange={handleChange}
+                                            placeholder="Fokus Konsultasi Utama"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-semibold"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-primary/10 text-primary text-[10px] font-mono font-bold">EN</span>
+                                            <span>Core Advisory Skill Badges (Pisahkan dengan koma)</span>
+                                        </label>
+                                        <input
+                                            name="contactAdvisorySkills"
+                                            value={settings.contactAdvisorySkills || ""}
+                                            onChange={handleChange}
+                                            placeholder="Enterprise Networking, Full-Stack Next.js 16, BGP & OSPF Routing, Microservices & APIs, Cloud Architecture, Security & Hardening"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                        />
+                                        <p className="text-[11px] text-muted-foreground">Pisahkan setiap keahlian dengan tanda koma (,)</p>
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-mono font-bold">ID</span>
+                                            <span>Lencana Keahlian (Indonesia - Opsional)</span>
+                                        </label>
+                                        <input
+                                            name="contactAdvisorySkills_id"
+                                            value={settings.contactAdvisorySkills_id || ""}
+                                            onChange={handleChange}
+                                            placeholder="Infrastruktur Jaringan Enterprise, Rekayasa Full-Stack Next.js 16, Routing BGP & OSPF, Microservices & APIs, Arsitektur Cloud, Keamanan & Hardening"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Card 3: Base of Operations */}
+                            <div className="bg-card/40 backdrop-blur-md border border-border rounded-2xl p-6 shadow-sm">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-500">
+                                        <MapPin className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-bold">Base of Operations</h2>
+                                        <p className="text-xs text-muted-foreground">Lokasi pusat operasional dan deskripsi lingkup keterlibatan kerja</p>
+                                    </div>
+                                </div>
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-primary/10 text-primary text-[10px] font-mono font-bold">EN</span>
+                                            <span>Base Title</span>
+                                        </label>
+                                        <input
+                                            name="contactBaseTitle"
+                                            value={settings.contactBaseTitle || ""}
+                                            onChange={handleChange}
+                                            placeholder="Base of Operations"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-mono font-bold">ID</span>
+                                            <span>Judul Pusat Operasional (Indonesia)</span>
+                                        </label>
+                                        <input
+                                            name="contactBaseTitle_id"
+                                            value={settings.contactBaseTitle_id || ""}
+                                            onChange={handleChange}
+                                            placeholder="Pusat Operasional"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-semibold"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="text-xs font-semibold text-foreground">Location Name (City, Country)</label>
+                                        <input
+                                            name="contactLocation"
+                                            value={settings.contactLocation || ""}
+                                            onChange={handleChange}
+                                            placeholder="Jakarta, Indonesia"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-primary/10 text-primary text-[10px] font-mono font-bold">EN</span>
+                                            <span>Engagement Scope Description</span>
+                                        </label>
+                                        <textarea
+                                            name="contactBaseDesc"
+                                            value={settings.contactBaseDesc || ""}
+                                            onChange={handleChange}
+                                            rows={2}
+                                            placeholder="Operating from Jakarta, Indonesia (UTC+7). Open to full-time remote contracts, hybrid technical leadership, and global on-site consultations."
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-mono font-bold">ID</span>
+                                            <span>Deskripsi Lingkup Keterlibatan (Indonesia)</span>
+                                        </label>
+                                        <textarea
+                                            name="contactBaseDesc_id"
+                                            value={settings.contactBaseDesc_id || ""}
+                                            onChange={handleChange}
+                                            rows={2}
+                                            placeholder="Beroperasi dari Jakarta, Indonesia (UTC+7). Terbuka untuk kontrak kerja remote penuh waktu, kepemimpinan teknis hybrid, dan konsultasi on-site global."
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm resize-none"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Card 4: Contact Hero & Direct Channels */}
+                            <div className="bg-card/40 backdrop-blur-md border border-border rounded-2xl p-6 shadow-sm">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                                        <MessageSquare className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-bold">Contact Page Hero & Consultation Channels</h2>
+                                        <p className="text-xs text-muted-foreground">Kustomisasi judul hero, subjudul, dan tautan booking konsultasi pada halaman /contact</p>
+                                    </div>
+                                </div>
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-primary/10 text-primary text-[10px] font-mono font-bold">EN</span>
+                                            <span>Contact Hero Badge</span>
+                                        </label>
+                                        <input
+                                            name="contactHeroBadge"
+                                            value={settings.contactHeroBadge || ""}
+                                            onChange={handleChange}
+                                            placeholder="Direct Channel & Technical Advisory"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-mono font-bold">ID</span>
+                                            <span>Badge Hero (Indonesia)</span>
+                                        </label>
+                                        <input
+                                            name="contactHeroBadge_id"
+                                            value={settings.contactHeroBadge_id || ""}
+                                            onChange={handleChange}
+                                            placeholder="Saluran Langsung & Konsultasi Teknis"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-primary/10 text-primary text-[10px] font-mono font-bold">EN</span>
+                                            <span>Contact Page Headline Title</span>
+                                        </label>
+                                        <input
+                                            name="contactHeroTitle"
+                                            value={settings.contactHeroTitle || ""}
+                                            onChange={handleChange}
+                                            placeholder="Let's Build Something Exceptional Together"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-mono font-bold">ID</span>
+                                            <span>Judul Headline (Indonesia)</span>
+                                        </label>
+                                        <input
+                                            name="contactHeroTitle_id"
+                                            value={settings.contactHeroTitle_id || ""}
+                                            onChange={handleChange}
+                                            placeholder="Mari Bangun Solusi Luar Biasa Bersama"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm font-semibold"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-primary/10 text-primary text-[10px] font-mono font-bold">EN</span>
+                                            <span>Contact Page Subtitle / Invitation</span>
+                                        </label>
+                                        <textarea
+                                            name="contactHeroSubtitle"
+                                            value={settings.contactHeroSubtitle || ""}
+                                            onChange={handleChange}
+                                            rows={2}
+                                            placeholder="Subjudul ajakan kontak pada halaman /contact..."
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <span className="px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-mono font-bold">ID</span>
+                                            <span>Subjudul Ajakan Kontak (Indonesia)</span>
+                                        </label>
+                                        <textarea
+                                            name="contactHeroSubtitle_id"
+                                            value={settings.contactHeroSubtitle_id || ""}
+                                            onChange={handleChange}
+                                            rows={2}
+                                            placeholder="Deskripsi ajakan kontak dalam Bahasa Indonesia..."
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm resize-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="text-xs font-semibold text-foreground">Meeting / Cal.com Booking URL</label>
+                                        <input
+                                            name="contactMeetingUrl"
+                                            value={settings.contactMeetingUrl || ""}
+                                            onChange={handleChange}
+                                            placeholder="https://cal.com/yourname (opsional)"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                                         />
                                     </div>
                                 </div>
