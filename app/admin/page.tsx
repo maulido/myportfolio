@@ -387,7 +387,7 @@ export default function AdminDashboard() {
                         </div>
                     </div>
                     <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <Link href="/maintenance" target="_blank" className="flex-1 sm:flex-none">
+                        <Link href="/maintenance?preview=true" target="_blank" className="flex-1 sm:flex-none">
                             <button className="w-full px-3 py-1.5 rounded-xl bg-background/80 hover:bg-background text-foreground text-xs font-semibold transition-all border border-border">
                                 Preview Screen
                             </button>

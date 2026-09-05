@@ -331,7 +331,7 @@ export default function AdminSettingsPage() {
                         { label: "Gallery", href: "/gallery" },
                         { label: "Uses", href: "/uses" },
                         { label: "Contact", href: "/contact" },
-                        { label: "Maintenance", href: "/maintenance" },
+                        { label: "Maintenance", href: "/maintenance?preview=true" },
                     ].map((p) => (
                         <a
                             key={p.href}
@@ -451,7 +451,7 @@ export default function AdminSettingsPage() {
 
                                     <div className="flex items-center gap-3">
                                         <Link
-                                            href="/maintenance"
+                                            href="/maintenance?preview=true"
                                             target="_blank"
                                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-muted hover:bg-muted/80 text-foreground transition-colors border border-border"
                                         >

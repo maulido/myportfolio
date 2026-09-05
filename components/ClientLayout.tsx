@@ -53,6 +53,10 @@ function ClientLayoutInner({
 
     // 2. Direct access to standalone maintenance page
     if (isMaintenancePage) {
+        if (!isMaintenanceMode && status === "unauthenticated") {
+            router.replace("/");
+            return null;
+        }
         return <>{children}</>;
     }
 
