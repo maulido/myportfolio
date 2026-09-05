@@ -18,10 +18,12 @@ import {
     Award,
     Settings,
     FolderOpen,
-    TrendingUp
+    TrendingUp,
+    Wrench
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 import {
     XAxis,
     YAxis,
@@ -92,6 +94,8 @@ export default function AdminDashboard() {
     const { data: session, status } = useSession();
     const [isWorking, setIsWorking] = useState(true);
     const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+    const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+    const [isUpdatingMaintenance, setIsUpdatingMaintenance] = useState(false);
 
     // Core entity states
     const [posts, setPosts] = useState<Post[]>([]);
@@ -120,6 +124,7 @@ export default function AdminDashboard() {
                         projectsRes,
                         galleryRes,
                         settingsRes,
+                        maintenanceRes,
                         sessionsRes,
                         guestbookRes,
                         pendingGuestbookRes,
@@ -130,6 +135,7 @@ export default function AdminDashboard() {
                         fetch("/api/projects"),
                         fetch("/api/gallery"),
                         fetch("/api/settings?key=isWorking"),
+                        fetch("/api/settings?key=isMaintenanceMode"),
                         fetch("/api/analytics/session/stats"),
                         fetch("/api/guestbook?limit=5"),
                         fetch("/api/guestbook/pending"),
@@ -161,6 +167,14 @@ export default function AdminDashboard() {
                     if (settingsRes.status === "fulfilled" && settingsRes.value.ok) {
                         const d = await settingsRes.value.json();
                         if (d.success && d.data !== undefined) setIsWorking(Boolean(d.data));
+                    }
+
+                    // Handle Maintenance Mode Status
+                    if (maintenanceRes.status === "fulfilled" && maintenanceRes.value.ok) {
+                        const d = await maintenanceRes.value.json();
+                        if (d.success && d.data !== undefined) {
+                            setIsMaintenanceMode(d.data === "true" || d.data === true);
+                        }
                     }
 
                     // Handle Session Analytics
@@ -232,6 +246,38 @@ export default function AdminDashboard() {
         }
     };
 
+    const handleToggleMaintenance = async () => {
+        if (isUpdatingMaintenance) return;
+        setIsUpdatingMaintenance(true);
+        const nextValue = !isMaintenanceMode;
+        setIsMaintenanceMode(nextValue);
+
+        try {
+            const res = await fetch("/api/settings", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ key: "isMaintenanceMode", value: nextValue ? "true" : "false" })
+            });
+
+            if (res.ok) {
+                if (nextValue) {
+                    toast.success("Maintenance Mode Activated! Public visitors now see the maintenance screen.");
+                } else {
+                    toast.success("Maintenance Mode Disabled! Website is live for all visitors.");
+                }
+            } else {
+                setIsMaintenanceMode(!nextValue);
+                toast.error("Failed to update maintenance mode");
+            }
+        } catch (error) {
+            console.error("Failed to update maintenance mode", error);
+            setIsMaintenanceMode(!nextValue);
+            toast.error("Network error while updating maintenance mode");
+        } finally {
+            setIsUpdatingMaintenance(false);
+        }
+    };
+
     if (status === "loading" || isLoadingData) {
         return (
             <div className="flex min-h-[400px] items-center justify-center">
@@ -269,7 +315,7 @@ export default function AdminDashboard() {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2.5">
                     <Link
                         href="/"
                         target="_blank"
@@ -279,6 +325,23 @@ export default function AdminDashboard() {
                         <span>View Live Site</span>
                         <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
                     </Link>
+
+                    {/* Maintenance Mode Instant Toggle */}
+                    <div className="flex items-center gap-2 bg-card border border-border/80 p-1 rounded-2xl shadow-xs">
+                        <button
+                            onClick={handleToggleMaintenance}
+                            disabled={isUpdatingMaintenance}
+                            title={isMaintenanceMode ? "Click to disable maintenance mode & restore live site" : "Click to enable maintenance mode"}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+                                isMaintenanceMode
+                                    ? "bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-600/25"
+                                    : "bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground"
+                            }`}
+                        >
+                            <Wrench className={`h-3.5 w-3.5 ${isMaintenanceMode ? "animate-spin" : ""}`} />
+                            <span>{isMaintenanceMode ? "Maintenance ON" : "Maintenance OFF"}</span>
+                        </button>
+                    </div>
 
                     <div className="flex items-center gap-2 bg-card border border-border/80 p-1.5 rounded-2xl shadow-xs">
                         <button
@@ -299,6 +362,46 @@ export default function AdminDashboard() {
                     </div>
                 </div>
             </motion.div>
+
+            {/* Maintenance Mode Alert Banner if active */}
+            {isMaintenanceMode && (
+                <motion.div
+                    initial={{ opacity: 0, y: -5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-900 dark:text-rose-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs"
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-400 shrink-0">
+                            <Wrench className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <div className="text-sm font-bold flex items-center gap-2">
+                                <span>Maintenance Mode is Active</span>
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-rose-600 text-white animate-pulse">
+                                    PUBLIC BLOCKED
+                                </span>
+                            </div>
+                            <div className="text-xs opacity-90 mt-0.5">
+                                Regular visitors are intercepted by the Maintenance Page. You can preview the live site with admin session or turn off maintenance.
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <Link href="/maintenance" target="_blank" className="flex-1 sm:flex-none">
+                            <button className="w-full px-3 py-1.5 rounded-xl bg-background/80 hover:bg-background text-foreground text-xs font-semibold transition-all border border-border">
+                                Preview Screen
+                            </button>
+                        </Link>
+                        <button
+                            onClick={handleToggleMaintenance}
+                            disabled={isUpdatingMaintenance}
+                            className="flex-1 sm:flex-none px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shadow-xs cursor-pointer"
+                        >
+                            Turn Off (Go Live)
+                        </button>
+                    </div>
+                </motion.div>
+            )}
 
             {/* Actionable Notification / Moderation Banner */}
             {hasPendingAction ? (

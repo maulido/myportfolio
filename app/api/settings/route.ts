@@ -44,10 +44,11 @@ export async function POST(req: Request) {
             }
 
             try {
-                const paths = ['/', '/about', '/projects', '/certifications', '/blog', '/gallery', '/uses', '/contact'];
+                const paths = ['/', '/about', '/projects', '/certifications', '/blog', '/gallery', '/uses', '/contact', '/maintenance'];
                 paths.forEach(p => {
                     try { revalidatePath(p); } catch {}
                 });
+                try { revalidatePath('/', 'layout'); } catch {}
             } catch (revErr) {
                 console.warn("revalidatePath error:", revErr);
             }
@@ -68,8 +69,11 @@ export async function POST(req: Request) {
         );
 
         try {
-            revalidatePath('/');
-            revalidatePath('/about');
+            const paths = ['/', '/about', '/projects', '/certifications', '/blog', '/gallery', '/uses', '/contact', '/maintenance'];
+            paths.forEach(p => {
+                try { revalidatePath(p); } catch {}
+            });
+            try { revalidatePath('/', 'layout'); } catch {}
         } catch (revErr) {
             console.warn("revalidatePath error:", revErr);
         }

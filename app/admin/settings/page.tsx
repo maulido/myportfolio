@@ -23,7 +23,8 @@ import {
     MessageSquare,
     Building2,
     MapPin,
-    Clock
+    Clock,
+    Wrench
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -52,6 +53,13 @@ export default function AdminSettingsPage() {
         socialLinkedin: "https://linkedin.com",
         socialTwitter: "https://twitter.com",
         socialInstagram: "https://instagram.com",
+        isMaintenanceMode: "false",
+        maintenanceTitle: "Scheduled Infrastructure Maintenance",
+        maintenanceTitle_id: "Situs Sedang Dalam Pemeliharaan Berkala",
+        maintenanceMessage: "We are currently conducting routine performance tuning, server optimization, and security updates. All services will be restored shortly.",
+        maintenanceMessage_id: "Kami sedang melakukan optimalisasi infrastruktur, peningkatan server, dan pembaruan keamanan. Seluruh layanan akan segera kembali normal.",
+        maintenanceExpectedEnd: "Within 2 hours",
+        maintenanceExpectedEnd_id: "Dalam 2 jam",
 
         // Home Page
         heroTitle: "Digital Architect",
@@ -328,6 +336,130 @@ export default function AdminSettingsPage() {
                     {/* TAB 1: GLOBAL & BRANDING */}
                     {activeTab === "global" && (
                         <div className="grid gap-6">
+                            {/* Maintenance Mode Configuration Card */}
+                            <div className="bg-card/40 backdrop-blur-md border border-border rounded-2xl p-6 shadow-sm">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-border/60">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-rose-500/10 rounded-lg text-rose-500">
+                                            <Wrench className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h2 className="text-lg font-bold">Maintenance Mode (Pemeliharaan Situs)</h2>
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                                    settings.isMaintenanceMode === "true"
+                                                        ? "bg-rose-500 text-white animate-pulse"
+                                                        : "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
+                                                }`}>
+                                                    {settings.isMaintenanceMode === "true" ? "ACTIVE / AKTIF" : "OFF (LIVE)"}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground mt-0.5">
+                                                Kunci akses publik sementara dengan menampilkan halaman pemeliharaan berkala
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-3">
+                                        <Link
+                                            href="/maintenance"
+                                            target="_blank"
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-muted hover:bg-muted/80 text-foreground transition-colors border border-border"
+                                        >
+                                            <span>Lihat Halaman Maintenance</span>
+                                            <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                                        </Link>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setSettings(prev => ({
+                                                ...prev,
+                                                isMaintenanceMode: prev.isMaintenanceMode === "true" ? "false" : "true"
+                                            }))}
+                                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-xs ${
+                                                settings.isMaintenanceMode === "true"
+                                                    ? "bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/25"
+                                                    : "bg-muted hover:bg-muted/80 text-foreground border border-border"
+                                            }`}
+                                        >
+                                            <Wrench className="h-3.5 w-3.5" />
+                                            <span>{settings.isMaintenanceMode === "true" ? "Mode: AKTIF" : "Mode: NONAKTIF"}</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {settings.isMaintenanceMode === "true" && (
+                                    <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-800 dark:text-rose-200 text-xs">
+                                        <strong>Pemberitahuan:</strong> Website saat ini diblokir untuk pengunjung umum dan dialihkan ke halaman pemeliharaan. Administrator yang sedang login tetap dapat melihat pratinjau situs publik secara normal.
+                                    </div>
+                                )}
+
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground">Maintenance Title [EN]</label>
+                                        <input
+                                            name="maintenanceTitle"
+                                            value={settings.maintenanceTitle || ""}
+                                            onChange={handleChange}
+                                            placeholder="Scheduled Infrastructure Maintenance"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground">Judul Pemeliharaan [ID]</label>
+                                        <input
+                                            name="maintenanceTitle_id"
+                                            value={settings.maintenanceTitle_id || ""}
+                                            onChange={handleChange}
+                                            placeholder="Situs Sedang Dalam Pemeliharaan Berkala"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground">Maintenance Explanation Message [EN]</label>
+                                        <textarea
+                                            name="maintenanceMessage"
+                                            value={settings.maintenanceMessage || ""}
+                                            onChange={handleChange}
+                                            rows={3}
+                                            placeholder="We are currently conducting routine performance tuning, server optimization, and security updates..."
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground">Pesan Penjelasan Pemeliharaan [ID]</label>
+                                        <textarea
+                                            name="maintenanceMessage_id"
+                                            value={settings.maintenanceMessage_id || ""}
+                                            onChange={handleChange}
+                                            rows={3}
+                                            placeholder="Kami sedang melakukan optimalisasi infrastruktur, peningkatan server, dan pembaruan keamanan..."
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground">Estimated Return Time [EN]</label>
+                                        <input
+                                            name="maintenanceExpectedEnd"
+                                            value={settings.maintenanceExpectedEnd || ""}
+                                            onChange={handleChange}
+                                            placeholder="e.g. Within 2 hours or Today at 18:00 WIB"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground">Estimasi Waktu Selesai [ID]</label>
+                                        <input
+                                            name="maintenanceExpectedEnd_id"
+                                            value={settings.maintenanceExpectedEnd_id || ""}
+                                            onChange={handleChange}
+                                            placeholder="mis. Dalam 2 jam atau Hari ini pukul 18:00 WIB"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="bg-card/40 backdrop-blur-md border border-border rounded-2xl p-6 shadow-sm">
                                 <div className="flex items-center gap-3 mb-6">
                                     <div className="p-2 bg-primary/10 rounded-lg">

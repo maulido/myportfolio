@@ -11,6 +11,13 @@ export interface GlobalSettings {
     socialLinkedin?: string;
     socialTwitter?: string;
     socialInstagram?: string;
+    isMaintenanceMode?: string;
+    maintenanceTitle?: string;
+    maintenanceTitle_id?: string;
+    maintenanceMessage?: string;
+    maintenanceMessage_id?: string;
+    maintenanceExpectedEnd?: string;
+    maintenanceExpectedEnd_id?: string;
     [key: string]: string | undefined;
 }
 

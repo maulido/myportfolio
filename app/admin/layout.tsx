@@ -1,21 +1,42 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { SessionProvider } from "next-auth/react";
 import { useSession, signOut } from "next-auth/react";
-import { LayoutDashboard, LogOut } from "lucide-react";
+import { LayoutDashboard, LogOut, Wrench } from "lucide-react";
+import Link from "next/link";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 
-function AdminLayoutContent({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
     const { data: session, status } = useSession();
     const router = useRouter();
+    const [isMaintenanceActive, setIsMaintenanceActive] = useState(false);
 
     useEffect(() => {
         if (status === "unauthenticated") {
             router.push("/login");
         }
     }, [status, router]);
+
+    useEffect(() => {
+        let isMounted = true;
+        fetch("/api/settings?key=isMaintenanceMode")
+            .then((res) => res.json())
+            .then((d) => {
+                if (isMounted && d.success && (d.data === "true" || d.data === true)) {
+                    setIsMaintenanceActive(true);
+                }
+            })
+            .catch(() => {});
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     if (status === "loading") {
         return (
@@ -36,7 +57,18 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                         </div>
                         <span className="font-bold text-xl tracking-tighter">ADMIN<span className="text-primary">CORE</span></span>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4">
+                        {isMaintenanceActive && (
+                            <Link
+                                href="/admin/settings"
+                                className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-bold animate-pulse hover:bg-rose-500/25 transition-colors"
+                                title="Maintenance Mode is Active - Click to configure in Settings"
+                            >
+                                <Wrench className="h-3.5 w-3.5" />
+                                <span className="hidden sm:inline">Maintenance Mode Active</span>
+                                <span className="sm:hidden">Maintenance</span>
+                            </Link>
+                        )}
                         <div className="hidden md:flex flex-col items-end">
                             <span className="text-sm font-bold text-foreground">{session?.user?.name}</span>
                             <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Super Admin</span>
@@ -65,17 +97,5 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                 </div>
             </main>
         </div>
-    );
-}
-
-export default function AdminLayout({
-    children,
-}: {
-    children: React.ReactNode;
-}) {
-    return (
-        <SessionProvider>
-            <AdminLayoutContent>{children}</AdminLayoutContent>
-        </SessionProvider>
     );
 }
