@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, X } from "lucide-react";
 import Link from "next/link";
 import ImageUpload from "@/components/ImageUpload";
 import { AdminLangTabs } from "@/components/AdminLangTabs";
@@ -17,6 +17,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
         slug: "",
         description: "",
         description_id: "",
+        category: "Full-Stack",
         problemStatement: "",
         problemStatement_id: "",
         solutionApproach: "",
@@ -24,6 +25,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
         tags: "",
         image: "",
         architectureDiagram: "",
+        screenshots: [] as string[],
         github: "",
         demo: "",
         liveUrl: "",
@@ -47,6 +49,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                         slug: item.slug || "",
                         description: item.description || "",
                         description_id: item.description_id || "",
+                        category: item.category || "Full-Stack",
                         problemStatement: item.problemStatement || "",
                         problemStatement_id: item.problemStatement_id || "",
                         solutionApproach: item.solutionApproach || "",
@@ -54,6 +57,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                         tags: Array.isArray(tagsArr) ? tagsArr.join(", ") : "",
                         image: item.imageUrl || item.image || "",
                         architectureDiagram: item.architectureDiagram || "",
+                        screenshots: item.screenshots || [],
                         github: item.githubUrl || item.github || "",
                         demo: item.demoUrl || item.demo || "",
                         liveUrl: item.liveUrl || "",
@@ -70,12 +74,26 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
         fetchProject();
     }, [id]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         const checked = (e.target as HTMLInputElement).checked;
         setFormData((prev) => ({
             ...prev,
             [name]: type === 'checkbox' ? checked : value
+        }));
+    };
+
+    const addScreenshot = (url: string) => {
+        setFormData(prev => ({
+            ...prev,
+            screenshots: [...prev.screenshots, url]
+        }));
+    };
+
+    const removeScreenshot = (index: number) => {
+        setFormData(prev => ({
+            ...prev,
+            screenshots: prev.screenshots.filter((_, i) => i !== index)
         }));
     };
 
@@ -94,6 +112,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                     slug: formData.slug,
                     description: formData.description,
                     description_id: formData.description_id || undefined,
+                    category: formData.category,
                     problemStatement: formData.problemStatement,
                     problemStatement_id: formData.problemStatement_id || undefined,
                     solutionApproach: formData.solutionApproach,
@@ -102,6 +121,7 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                     tags: tagsArray,
                     imageUrl: formData.image,
                     architectureDiagram: formData.architectureDiagram,
+                    screenshots: formData.screenshots,
                     githubUrl: formData.github,
                     demoUrl: formData.demo,
                     liveUrl: formData.liveUrl,
@@ -222,15 +242,38 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                             )}
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Tags / Technologies (comma separated)</label>
-                            <input
-                                name="tags"
-                                value={formData.tags}
-                                onChange={handleChange}
-                                className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="React, Next.js, MongoDB, Docker"
-                            />
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none">Category *</label>
+                                <select
+                                    required
+                                    name="category"
+                                    value={formData.category}
+                                    onChange={handleChange}
+                                    className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                >
+                                    <option value="Full-Stack">Full-Stack</option>
+                                    <option value="Networking">Networking</option>
+                                    <option value="DevOps">DevOps</option>
+                                    <option value="Cloud">Cloud</option>
+                                    <option value="Mobile">Mobile</option>
+                                    <option value="Security">Security</option>
+                                    <option value="Frontend">Frontend</option>
+                                    <option value="Backend">Backend</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none">Tags / Technologies (comma separated)</label>
+                                <input
+                                    name="tags"
+                                    value={formData.tags}
+                                    onChange={handleChange}
+                                    className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="React, Next.js, MongoDB, Docker"
+                                />
+                            </div>
                         </div>
 
                         <div className="flex items-center space-x-2 pt-1">
@@ -264,6 +307,33 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                                 <ImageUpload
                                     value={formData.architectureDiagram}
                                     onChange={(url) => setFormData(prev => ({ ...prev, architectureDiagram: url }))}
+                                    endpoint="imageUploader"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium leading-none">Screenshots</label>
+                            <div className="space-y-2">
+                                {formData.screenshots.map((screenshot, index) => (
+                                    <div key={index} className="flex items-center gap-2">
+                                        <input
+                                            value={screenshot}
+                                            readOnly
+                                            className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => removeScreenshot(index)}
+                                            className="p-2 rounded-md border border-input hover:bg-destructive hover:text-destructive-foreground transition-colors cursor-pointer"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                                <ImageUpload
+                                    value=""
+                                    onChange={addScreenshot}
                                     endpoint="imageUploader"
                                 />
                             </div>

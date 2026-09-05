@@ -16,6 +16,7 @@ export default function NewProjectPage() {
         slug: "",
         description: "",
         description_id: "",
+        category: "Full-Stack",
         problemStatement: "",
         problemStatement_id: "",
         solutionApproach: "",
@@ -32,7 +33,7 @@ export default function NewProjectPage() {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         const checked = (e.target as HTMLInputElement).checked;
 
@@ -188,16 +189,39 @@ export default function NewProjectPage() {
                             )}
                         </div>
 
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Technologies (comma separated) *</label>
-                            <input
-                                required
-                                name="technologies"
-                                value={formData.technologies}
-                                onChange={handleChange}
-                                className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="React, Next.js, MongoDB, TailwindCSS"
-                            />
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none">Category *</label>
+                                <select
+                                    required
+                                    name="category"
+                                    value={formData.category}
+                                    onChange={handleChange}
+                                    className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                >
+                                    <option value="Full-Stack">Full-Stack</option>
+                                    <option value="Networking">Networking</option>
+                                    <option value="DevOps">DevOps</option>
+                                    <option value="Cloud">Cloud</option>
+                                    <option value="Mobile">Mobile</option>
+                                    <option value="Security">Security</option>
+                                    <option value="Frontend">Frontend</option>
+                                    <option value="Backend">Backend</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none">Technologies (comma separated) *</label>
+                                <input
+                                    required
+                                    name="technologies"
+                                    value={formData.technologies}
+                                    onChange={handleChange}
+                                    className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="React, Next.js, MongoDB, TailwindCSS"
+                                />
+                            </div>
                         </div>
 
                         <div className="flex items-center space-x-2">
