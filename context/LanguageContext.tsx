@@ -26,9 +26,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         if (typeof window !== "undefined") {
             const savedLang = localStorage.getItem("portfolio_lang") as Language | null;
             if (savedLang === "en" || savedLang === "id") return savedLang;
-            if (typeof navigator !== "undefined" && navigator.language?.toLowerCase().startsWith("id")) {
-                return "id";
-            }
         }
         return "en";
     });
