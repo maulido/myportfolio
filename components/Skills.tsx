@@ -365,7 +365,7 @@ export function Skills({ defaultMode = "compact" }: SkillsProps = {}) {
                     viewport={{ once: true }}
                     className="flex justify-center w-full mb-6"
                 >
-                    <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 rounded-2xl bg-card/80 dark:bg-card/40 border border-border/80 dark:border-primary/15 backdrop-blur-md shadow-sm overflow-x-auto max-w-full scrollbar-none">
+                    <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 rounded-2xl bg-card/80 dark:bg-card/40 border border-border/80 dark:border-primary/15 backdrop-blur-md shadow-sm overflow-x-auto max-w-full scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                         <button
                             onClick={() => setActiveTab("all")}
                             className={`shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap ${activeTab === "all"

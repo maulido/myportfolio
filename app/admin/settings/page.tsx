@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { 
     Save, 
     Globe, 
@@ -24,7 +24,9 @@ import {
     Building2,
     MapPin,
     Clock,
-    Wrench
+    Wrench,
+    ChevronLeft,
+    ChevronRight
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -234,6 +236,34 @@ export default function AdminSettingsPage() {
         { key: "footer", label: "Footer & Legal", icon: Layers }
     ];
 
+    const tabsRef = useRef<HTMLDivElement>(null);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(false);
+
+    const checkTabsScroll = useCallback(() => {
+        if (tabsRef.current) {
+            const { scrollLeft, scrollWidth, clientWidth } = tabsRef.current;
+            setCanScrollLeft(scrollLeft > 4);
+            setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 4);
+        }
+    }, []);
+
+    useEffect(() => {
+        checkTabsScroll();
+        const handleResize = () => checkTabsScroll();
+        window.addEventListener("resize", handleResize);
+
+        return () => window.removeEventListener("resize", handleResize);
+    }, [checkTabsScroll, activeTab]);
+
+    const scrollTabs = (direction: "left" | "right") => {
+        if (tabsRef.current) {
+            const scrollAmount = direction === "left" ? -240 : 240;
+            tabsRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+            setTimeout(checkTabsScroll, 300);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex min-h-screen items-center justify-center bg-background">
@@ -277,7 +307,14 @@ export default function AdminSettingsPage() {
                 </div>
 
                 {/* Quick Navigation / Preview Links Bar */}
-                <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none text-xs">
+                <div 
+                    onWheel={(e) => {
+                        if (e.deltaY !== 0) {
+                            e.currentTarget.scrollLeft += e.deltaY;
+                        }
+                    }}
+                    className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden text-xs"
+                >
                     <span className="text-muted-foreground font-semibold shrink-0">Live Preview:</span>
                     {[
                         { label: "Home", href: "/" },
@@ -288,13 +325,14 @@ export default function AdminSettingsPage() {
                         { label: "Gallery", href: "/gallery" },
                         { label: "Uses", href: "/uses" },
                         { label: "Contact", href: "/contact" },
+                        { label: "Maintenance", href: "/maintenance" },
                     ].map((p) => (
                         <a
                             key={p.href}
                             href={p.href}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-card border border-border text-foreground/80 hover:text-primary hover:border-primary/50 transition-colors shrink-0"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-card border border-border text-foreground/80 hover:text-primary hover:border-primary/50 transition-colors shrink-0 shadow-2xs"
                         >
                             <span>{p.label}</span>
                             <ExternalLink className="h-3 w-3" />
@@ -302,27 +340,71 @@ export default function AdminSettingsPage() {
                     ))}
                 </div>
 
-                {/* Tabs Navigation */}
-                <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-border scrollbar-none">
-                    {tabs.map((tab) => {
-                        const Icon = tab.icon;
-                        const active = activeTab === tab.key;
-                        return (
-                            <button
-                                key={tab.key}
-                                type="button"
-                                onClick={() => setActiveTab(tab.key)}
-                                className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                                    active
-                                        ? "bg-primary text-white shadow-md shadow-primary/25"
-                                        : "bg-card/70 border border-border/70 text-muted-foreground hover:text-foreground hover:bg-card"
-                                }`}
-                            >
-                                <Icon className="h-3.5 w-3.5" />
-                                {tab.label}
-                            </button>
-                        );
-                    })}
+                {/* Tabs Navigation with Sleek Horizontal Scrolling */}
+                <div className="relative group/tabs">
+                    {/* Left Scroll Button */}
+                    {canScrollLeft && (
+                        <button
+                            type="button"
+                            onClick={() => scrollTabs("left")}
+                            className="absolute left-1 top-1/2 -translate-y-1/2 z-20 h-7 w-7 rounded-full bg-background/95 border border-border shadow-md flex items-center justify-center text-foreground hover:bg-card hover:scale-105 transition-all cursor-pointer"
+                            aria-label="Scroll tabs left"
+                        >
+                            <ChevronLeft className="h-3.5 w-3.5" />
+                        </button>
+                    )}
+
+                    {/* Right Scroll Button */}
+                    {canScrollRight && (
+                        <button
+                            type="button"
+                            onClick={() => scrollTabs("right")}
+                            className="absolute right-1 top-1/2 -translate-y-1/2 z-20 h-7 w-7 rounded-full bg-background/95 border border-border shadow-md flex items-center justify-center text-foreground hover:bg-card hover:scale-105 transition-all cursor-pointer"
+                            aria-label="Scroll tabs right"
+                        >
+                            <ChevronRight className="h-3.5 w-3.5" />
+                        </button>
+                    )}
+
+                    {/* Edge Fade Gradients to hint scrollability */}
+                    {canScrollLeft && (
+                        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10" />
+                    )}
+                    {canScrollRight && (
+                        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10" />
+                    )}
+
+                    <div
+                        ref={tabsRef}
+                        onScroll={checkTabsScroll}
+                        onWheel={(e) => {
+                            if (e.deltaY !== 0 && tabsRef.current) {
+                                tabsRef.current.scrollLeft += e.deltaY;
+                                checkTabsScroll();
+                            }
+                        }}
+                        className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-border/70 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden scroll-smooth px-1"
+                    >
+                        {tabs.map((tab) => {
+                            const Icon = tab.icon;
+                            const active = activeTab === tab.key;
+                            return (
+                                <button
+                                    key={tab.key}
+                                    type="button"
+                                    onClick={() => setActiveTab(tab.key)}
+                                    className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all shrink-0 cursor-pointer ${
+                                        active
+                                            ? "bg-primary text-white shadow-md shadow-primary/25 scale-[1.02]"
+                                            : "bg-card/70 border border-border/70 text-muted-foreground hover:text-foreground hover:bg-card"
+                                    }`}
+                                >
+                                    <Icon className="h-3.5 w-3.5" />
+                                    {tab.label}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
 
                 {/* Tab Content Panels */}

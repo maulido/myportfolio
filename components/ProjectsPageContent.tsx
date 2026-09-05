@@ -297,7 +297,7 @@ export function ProjectsPageContent() {
 
                     {/* Category Tabs */}
                     {categories.length > 2 && (
-                        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-1 shrink-0">
                                 {dictionary.projects.categoryLabel}
                             </span>

@@ -190,7 +190,7 @@ export default function AdminSeoPage() {
             {/* Page Selector Tabs */}
             <div className="p-4 rounded-2xl bg-card/70 backdrop-blur-md border border-border space-y-3 shadow-sm">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Select Page to Audit & Simulate</p>
-                <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                     {[
                         { key: "home", label: "Home (/)" },
                         { key: "about", label: "About (/about)" },

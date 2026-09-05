@@ -279,7 +279,7 @@ export default function UsesPage() {
                         </div>
 
                         {/* Category Filter Pills */}
-                        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none pt-1">
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pt-1">
                             {categories.map((cat) => {
                                 const Icon = cat.icon;
                                 const isSelected = selectedCategory === cat.key;

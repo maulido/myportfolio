@@ -77,7 +77,7 @@ export default function AdminSidebar() {
     return (
         <aside className="w-full">
             {/* Mobile / Tablet Horizontal Scrollable Pill Bar */}
-            <div className="md:hidden flex items-center gap-2 overflow-x-auto pb-3 mb-6 scrollbar-none border-b border-border/80">
+            <div className="md:hidden flex items-center gap-2 overflow-x-auto pb-3 mb-6 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden border-b border-border/80">
                 {allItems.map((item) => {
                     const active = isActive(item.href);
                     const Icon = item.icon;

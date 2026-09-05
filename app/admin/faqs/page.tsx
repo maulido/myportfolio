@@ -262,7 +262,7 @@ export default function AdminFaqListPage() {
                     </div>
 
                     {categories.length > 2 && (
-                        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
+                        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                             {categories.map((cat) => (
                                 <button
                                     key={cat}

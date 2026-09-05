@@ -324,7 +324,7 @@ export default function AdminMediaPage() {
                     />
                 </div>
 
-                <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                     <button
                         onClick={() => setSelectedType("all")}
                         className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border ${
