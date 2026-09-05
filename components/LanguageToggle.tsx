@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useLanguage } from "@/context/LanguageContext";
 import { Globe } from "lucide-react";
@@ -14,7 +14,7 @@ export function LanguageToggle() {
             title={`Switch to ${locale === "en" ? "Bahasa Indonesia" : "English"}`}
         >
             <Globe className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
-            <span className="font-mono text-[11px] uppercase tracking-wider text-foreground">
+            <span suppressHydrationWarning className="font-mono text-[11px] uppercase tracking-wider text-foreground">
                 {locale}
             </span>
         </button>

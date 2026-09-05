@@ -1,7 +1,7 @@
 "use client";
 
 import { Twitter, Linkedin, Facebook, Link2, Share2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
 interface ShareButtonsProps {
@@ -12,8 +12,18 @@ interface ShareButtonsProps {
 
 export function ShareButtons({ title, url, description }: ShareButtonsProps) {
     const [copied, setCopied] = useState(false);
+    const [shareUrl, setShareUrl] = useState(url || '');
+    const [canNativeShare, setCanNativeShare] = useState(false);
 
-    const shareUrl = url || (typeof window !== 'undefined' ? window.location.href : '');
+    useEffect(() => {
+        if (!url && typeof window !== 'undefined') {
+            setShareUrl(window.location.href);
+        }
+        if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+            setCanNativeShare(true);
+        }
+    }, [url]);
+
     const shareText = description || title;
 
     const shareLinks = {
@@ -93,7 +103,7 @@ export function ShareButtons({ title, url, description }: ShareButtonsProps) {
                 <Link2 className="h-4 w-4" />
             </button>
 
-            {typeof navigator !== 'undefined' && typeof navigator.share === 'function' && (
+            {canNativeShare && (
                 <button
                     onClick={handleNativeShare}
                     className="p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-all"

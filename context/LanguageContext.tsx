@@ -12,6 +12,7 @@ interface LanguageContextType {
     toggleLocale: () => void;
     t: (path: string, fallback?: string) => string;
     dictionary: TranslationDictionary;
+    mounted: boolean;
 }
 
 const dictionaries: Record<Language, TranslationDictionary> = {
@@ -22,58 +23,81 @@ const dictionaries: Record<Language, TranslationDictionary> = {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-    const [locale, setLocaleState] = useState<Language>(() => {
-        if (typeof window !== "undefined") {
-            // Priority 1: Check URL search query param (e.g. ?lang=id from alternate tags or shares)
+    // Deterministic initial state: always start with 'en' to guarantee identical SSR & initial client hydration
+    const [locale, setLocaleState] = useState<Language>("en");
+    const [mounted, setMounted] = useState(false);
+
+    // Sync saved preference from URL query param, localStorage, or cookie strictly AFTER hydration
+    useEffect(() => {
+        setMounted(true);
+
+        try {
+            // Priority 1: Check URL search query param (e.g. ?lang=id)
             const urlParams = new URLSearchParams(window.location.search);
             const queryLang = urlParams.get("lang") as Language | null;
-            if (queryLang === "en" || queryLang === "id") return queryLang;
+            if (queryLang === "en" || queryLang === "id") {
+                setLocaleState(queryLang);
+                return;
+            }
 
             // Priority 2: Saved user preference in localStorage
             const savedLang = localStorage.getItem("portfolio_lang") as Language | null;
-            if (savedLang === "en" || savedLang === "id") return savedLang;
+            if (savedLang === "en" || savedLang === "id") {
+                setLocaleState(savedLang);
+                return;
+            }
 
             // Priority 3: Saved user cookie
             const cookieMatch = document.cookie.match(/(?:^|;\s*)portfolio_lang=([^;]+)/);
             if (cookieMatch && (cookieMatch[1] === "en" || cookieMatch[1] === "id")) {
-                return cookieMatch[1] as Language;
+                setLocaleState(cookieMatch[1] as Language);
+                return;
             }
+        } catch {
+            // Silently handle any storage/browser restrictions
         }
-        return "en";
-    });
+    }, []);
 
+    // Sync document element, localStorage, and cookie whenever locale changes (only after mount)
     useEffect(() => {
-        // Sync with URL query parameter on mount if present
-        if (typeof window !== "undefined") {
-            const urlParams = new URLSearchParams(window.location.search);
-            const queryLang = urlParams.get("lang") as Language | null;
-            if ((queryLang === "en" || queryLang === "id") && queryLang !== locale) {
-                setLocaleState(queryLang);
-            }
-        }
-    }, [locale]);
-
-    useEffect(() => {
-        document.documentElement.lang = locale;
-        if (typeof window !== "undefined") {
+        if (!mounted) return;
+        try {
+            document.documentElement.lang = locale;
             localStorage.setItem("portfolio_lang", locale);
             document.cookie = `portfolio_lang=${locale}; path=/; max-age=31536000; SameSite=Lax`;
+        } catch {
+            // Silently handle storage errors
         }
-    }, [locale]);
+    }, [locale, mounted]);
 
     const setLocale = useCallback((newLocale: Language) => {
         setLocaleState(newLocale);
-        if (typeof window !== "undefined") {
-            localStorage.setItem("portfolio_lang", newLocale);
-            document.cookie = `portfolio_lang=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
-            document.documentElement.lang = newLocale;
+        try {
+            if (typeof window !== "undefined") {
+                localStorage.setItem("portfolio_lang", newLocale);
+                document.cookie = `portfolio_lang=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
+                document.documentElement.lang = newLocale;
+            }
+        } catch {
+            // Ignore
         }
     }, []);
 
     const toggleLocale = useCallback(() => {
-        const next = locale === "en" ? "id" : "en";
-        setLocale(next);
-    }, [locale, setLocale]);
+        setLocaleState((prev) => {
+            const next = prev === "en" ? "id" : "en";
+            try {
+                if (typeof window !== "undefined") {
+                    localStorage.setItem("portfolio_lang", next);
+                    document.cookie = `portfolio_lang=${next}; path=/; max-age=31536000; SameSite=Lax`;
+                    document.documentElement.lang = next;
+                }
+            } catch {
+                // Ignore
+            }
+            return next;
+        });
+    }, []);
 
     // Translate helper function using dot notation e.g. "nav.home"
     const t = useCallback((path: string, fallback?: string): string => {
@@ -100,6 +124,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
                 toggleLocale,
                 t,
                 dictionary: dictionaries[locale] || en,
+                mounted,
             }}
         >
             {children}

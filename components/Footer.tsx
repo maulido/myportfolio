@@ -120,7 +120,7 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
                                 <span className="text-gradient">{brandName}</span>
                             </span>
                         </Link>
-                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-sm">
+                        <p suppressHydrationWarning className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-sm">
                             {footerTagline}
                         </p>
 
@@ -128,7 +128,7 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
                         <div className="pt-2 space-y-2.5">
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <MapPin className="h-3.5 w-3.5 text-primary shrink-0" />
-                                <span>{locale === "id" ? `Berbasis di ${contactLocation}` : `Based in ${contactLocation}`}</span>
+                                <span suppressHydrationWarning>{locale === "id" ? `Berbasis di ${contactLocation}` : `Based in ${contactLocation}`}</span>
                             </div>
                             {isWorking && (
                                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
@@ -136,7 +136,7 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                         <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                                     </span>
-                                    <span>{t.statusAvailable}</span>
+                                    <span suppressHydrationWarning>{t.statusAvailable}</span>
                                 </div>
                             )}
                         </div>
@@ -201,7 +201,7 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
 
                     {/* Col 2: Navigation Links (2.5 Cols) */}
                     <div className="lg:col-span-2 space-y-3">
-                        <p className="text-[11px] font-mono uppercase tracking-widest text-foreground/80 font-bold">
+                        <p suppressHydrationWarning className="text-[11px] font-mono uppercase tracking-widest text-foreground/80 font-bold">
                             {locale === "id" ? "Navigasi" : "Navigation"}
                         </p>
                         <ul className="space-y-2 text-xs sm:text-sm">
@@ -212,7 +212,7 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
                                         className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1 group"
                                     >
                                         <span className="h-1 w-1 rounded-full bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        <span>{link.label}</span>
+                                        <span suppressHydrationWarning>{link.label}</span>
                                     </Link>
                                 </li>
                             ))}
@@ -221,7 +221,7 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
 
                     {/* Col 3: Interactive & Resources (2.5 Cols) */}
                     <div className="lg:col-span-2 space-y-3">
-                        <p className="text-[11px] font-mono uppercase tracking-widest text-foreground/80 font-bold">
+                        <p suppressHydrationWarning className="text-[11px] font-mono uppercase tracking-widest text-foreground/80 font-bold">
                             {locale === "id" ? "Sumber Daya" : "Resources"}
                         </p>
                         <ul className="space-y-2 text-xs sm:text-sm">
@@ -232,7 +232,7 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
                                         className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1 group"
                                     >
                                         <span className="h-1 w-1 rounded-full bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        <span>{link.label}</span>
+                                        <span suppressHydrationWarning>{link.label}</span>
                                     </Link>
                                 </li>
                             ))}
@@ -243,11 +243,11 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
                     <div className="lg:col-span-4 space-y-3">
                         <div className="flex items-center gap-2">
                             <Radio className="h-3.5 w-3.5 text-primary animate-pulse" />
-                            <p className="text-[11px] font-mono uppercase tracking-widest text-foreground/80 font-bold">
+                            <p suppressHydrationWarning className="text-[11px] font-mono uppercase tracking-widest text-foreground/80 font-bold">
                                 {newsletterTitle}
                             </p>
                         </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
+                        <p suppressHydrationWarning className="text-xs text-muted-foreground leading-relaxed">
                             {newsletterSubtitle}
                         </p>
 
@@ -272,7 +272,7 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
                                     ) : (
                                         <Send className="h-3.5 w-3.5" />
                                     )}
-                                    <span className="hidden sm:inline">{status === "loading" ? t.newsletterSubscribing : (locale === "id" ? "Gabung" : "Join")}</span>
+                                    <span suppressHydrationWarning className="hidden sm:inline">{status === "loading" ? t.newsletterSubscribing : (locale === "id" ? "Gabung" : "Join")}</span>
                                 </button>
                             </div>
 
@@ -293,7 +293,7 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
                 {/* Bottom Bar: Copyright, Tech Specs, Admin, Back to Top */}
                 <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
                     <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-1">
-                        <span>
+                        <span suppressHydrationWarning>
                             &copy; {new Date().getFullYear()} <span className="font-semibold text-foreground">{brandName}</span>. {copyrightText}
                         </span>
                         <span className="hidden sm:inline text-muted-foreground/40">•</span>
@@ -316,7 +316,7 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/80 bg-background/60 hover:bg-muted dark:hover:bg-white/10 text-foreground/80 hover:text-primary transition-all text-xs font-semibold shadow-2xs group cursor-pointer"
                             aria-label="Scroll back to top"
                         >
-                            <span>{locale === "id" ? "Atas" : "Top"}</span>
+                            <span suppressHydrationWarning>{locale === "id" ? "Atas" : "Top"}</span>
                             <ArrowUp className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5" />
                         </button>
                     </div>
