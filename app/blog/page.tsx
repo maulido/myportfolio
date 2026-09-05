@@ -23,13 +23,18 @@ import {
 import { Skeleton } from "@/components/Skeleton";
 import { SpotlightCard } from "@/components/SpotlightCard";
 import { useSettings } from "@/lib/useSettings";
+import { useLanguage } from "@/context/LanguageContext";
+import { getLocalizedField } from "@/lib/localization";
 
 interface IPost {
     _id: string;
     title: string;
+    title_id?: string;
     slug: string;
     excerpt: string;
+    excerpt_id?: string;
     content?: string;
+    content_id?: string;
     category?: string;
     tags: string[];
     createdAt: string | Date;
@@ -61,6 +66,7 @@ const getShimmerDataUrl = (w: number, h: number) =>
     `data:image/svg+xml;base64,${toBase64(shimmer(w, h))}`;
 
 export default function BlogPage() {
+    const { locale } = useLanguage();
     const [posts, setPosts] = useState<IPost[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
@@ -250,12 +256,12 @@ export default function BlogPage() {
 
                                     <Link href={`/blog/${featuredPost.slug}`} className="block group-hover:text-primary transition-colors">
                                         <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground leading-snug">
-                                            {featuredPost.title}
+                                            {getLocalizedField(featuredPost, 'title', locale, featuredPost.title)}
                                         </h2>
                                     </Link>
 
                                     <p className="text-sm md:text-base text-muted-foreground leading-relaxed line-clamp-3">
-                                        {featuredPost.excerpt}
+                                        {getLocalizedField(featuredPost, 'excerpt', locale, featuredPost.excerpt)}
                                     </p>
 
                                     <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground pt-2">
@@ -418,12 +424,12 @@ export default function BlogPage() {
 
                                                     <Link href={`/blog/${post.slug}`} className="block group-hover:text-primary transition-colors">
                                                         <h2 className="text-xl font-bold tracking-tight text-foreground line-clamp-2 leading-snug">
-                                                            {post.title}
+                                                            {getLocalizedField(post, 'title', locale, post.title)}
                                                         </h2>
                                                     </Link>
 
                                                     <p className="text-xs md:text-sm text-muted-foreground line-clamp-3 leading-relaxed">
-                                                        {post.excerpt}
+                                                        {getLocalizedField(post, 'excerpt', locale, post.excerpt)}
                                                     </p>
 
                                                     {/* Tags */}

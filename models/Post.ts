@@ -2,9 +2,12 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IPost extends Document {
     title: string;
+    title_id?: string;
     slug: string;
     content: string;
+    content_id?: string;
     excerpt: string;
+    excerpt_id?: string;
     category: string;
     tags: string[];
     published: boolean;
@@ -16,9 +19,12 @@ export interface IPost extends Document {
 
 const PostSchema: Schema = new Schema({
     title: { type: String, required: true },
+    title_id: { type: String },
     slug: { type: String, required: true, unique: true },
     content: { type: String, required: true },
+    content_id: { type: String },
     excerpt: { type: String, required: true },
+    excerpt_id: { type: String },
     category: { type: String, default: 'General' },
     tags: { type: [String], default: [] },
     published: { type: Boolean, default: true },

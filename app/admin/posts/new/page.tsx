@@ -6,14 +6,19 @@ import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import RichTextEditor from "@/components/RichTextEditor";
 import ImageUpload from "@/components/ImageUpload";
+import { AdminLangTabs } from "@/components/AdminLangTabs";
 
 export default function NewPostPage() {
     const router = useRouter();
+    const [langTab, setLangTab] = useState<"en" | "id">("en");
     const [formData, setFormData] = useState({
         title: "",
+        title_id: "",
         slug: "",
         excerpt: "",
+        excerpt_id: "",
         content: "",
+        content_id: "",
         category: "General",
         tags: "",
         coverImage: "",
@@ -45,7 +50,7 @@ export default function NewPostPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     ...formData,
-                    tags: formData.tags.split(",").map((tag) => tag.trim()),
+                    tags: formData.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
                 }),
             });
 
@@ -75,52 +80,97 @@ export default function NewPostPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-8 rounded-xl border border-primary/10 bg-card/10 backdrop-blur-sm p-8">
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Title</label>
-                            <input
-                                required
-                                name="title"
-                                value={formData.title}
-                                onChange={handleChange}
-                                className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="Post Title"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Slug</label>
-                            <input
-                                required
-                                name="slug"
-                                value={formData.slug}
-                                onChange={handleChange}
-                                className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                placeholder="post-url-slug"
-                            />
-                        </div>
-                    </div>
+                    {/* Multilingual Tabs */}
+                    <AdminLangTabs
+                        activeTab={langTab}
+                        onChange={setLangTab}
+                        label="Article Content Localization"
+                    />
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium leading-none">Excerpt</label>
-                        <textarea
-                            required
-                            name="excerpt"
-                            value={formData.excerpt}
-                            onChange={handleChange}
-                            rows={3}
-                            className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                            placeholder="Brief summary of the post..."
-                        />
-                    </div>
+                    {langTab === "en" ? (
+                        <>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium leading-none">Title (English - Primary)</label>
+                                    <input
+                                        required
+                                        name="title"
+                                        value={formData.title}
+                                        onChange={handleChange}
+                                        className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        placeholder="Post Title in English"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium leading-none">Slug (URL)</label>
+                                    <input
+                                        required
+                                        name="slug"
+                                        value={formData.slug}
+                                        onChange={handleChange}
+                                        className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        placeholder="post-url-slug"
+                                    />
+                                </div>
+                            </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium leading-none">Content</label>
-                        <RichTextEditor
-                            content={formData.content}
-                            onChange={(content) => setFormData(prev => ({ ...prev, content }))}
-                            placeholder="Start writing your blog post..."
-                        />
-                    </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none">Excerpt (English)</label>
+                                <textarea
+                                    required
+                                    name="excerpt"
+                                    value={formData.excerpt}
+                                    onChange={handleChange}
+                                    rows={3}
+                                    className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="Brief summary of the article in English..."
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none">Content (English)</label>
+                                <RichTextEditor
+                                    content={formData.content}
+                                    onChange={(content) => setFormData(prev => ({ ...prev, content }))}
+                                    placeholder="Write your article in English..."
+                                />
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none">Judul Artikel (Bahasa Indonesia)</label>
+                                <input
+                                    name="title_id"
+                                    value={formData.title_id}
+                                    onChange={handleChange}
+                                    className="flex h-10 w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="Judul artikel dalam Bahasa Indonesia (opsional, fallback ke Inggris)"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none">Ringkasan / Excerpt (Bahasa Indonesia)</label>
+                                <textarea
+                                    name="excerpt_id"
+                                    value={formData.excerpt_id}
+                                    onChange={handleChange}
+                                    rows={3}
+                                    className="flex w-full rounded-md border border-input/50 bg-background/50 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    placeholder="Ringkasan artikel dalam Bahasa Indonesia..."
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium leading-none">Konten Artikel (Bahasa Indonesia)</label>
+                                <RichTextEditor
+                                    content={formData.content_id}
+                                    onChange={(content_id) => setFormData(prev => ({ ...prev, content_id }))}
+                                    placeholder="Tulis artikel dalam Bahasa Indonesia..."
+                                />
+                            </div>
+                        </>
+                    )}
 
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="space-y-2">

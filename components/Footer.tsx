@@ -25,7 +25,6 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
     const settings = { ...(initialSettings || {}), ...(clientSettings || {}) };
     const { locale, dictionary } = useLanguage();
     const t = dictionary.footer;
-    const tNav = dictionary.nav;
 
     const [email, setEmail] = useState("");
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -90,18 +89,18 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
     };
 
     const navigationLinks = [
-        { label: tNav.home, href: "/" },
-        { label: tNav.about, href: "/about" },
-        { label: tNav.projects, href: "/projects" },
-        { label: tNav.certifications, href: "/certifications" },
-        { label: tNav.blog, href: "/blog" },
+        { label: "Home", href: "/" },
+        { label: "About", href: "/about" },
+        { label: "Projects", href: "/projects" },
+        { label: "Certifications", href: "/certifications" },
+        { label: "Blog", href: "/blog" },
     ];
 
     const interactiveLinks = [
-        { label: tNav.gallery, href: "/gallery" },
-        { label: tNav.uses, href: "/uses" },
-        { label: tNav.guestbook, href: "/guestbook" },
-        { label: tNav.contact, href: "/contact" },
+        { label: "Gallery", href: "/gallery" },
+        { label: "Uses", href: "/uses" },
+        { label: "Guestbook", href: "/guestbook" },
+        { label: "Contact", href: "/contact" },
     ];
 
     return (
@@ -201,8 +200,8 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
 
                     {/* Col 2: Navigation Links (2.5 Cols) */}
                     <div className="lg:col-span-2 space-y-3">
-                        <p suppressHydrationWarning className="text-[11px] font-mono uppercase tracking-widest text-foreground/80 font-bold">
-                            {locale === "id" ? "Navigasi" : "Navigation"}
+                        <p className="text-[11px] font-mono uppercase tracking-widest text-foreground/80 font-bold">
+                            Navigation
                         </p>
                         <ul className="space-y-2 text-xs sm:text-sm">
                             {navigationLinks.map((link) => (
@@ -212,7 +211,7 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
                                         className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1 group"
                                     >
                                         <span className="h-1 w-1 rounded-full bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        <span suppressHydrationWarning>{link.label}</span>
+                                        <span>{link.label}</span>
                                     </Link>
                                 </li>
                             ))}
@@ -221,8 +220,8 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
 
                     {/* Col 3: Interactive & Resources (2.5 Cols) */}
                     <div className="lg:col-span-2 space-y-3">
-                        <p suppressHydrationWarning className="text-[11px] font-mono uppercase tracking-widest text-foreground/80 font-bold">
-                            {locale === "id" ? "Sumber Daya" : "Resources"}
+                        <p className="text-[11px] font-mono uppercase tracking-widest text-foreground/80 font-bold">
+                            Resources
                         </p>
                         <ul className="space-y-2 text-xs sm:text-sm">
                             {interactiveLinks.map((link) => (
@@ -232,7 +231,7 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
                                         className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-1 group"
                                     >
                                         <span className="h-1 w-1 rounded-full bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        <span suppressHydrationWarning>{link.label}</span>
+                                        <span>{link.label}</span>
                                     </Link>
                                 </li>
                             ))}
@@ -316,7 +315,7 @@ export function Footer({ settings: initialSettings }: { settings?: Record<string
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/80 bg-background/60 hover:bg-muted dark:hover:bg-white/10 text-foreground/80 hover:text-primary transition-all text-xs font-semibold shadow-2xs group cursor-pointer"
                             aria-label="Scroll back to top"
                         >
-                            <span suppressHydrationWarning>{locale === "id" ? "Atas" : "Top"}</span>
+                            <span>Top</span>
                             <ArrowUp className="h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5" />
                         </button>
                     </div>

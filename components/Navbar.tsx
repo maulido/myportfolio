@@ -23,7 +23,6 @@ import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageToggle } from "./LanguageToggle";
-import { useLanguage } from "@/context/LanguageContext";
 
 interface NavItem {
     key: string;
@@ -65,7 +64,6 @@ interface NavbarProps {
 
 export function Navbar({ brandName: initialBrandName }: NavbarProps = {}) {
     const pathname = usePathname();
-    const { t } = useLanguage();
     const [brandName, setBrandName] = useState(initialBrandName || "Portfolio");
     const [isOpen, setIsOpen] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -195,14 +193,14 @@ export function Navbar({ brandName: initialBrandName }: NavbarProps = {}) {
 
                                     {/* Active Spring Pill */}
                                     {isActive && (
-                                        <motion.span
-                                            layoutId="navbar-active-pill"
-                                            className="absolute inset-0 bg-primary/15 dark:bg-primary/25 rounded-full border border-primary/30 dark:border-primary/40 shadow-[0_0_12px_rgba(99,102,241,0.2)] -z-10"
-                                            transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                                        />
-                                    )}
-                                    {t(item.key, item.defaultName)}
-                                </Link>
+                                         <motion.span
+                                             layoutId="navbar-active-pill"
+                                             className="absolute inset-0 bg-primary/15 dark:bg-primary/25 rounded-full border border-primary/30 dark:border-primary/40 shadow-[0_0_12px_rgba(99,102,241,0.2)] -z-10"
+                                             transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                                         />
+                                     )}
+                                     {item.defaultName}
+                                 </Link>
                             );
                         })}
 
@@ -237,7 +235,7 @@ export function Navbar({ brandName: initialBrandName }: NavbarProps = {}) {
                                                 transition={{ type: "spring", stiffness: 380, damping: 30 }}
                                             />
                                         )}
-                                        {t(item.key, item.defaultName)}
+                                        {item.defaultName}
                                     </Link>
                                 );
                             })}
@@ -271,7 +269,7 @@ export function Navbar({ brandName: initialBrandName }: NavbarProps = {}) {
                                         transition={{ type: "spring", stiffness: 380, damping: 30 }}
                                     />
                                 )}
-                                <span>{t("nav.more", "More")}</span>
+                                <span>More</span>
                                 <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", isDropdownOpen && "rotate-180")} />
                             </button>
 
@@ -305,7 +303,7 @@ export function Navbar({ brandName: initialBrandName }: NavbarProps = {}) {
                                                     )}>
                                                         <Icon className="h-3.5 w-3.5" />
                                                     </div>
-                                                    <span className="flex-1">{t(item.key, item.defaultName)}</span>
+                                                    <span className="flex-1">{item.defaultName}</span>
                                                     {isActive && <span className="h-1.5 w-1.5 rounded-full bg-primary" />}
                                                 </Link>
                                             );
@@ -343,7 +341,7 @@ export function Navbar({ brandName: initialBrandName }: NavbarProps = {}) {
                                             transition={{ type: "spring", stiffness: 380, damping: 30 }}
                                         />
                                     )}
-                                    {t(contactNavItem.key, contactNavItem.defaultName)}
+                                    {contactNavItem.defaultName}
                                 </Link>
                             );
                         })()}
@@ -359,7 +357,7 @@ export function Navbar({ brandName: initialBrandName }: NavbarProps = {}) {
                             title="Search (Ctrl + K)"
                         >
                             <Search className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
-                            <span className="hidden xl:inline text-[11px]">{t("nav.search", "Search...")}</span>
+                            <span className="hidden xl:inline text-[11px]">Search...</span>
                             <kbd className="hidden xl:inline-flex items-center px-1.5 py-0.5 text-[9px] font-mono font-semibold bg-muted dark:bg-white/10 rounded text-muted-foreground border border-border/60 dark:border-white/10">
                                 ⌘K
                             </kbd>
@@ -399,7 +397,7 @@ export function Navbar({ brandName: initialBrandName }: NavbarProps = {}) {
                             >
                                 <span className="flex items-center gap-2">
                                     <Search className="h-3.5 w-3.5 text-primary" />
-                                    <span>{t("nav.search", "Search pages, projects, articles...")}</span>
+                                    <span>Search pages, projects, articles...</span>
                                 </span>
                                 <kbd className="px-1.5 py-0.5 text-[10px] font-mono bg-background/80 rounded border border-border/60">⌘K</kbd>
                             </button>
@@ -429,7 +427,7 @@ export function Navbar({ brandName: initialBrandName }: NavbarProps = {}) {
                                             >
                                                 <Icon className="h-4 w-4" />
                                             </div>
-                                            <span className="flex-1 text-sm">{t(item.key, item.defaultName)}</span>
+                                            <span className="flex-1 text-sm">{item.defaultName}</span>
                                             {isActive && <span className="h-1.5 w-1.5 rounded-full bg-primary" />}
                                         </Link>
                                     );
