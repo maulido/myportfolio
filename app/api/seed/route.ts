@@ -5,8 +5,13 @@ import Testimonial from '@/models/Testimonial';
 import Post from '@/models/Post';
 import GalleryItem from '@/models/GalleryItem';
 import Certification from '@/models/Certification';
+import { requireAuth } from '@/lib/auth-helpers';
 
 export async function GET() {
+    // Require admin authentication to prevent unauthorized public seeding
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
+
     await dbConnect();
 
     try {

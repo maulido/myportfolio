@@ -1,12 +1,29 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { SessionProvider } from "next-auth/react";
 import { useSession, signOut } from "next-auth/react";
 import { LayoutDashboard, LogOut } from "lucide-react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (status === "unauthenticated") {
+            router.push("/login");
+        }
+    }, [status, router]);
+
+    if (status === "loading") {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent" />
+            </div>
+        );
+    }
 
     return (
         <div className="flex min-h-screen flex-col bg-background">

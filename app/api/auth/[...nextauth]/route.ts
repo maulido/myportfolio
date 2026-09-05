@@ -1,12 +1,25 @@
-import NextAuth, { User, Session } from "next-auth";
+import NextAuth, { User, Session, NextAuthOptions } from "next-auth";
 import { JWT } from "next-auth/jwt";
 import { AdapterUser } from "next-auth/adapters";
 import CredentialsProvider from "next-auth/providers/credentials";
 import dbConnect from "@/lib/db";
 import Admin from "@/models/Admin";
 import bcrypt from "bcryptjs";
+import { rateLimit } from "@/lib/rate-limit";
 
-export const authOptions = {
+// Rate limit login attempts: 5 attempts per 15 minutes per username/IP
+const loginLimiter = rateLimit({
+    interval: 15 * 60 * 1000,
+    uniqueTokenPerInterval: 500,
+});
+
+export const authOptions: NextAuthOptions = {
+    session: {
+        strategy: "jwt",
+        maxAge: 24 * 60 * 60, // 24 hours (hardened from default 30 days)
+        updateAge: 60 * 60, // 1 hour rolling update
+    },
+    useSecureCookies: process.env.NODE_ENV === "production",
     providers: [
         CredentialsProvider({
             name: "Credentials",
@@ -15,6 +28,16 @@ export const authOptions = {
                 password: { label: "Password", type: "password" }
             },
             async authorize(credentials) {
+                const targetKey = credentials?.username
+                    ? `login:${credentials.username.trim().toLowerCase()}`
+                    : "login:unknown";
+
+                try {
+                    await loginLimiter.check(5, targetKey);
+                } catch {
+                    throw new Error("Too many failed attempts. Account temporarily locked for 15 minutes.");
+                }
+
                 await dbConnect();
 
                 const admin = await Admin.findOne({ username: credentials?.username });

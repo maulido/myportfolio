@@ -44,10 +44,18 @@ export async function POST(req: Request) {
       );
     }
 
-    const { name, email, message } = await req.json();
+    const body = await req.json();
+    const rawName = body?.name;
+    const rawEmail = body?.email;
+    const rawMessage = body?.message;
+
+    const { sanitizeText, sanitizeEmail } = await import('@/lib/sanitize');
+    const name = sanitizeText(rawName);
+    const email = sanitizeEmail(rawEmail);
+    const message = sanitizeText(rawMessage);
 
     if (!name || !email || !message) {
-      return NextResponse.json({ success: false, error: "Missing fields" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Valid name, email, and message are required" }, { status: 400 });
     }
 
     // Always persist the inquiry to the database so it is never lost

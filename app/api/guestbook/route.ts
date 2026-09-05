@@ -71,6 +71,18 @@ export async function POST(request: NextRequest) {
         await dbConnect();
 
         const body = await request.json();
+        const { sanitizeText, sanitizeEmail } = await import('@/lib/sanitize');
+        const name = sanitizeText(body?.name);
+        const message = sanitizeText(body?.message);
+        const email = body?.email ? sanitizeEmail(body.email) : undefined;
+        const website = body?.website ? sanitizeText(body.website) : undefined;
+
+        if (!name || !message) {
+            return NextResponse.json(
+                { success: false, error: 'Valid name and message are required.' },
+                { status: 400 }
+            );
+        }
 
         // Simple rate limiting check - max 10 entries per IP in last hour
         const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
@@ -87,9 +99,13 @@ export async function POST(request: NextRequest) {
         }
 
         const entry = await GuestbookEntry.create({
-            ...body,
+            name,
+            message,
+            email,
+            website,
             ipAddress: ip,
-            approved: false // Require approval by default
+            approved: false, // Require approval by default
+            spam: false
         });
 
         return NextResponse.json({
