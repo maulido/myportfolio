@@ -1,28 +1,60 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Mail, MapPin, Phone, Send } from "lucide-react";
+import { Mail, MapPin, Phone, Send, Copy, Check } from "lucide-react";
 import { useState, useEffect } from "react";
 import toast, { Toaster } from 'react-hot-toast';
 
 export function Contact() {
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [copiedKey, setCopiedKey] = useState<string | null>(null);
     const [contactInfo, setContactInfo] = useState({
         email: "email@example.com",
         phone: "+1 (555) 123-4567",
         location: "Jakarta, Indonesia"
     });
+    const [contactSettings, setContactSettings] = useState({
+        title: "Get in Touch",
+        subtitle: "Have a project in mind or just want to say hi? I'm always open to discussing new opportunities and creative ideas."
+    });
+
+    const copyToClipboard = (text: string, label: string, e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        navigator.clipboard.writeText(text);
+        setCopiedKey(label);
+        toast.success(`${label} copied to clipboard!`, {
+            duration: 2500,
+            style: {
+                background: '#10b981',
+                color: '#fff',
+            },
+        });
+        setTimeout(() => setCopiedKey(null), 2500);
+    };
 
     useEffect(() => {
-        // Fetch contact info from API
-        fetch('/api/contact-info')
-            .then(res => res.json())
-            .then(data => {
-                if (data.success && data.data) {
-                    setContactInfo(data.data);
+        // Fetch contact info and settings in parallel
+        Promise.all([
+            fetch('/api/contact-info').then(res => res.json()).catch(() => ({})),
+            fetch('/api/settings').then(res => res.json()).catch(() => ({}))
+        ]).then(([contactRes, settingsRes]) => {
+            if (contactRes?.success && contactRes?.data) {
+                setContactInfo(contactRes.data);
+            }
+            if (settingsRes?.success && Array.isArray(settingsRes?.data)) {
+                const sMap: Record<string, string> = {};
+                settingsRes.data.forEach((item: { key: string; value: unknown }) => {
+                    if (item && item.key) sMap[item.key] = String(item.value ?? '');
+                });
+                if (sMap.contactSectionTitle || sMap.contactSectionSubtitle) {
+                    setContactSettings({
+                        title: sMap.contactSectionTitle || "Get in Touch",
+                        subtitle: sMap.contactSectionSubtitle || "Have a project in mind or just want to say hi? I'm always open to discussing new opportunities and creative ideas."
+                    });
                 }
-            })
-            .catch(err => console.error('Failed to fetch contact info:', err));
+            }
+        }).catch(err => console.error('Failed to fetch contact data:', err));
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -87,39 +119,67 @@ export function Contact() {
                     <div className="space-y-8">
                         <div>
                             <h2 className="text-4xl font-extrabold tracking-tighter md:text-5xl lg:text-6xl mb-6">
-                                Get in <span className="text-gradient">Touch</span>
+                                {contactSettings.title.includes(" ") ? (
+                                    <>
+                                        {contactSettings.title.substring(0, contactSettings.title.lastIndexOf(" "))}{" "}
+                                        <span className="text-gradient">
+                                            {contactSettings.title.substring(contactSettings.title.lastIndexOf(" ") + 1)}
+                                        </span>
+                                    </>
+                                ) : (
+                                    <span>{contactSettings.title}</span>
+                                )}
                             </h2>
                             <p className="text-muted-foreground text-lg leading-relaxed max-w-md">
-                                Have a project in mind or just want to say hi? I&apos;m always open to discussing new opportunities and creative ideas.
+                                {contactSettings.subtitle}
                             </p>
                         </div>
 
-                        <div className="space-y-6">
+                        <div className="space-y-4">
                             {[
-                                { icon: <Mail className="h-6 w-6" />, label: "Email", value: contactInfo.email, href: `mailto:${contactInfo.email}` },
-                                { icon: <Phone className="h-6 w-6" />, label: "Phone", value: contactInfo.phone, href: `tel:${contactInfo.phone.replace(/[^0-9+]/g, '')}` },
-                                { icon: <MapPin className="h-6 w-6" />, label: "Location", value: contactInfo.location, href: "#" }
+                                { icon: <Mail className="h-6 w-6" />, label: "Email", value: contactInfo.email, href: `mailto:${contactInfo.email}`, canCopy: true },
+                                { icon: <Phone className="h-6 w-6" />, label: "Phone", value: contactInfo.phone, href: `tel:${contactInfo.phone.replace(/[^0-9+]/g, '')}`, canCopy: true },
+                                { icon: <MapPin className="h-6 w-6" />, label: "Location", value: contactInfo.location, href: "#", canCopy: false }
                             ].map((item, i) => (
-                                <motion.a
+                                <motion.div
                                     key={i}
-                                    href={item.href}
                                     initial={{ opacity: 0, x: -20 }}
                                     whileInView={{ opacity: 1, x: 0 }}
                                     transition={{ delay: i * 0.1 }}
-                                    className="flex items-center gap-4 group"
+                                    className="flex items-center justify-between p-3 -mx-3 rounded-2xl transition-colors hover:bg-muted/40 group"
                                 >
-                                    <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-lg shadow-primary/5">
-                                        {item.icon}
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{item.label}</p>
-                                        <p className="font-bold text-foreground group-hover:text-primary transition-colors">{item.value}</p>
-                                    </div>
-                                </motion.a>
+                                    <a
+                                        href={item.href}
+                                        className="flex items-center gap-4 flex-1 min-w-0"
+                                    >
+                                        <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-md shadow-primary/5 shrink-0">
+                                            {item.icon}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{item.label}</p>
+                                            <p className="font-bold text-foreground group-hover:text-primary transition-colors truncate">{item.value}</p>
+                                        </div>
+                                    </a>
+                                    {item.canCopy && (
+                                        <button
+                                            type="button"
+                                            onClick={(e) => copyToClipboard(item.value, item.label, e)}
+                                            className="p-2.5 rounded-xl text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-all active:scale-90 shrink-0 ml-2"
+                                            title={`Copy ${item.label}`}
+                                            aria-label={`Copy ${item.label}`}
+                                        >
+                                            {copiedKey === item.label ? (
+                                                <Check className="h-4 w-4 text-emerald-500" />
+                                            ) : (
+                                                <Copy className="h-4 w-4" />
+                                            )}
+                                        </button>
+                                    )}
+                                </motion.div>
                             ))}
                         </div>
                     </div>
-                    <div className="rounded-xl border border-border/80 dark:border-primary/20 bg-card/90 dark:bg-card/80 backdrop-blur-md p-6 shadow-sm md:shadow-xl">
+                    <div className="rounded-2xl border border-border/80 dark:border-primary/20 bg-card/90 dark:bg-card/70 backdrop-blur-md p-6 sm:p-8 shadow-md md:shadow-xl">
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">

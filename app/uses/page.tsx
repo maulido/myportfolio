@@ -6,6 +6,7 @@ import { Breadcrumb } from "@/components/Breadcrumb";
 import { motion } from "framer-motion";
 import { ExternalLink, Laptop, Code, Server, Armchair, Package } from "lucide-react";
 import Image from "next/image";
+import { useSettings } from "@/lib/useSettings";
 
 interface UsesItem {
     _id: string;
@@ -29,6 +30,11 @@ const categoryIcons: Record<string, React.ElementType> = {
 export default function UsesPage() {
     const [groupedItems, setGroupedItems] = useState<Record<string, UsesItem[]>>({});
     const [loading, setLoading] = useState(true);
+
+    const { get } = useSettings();
+    const heroBadge = get("usesHeroBadge", "Workspace & Equipment");
+    const heroTitle = get("usesHeroTitle", "Tech Stack, Gear & Workspace");
+    const heroSubtitle = get("usesHeroSubtitle", "A comprehensive catalog of hardware, developer software, and desk gear that power my daily engineering workflow.");
 
     useEffect(() => {
         fetchUsesItems();
@@ -90,12 +96,15 @@ export default function UsesPage() {
                         transition={{ duration: 0.5 }}
                         className="text-center max-w-3xl mx-auto"
                     >
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 mb-3">
+                            <Laptop className="h-3.5 w-3.5" />
+                            <span>{heroBadge}</span>
+                        </div>
                         <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gradient">
-                            What I Use
+                            {heroTitle}
                         </h1>
-                        <p className="text-xl text-muted-foreground leading-relaxed">
-                            A collection of tools, software, and hardware that power my daily workflow.
-                            From development to productivity, here&apos;s what I use to get things done.
+                        <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
+                            {heroSubtitle}
                         </p>
                     </motion.div>
                 </section>

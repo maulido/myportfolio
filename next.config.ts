@@ -27,7 +27,7 @@ const nextConfig: NextConfig = {
   },
 
   experimental: {
-    optimizePackageImports: ['lucide-react', 'recharts', 'react-icons'],
+    optimizePackageImports: ['lucide-react', 'recharts'],
   },
 
   // Security headers

@@ -7,6 +7,7 @@ import { ArrowLeft, Calendar, Tag as TagIcon, Clock } from "lucide-react";
 import { ShareButtons } from "@/components/ShareButtons";
 import { EngagementButtons } from "@/components/EngagementButtons";
 import { Breadcrumb } from "@/components/Breadcrumb";
+import Image from "next/image";
 import { Metadata } from 'next';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -158,6 +159,19 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                             <ShareButtons title={post.title} />
                         </div>
                     </header>
+
+                    {post.coverImage && (
+                        <div className="relative w-full aspect-video rounded-2xl overflow-hidden mb-10 border border-border/80 dark:border-white/10 shadow-xl bg-card">
+                            <Image
+                                src={post.coverImage}
+                                alt={post.title}
+                                fill
+                                className="object-cover"
+                                priority
+                                unoptimized
+                            />
+                        </div>
+                    )}
 
                     <div className="prose prose-invert prose-lg max-w-none border-t border-primary/10 pt-10">
                         {/* 

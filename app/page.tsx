@@ -58,7 +58,7 @@ export default function Home() {
         <Certifications />
         <Projects />
         <Testimonials />
-        <GitHubActivity username="maulido" />
+        <GitHubActivity />
         <Contact />
       </main>
     </div>

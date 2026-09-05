@@ -44,8 +44,10 @@ export async function POST(req: Request) {
             }
 
             try {
-                revalidatePath('/');
-                revalidatePath('/about');
+                const paths = ['/', '/about', '/projects', '/certifications', '/blog', '/gallery', '/uses', '/contact'];
+                paths.forEach(p => {
+                    try { revalidatePath(p); } catch {}
+                });
             } catch (revErr) {
                 console.warn("revalidatePath error:", revErr);
             }

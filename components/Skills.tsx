@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Award, Calendar, Code2 } from "lucide-react";
 import { getIcon } from "@/lib/iconMap";
 import { useState, useEffect } from "react";
+import { SpotlightCard } from "./SpotlightCard";
 
 type SkillLevel = "Expert" | "Advanced" | "Intermediate" | "Beginner";
 
@@ -123,54 +124,57 @@ export function Skills() {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.5, delay: categoryIndex * 0.1 }}
                                     viewport={{ once: true }}
-                                    className="group relative overflow-hidden bg-card/90 dark:bg-card/50 backdrop-blur-md rounded-2xl border border-border/80 dark:border-primary/10 p-6 shadow-sm hover:shadow-xl hover:shadow-primary/10 transition-all duration-500 hover:-translate-y-1"
+                                    whileHover={{ scale: 1.02, y: -4 }}
+                                    className="h-full"
                                 >
-                                    {/* Category Header */}
-                                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/80 dark:border-primary/10">
-                                        <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                                            {category.icon}
+                                    <SpotlightCard className="p-6 h-full flex flex-col">
+                                        {/* Category Header */}
+                                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border/80 dark:border-primary/10">
+                                            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                                                {category.icon}
+                                            </div>
+                                            <h3 className="font-bold text-lg">{category.category}</h3>
                                         </div>
-                                        <h3 className="font-bold text-lg">{category.category}</h3>
-                                    </div>
 
-                                    {/* Skills List */}
-                                    <div className="space-y-4">
-                                        {category.skills.map((skill: Skill, skillIndex: number) => (
-                                            <motion.div
-                                                key={skill._id}
-                                                initial={{ opacity: 0, x: -10 }}
-                                                whileInView={{ opacity: 1, x: 0 }}
-                                                transition={{ delay: categoryIndex * 0.1 + skillIndex * 0.05 }}
-                                                viewport={{ once: true }}
-                                                className="group/skill"
-                                            >
-                                                {/* Skill Name with Icon */}
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className={skill.color || 'text-foreground'}>
-                                                            {getIcon(skill.icon, "h-4 w-4")}
+                                        {/* Skills List */}
+                                        <div className="space-y-4">
+                                            {category.skills.map((skill: Skill, skillIndex: number) => (
+                                                <motion.div
+                                                    key={skill._id}
+                                                    initial={{ opacity: 0, x: -10 }}
+                                                    whileInView={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: categoryIndex * 0.1 + skillIndex * 0.05 }}
+                                                    viewport={{ once: true }}
+                                                    className="group/skill rounded-xl p-2 -mx-2 transition-colors hover:bg-muted/40"
+                                                >
+                                                    {/* Skill Name with Icon */}
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className={skill.color || 'text-foreground'}>
+                                                                {getIcon(skill.icon, "h-4 w-4")}
+                                                            </div>
+                                                            <span className="text-sm font-semibold">{skill.name}</span>
                                                         </div>
-                                                        <span className="text-sm font-semibold">{skill.name}</span>
-                                                    </div>
-                                                </div>
-
-                                                {/* Level Badge and Years */}
-                                                <div className="flex items-center gap-2 ml-6">
-                                                    {/* Level Badge */}
-                                                    <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getLevelColor(skill.level)}`}>
-                                                        <div className={`w-1.5 h-1.5 rounded-full ${getLevelDot(skill.level)}`} />
-                                                        {skill.level}
                                                     </div>
 
-                                                    {/* Years of Experience */}
-                                                    <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium bg-muted/50 text-muted-foreground border border-muted">
-                                                        <Calendar className="h-2.5 w-2.5" />
-                                                        {skill.years}y
+                                                    {/* Level Badge and Years */}
+                                                    <div className="flex items-center gap-2 ml-6">
+                                                        {/* Level Badge */}
+                                                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${getLevelColor(skill.level)} transition-transform group-hover/skill:scale-105`}>
+                                                            <div className={`w-1.5 h-1.5 rounded-full ${getLevelDot(skill.level)}`} />
+                                                            {skill.level}
+                                                        </div>
+
+                                                        {/* Years of Experience */}
+                                                        <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium bg-muted/50 text-muted-foreground border border-muted">
+                                                            <Calendar className="h-2.5 w-2.5" />
+                                                            {skill.years}y
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </motion.div>
-                                        ))}
-                                    </div>
+                                                </motion.div>
+                                            ))}
+                                        </div>
+                                    </SpotlightCard>
                                 </motion.div>
                             ))}
                         </div>

@@ -5,6 +5,7 @@ import { Award, ExternalLink, Calendar, CheckCircle2, ChevronRight } from 'lucid
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { SpotlightCard } from './SpotlightCard';
 
 const CertificationDetailModal = dynamic(() => import('./CertificationDetailModal'), { ssr: false });
 
@@ -138,101 +139,103 @@ export function Certifications() {
                             viewport={{ once: true }}
                             whileHover={{ scale: 1.02, y: -5 }}
                             onClick={() => handleCertClick(cert)}
-                            className="border border-border/80 dark:border-primary/20 rounded-xl p-6 bg-card/90 dark:bg-card/40 backdrop-blur-sm hover:border-primary/40 shadow-sm hover:shadow-xl hover:shadow-primary/10 transition-colors duration-300 group cursor-pointer"
+                            className="h-full"
                         >
-                            {/* Certificate Image/Badge */}
-                            {cert.imageUrl && (
-                                <div className="aspect-video relative mb-4 rounded-lg overflow-hidden bg-muted/20">
-                                    <Image
-                                        src={cert.imageUrl}
-                                        alt={cert.title}
-                                        fill
-                                        className="object-cover"
-                                        unoptimized
-                                    />
-                                </div>
-                            )}
-
-                            {/* Title */}
-                            <div className="flex items-start gap-2 mb-2">
-                                <Award className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
-                                <h3 className="font-bold text-lg leading-tight group-hover:text-primary transition-colors">
-                                    {cert.title}
-                                </h3>
-                            </div>
-
-                            {/* Issuer */}
-                            <p className="text-sm text-muted-foreground mb-3 font-medium">
-                                {cert.issuer}
-                            </p>
-
-                            {/* Description */}
-                            {cert.description && (
-                                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                                    {cert.description}
-                                </p>
-                            )}
-
-                            {/* Date */}
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
-                                <Calendar className="h-3 w-3" />
-                                <span>Issued {new Date(cert.issueDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
-                                {cert.expiryDate && (
-                                    <>
-                                        <span>•</span>
-                                        <span>Expires {new Date(cert.expiryDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
-                                    </>
+                            <SpotlightCard className="p-6 h-full flex flex-col cursor-pointer">
+                                {/* Certificate Image/Badge */}
+                                {cert.imageUrl && (
+                                    <div className="aspect-video relative mb-4 rounded-lg overflow-hidden bg-muted/20">
+                                        <Image
+                                            src={cert.imageUrl}
+                                            alt={cert.title}
+                                            fill
+                                            className="object-cover"
+                                            unoptimized
+                                        />
+                                    </div>
                                 )}
-                            </div>
 
-                            {/* Skills */}
-                            {cert.skills && cert.skills.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mb-4">
-                                    {cert.skills.slice(0, 3).map(skill => (
-                                        <span
-                                            key={skill}
-                                            className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-md text-xs font-medium"
-                                        >
-                                            <CheckCircle2 className="h-3 w-3" />
-                                            {skill}
-                                        </span>
-                                    ))}
-                                    {cert.skills.length > 3 && (
-                                        <span className="text-xs text-muted-foreground">
-                                            +{cert.skills.length - 3} more
-                                        </span>
+                                {/* Title */}
+                                <div className="flex items-start gap-2 mb-2">
+                                    <Award className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
+                                    <h3 className="font-bold text-lg leading-tight group-hover:text-primary transition-colors">
+                                        {cert.title}
+                                    </h3>
+                                </div>
+
+                                {/* Issuer */}
+                                <p className="text-sm text-muted-foreground mb-3 font-medium">
+                                    {cert.issuer}
+                                </p>
+
+                                {/* Description */}
+                                {cert.description && (
+                                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                                        {cert.description}
+                                    </p>
+                                )}
+
+                                {/* Date */}
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
+                                    <Calendar className="h-3 w-3" />
+                                    <span>Issued {new Date(cert.issueDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                                    {cert.expiryDate && (
+                                        <>
+                                            <span>•</span>
+                                            <span>Expires {new Date(cert.expiryDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                                        </>
                                     )}
                                 </div>
-                            )}
 
-                            {/* Credential Link */}
-                            {cert.credentialUrl && (
-                                <a
-                                    href={cert.credentialUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-medium"
-                                >
-                                    Verify Credential
-                                    <ExternalLink className="h-3 w-3" />
-                                </a>
-                            )}
+                                {/* Skills */}
+                                {cert.skills && cert.skills.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mb-4">
+                                        {cert.skills.slice(0, 3).map(skill => (
+                                            <span
+                                                key={skill}
+                                                className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-md text-xs font-medium"
+                                            >
+                                                <CheckCircle2 className="h-3 w-3" />
+                                                {skill}
+                                            </span>
+                                        ))}
+                                        {cert.skills.length > 3 && (
+                                            <span className="text-xs text-muted-foreground">
+                                                +{cert.skills.length - 3} more
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
 
-                            {/* Credential ID */}
-                            {cert.credentialId && (
-                                <p className="text-xs text-muted-foreground mt-2">
-                                    ID: {cert.credentialId}
-                                </p>
-                            )}
+                                {/* Credential Link */}
+                                {cert.credentialUrl && (
+                                    <a
+                                        href={cert.credentialUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-medium"
+                                    >
+                                        Verify Credential
+                                        <ExternalLink className="h-3 w-3" />
+                                    </a>
+                                )}
 
-                            {/* View Details Indicator */}
-                            <div className="mt-4 pt-4 border-t border-primary/10 flex items-center justify-end">
-                                <div className="flex items-center text-xs text-primary font-medium group-hover:gap-1 transition-all">
-                                    View Details
-                                    <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+                                {/* Credential ID */}
+                                {cert.credentialId && (
+                                    <p className="text-xs text-muted-foreground mt-2">
+                                        ID: {cert.credentialId}
+                                    </p>
+                                )}
+
+                                {/* View Details Indicator */}
+                                <div className="mt-auto pt-4 border-t border-primary/10 flex items-center justify-end">
+                                    <div className="flex items-center text-xs text-primary font-medium group-hover:gap-1 transition-all">
+                                        View Details
+                                        <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+                                    </div>
                                 </div>
-                            </div>
+                            </SpotlightCard>
                         </motion.div>
                     ))}
                 </div>

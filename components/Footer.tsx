@@ -2,8 +2,11 @@
 
 import { Github, Linkedin, Mail } from "lucide-react";
 import { useState } from "react";
+import { useSettings } from "@/lib/useSettings";
 
-export function Footer({ settings }: { settings: Record<string, string | undefined> }) {
+export function Footer({ settings: initialSettings }: { settings?: Record<string, string | undefined> }) {
+    const { settings: clientSettings } = useSettings();
+    const settings = { ...(initialSettings || {}), ...(clientSettings || {}) };
     const [email, setEmail] = useState("");
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
@@ -75,7 +78,12 @@ export function Footer({ settings }: { settings: Record<string, string | undefin
                     )}
                 </div>
                 <div className="space-y-4 max-w-sm mx-auto mb-12">
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-foreground/70">Subscribe to Newsletter</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-foreground/70">
+                        {settings?.footerNewsletterTitle || "Subscribe to Newsletter"}
+                    </h4>
+                    {settings?.footerNewsletterSubtitle && (
+                        <p className="text-xs text-muted-foreground">{settings.footerNewsletterSubtitle}</p>
+                    )}
                     <form className="flex flex-col sm:flex-row gap-2.5" onSubmit={handleSubscribe}>
                         <input
                             type="email"
@@ -98,12 +106,12 @@ export function Footer({ settings }: { settings: Record<string, string | undefin
                 </div>
 
                 <div className="space-y-1.5 pt-4 border-t border-border/60 dark:border-white/5">
-                    <h3 className="text-base font-bold text-gradient">Portfolio</h3>
-                    <p className="text-xs text-muted-foreground">
-                        Built with Next.js & TailwindCSS.
+                    <h3 className="text-base font-bold text-gradient">{settings?.brandName || "Portfolio"}</h3>
+                    <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                        {settings?.footerTagline || "Built with Next.js & TailwindCSS."}
                     </p>
                     <p className="text-xs text-muted-foreground/80 pt-2">
-                        &copy; {new Date().getFullYear()} All rights reserved.
+                        &copy; {new Date().getFullYear()} {settings?.copyrightText || "All rights reserved."}
                     </p>
                 </div>
             </div>

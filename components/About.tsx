@@ -44,21 +44,31 @@ export function About() {
         paragraph2: ''
     });
     const [education, setEducation] = useState<EducationEntry[]>([]);
+    const [homeAboutHeadline, setHomeAboutHeadline] = useState<string>("Architecting Scalable Code & High-Performance Networks");
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const aboutRes = await fetch('/api/about');
+                const [aboutRes, eduRes, settingsRes] = await Promise.all([
+                    fetch('/api/about'),
+                    fetch('/api/career?type=education'),
+                    fetch('/api/settings?key=homeAboutHeadline')
+                ]);
+
                 const aboutData = await aboutRes.json();
                 if (aboutData.success) {
                     setAboutMe(aboutData.data);
                 }
 
-                const eduRes = await fetch('/api/career?type=education');
                 const eduData = await eduRes.json();
                 if (eduData.success) {
                     setEducation(eduData.data);
+                }
+
+                const sData = await settingsRes.json();
+                if (sData.success && sData.data) {
+                    setHomeAboutHeadline(String(sData.data));
                 }
             } catch (error) {
                 console.error('Failed to fetch About data:', error);
@@ -117,26 +127,29 @@ export function About() {
                         className="flex justify-center"
                     >
                         <div className="relative group">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-primary to-accent rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                            <div className="relative h-64 w-64 md:h-96 md:w-96 overflow-hidden rounded-full border-4 border-primary/20 shadow-2xl bg-gradient-to-b from-primary/5 to-accent/5 flex items-center justify-center">
-                                {aboutMe.profilePhotoUrl ? (
-                                    <Image
-                                        src={aboutMe.profilePhotoUrl}
-                                        alt={aboutMe.name || "Profile"}
-                                        className="object-cover"
-                                        fill
-                                        sizes="(max-width: 768px) 256px, 384px"
-                                        priority
-                                    />
-                                ) : (
-                                    <>
-                                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
-                                        <div className="flex flex-col items-center justify-center text-primary/60">
-                                            <Bot className="h-20 w-20 md:h-32 md:w-32 mb-4 animate-pulse" />
-                                            <span className="text-sm font-bold tracking-widest uppercase">Identity Protected</span>
-                                        </div>
-                                    </>
-                                )}
+                            <div className="absolute -inset-2 bg-gradient-to-tr from-primary via-accent to-primary rounded-full blur-xl opacity-25 group-hover:opacity-60 transition duration-700 pointer-events-none" />
+                            <div className="relative h-64 w-64 md:h-96 md:w-96 overflow-hidden rounded-full border-4 border-primary/20 shadow-2xl bg-gradient-to-b from-primary/5 to-accent/5 flex items-center justify-center p-1">
+                                <div className="relative w-full h-full rounded-full overflow-hidden">
+                                    {aboutMe.profilePhotoUrl ? (
+                                        <Image
+                                            src={aboutMe.profilePhotoUrl}
+                                            alt={aboutMe.name || "Profile"}
+                                            className="object-cover group-hover:scale-105 transition-transform duration-700"
+                                            fill
+                                            sizes="(max-width: 768px) 256px, 384px"
+                                            priority
+                                            unoptimized
+                                        />
+                                    ) : (
+                                        <>
+                                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
+                                            <div className="flex flex-col items-center justify-center text-primary/60 h-full w-full">
+                                                <Bot className="h-20 w-20 md:h-32 md:w-32 mb-4 animate-pulse" />
+                                                <span className="text-sm font-bold tracking-widest uppercase">Identity Protected</span>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </motion.div>
@@ -150,9 +163,10 @@ export function About() {
                         className="space-y-6"
                     >
                         <div>
-                            <h2 className="text-3xl font-bold tracking-tighter md:text-5xl mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
+                            <h2 className="text-3xl font-bold tracking-tighter md:text-5xl mb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60">
                                 About Me
                             </h2>
+                            <p className="text-sm md:text-base font-semibold text-foreground/90 mb-4">{homeAboutHeadline}</p>
                             <div className="h-1.5 w-20 bg-primary rounded-full mb-6"></div>
 
                             {/* Name & Title */}
@@ -249,7 +263,7 @@ export function About() {
 
                         {/* Quick Stats */}
                         {(aboutMe.stats?.yearsExperience || aboutMe.stats?.projectsCompleted || aboutMe.stats?.technologiesMastered || aboutMe.stats?.certificationsEarned) ? (
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4">
                                 {stats.map((stat, index) => (
                                     <motion.div
                                         key={index}
@@ -257,21 +271,24 @@ export function About() {
                                         whileInView={{ opacity: 1, y: 0 }}
                                         transition={{ delay: index * 0.1 }}
                                         viewport={{ once: true }}
-                                        className="p-4 rounded-xl bg-card border border-primary/10 shadow-sm text-center"
+                                        whileHover={{ y: -3, scale: 1.02 }}
+                                        className="p-3.5 rounded-2xl bg-card/90 dark:bg-card/40 border border-border/80 dark:border-primary/20 shadow-xs hover:border-primary/40 hover:shadow-md transition-all text-center group"
                                     >
-                                        <stat.icon className={`h-6 w-6 mx-auto mb-2 ${stat.color}`} />
-                                        <div className="text-2xl font-bold">{stat.value}+</div>
-                                        <div className="text-xs text-muted-foreground mt-1">{stat.label}</div>
+                                        <div className={`h-9 w-9 mx-auto mb-2 rounded-xl bg-primary/10 flex items-center justify-center ${stat.color} group-hover:scale-110 transition-transform`}>
+                                            <stat.icon className="h-4 w-4" />
+                                        </div>
+                                        <div className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">{stat.value}+</div>
+                                        <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mt-0.5">{stat.label}</div>
                                     </motion.div>
                                 ))}
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                                <div className="p-4 rounded-xl bg-card border border-primary/10 shadow-sm">
-                                    <h3 className="font-bold mb-3 text-primary flex items-center gap-2">
-                                        <ShieldCheck className="h-5 w-5" /> Education
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                                <div className="p-5 rounded-2xl bg-card/90 dark:bg-card/40 border border-border/80 dark:border-primary/20 shadow-xs">
+                                    <h3 className="font-bold text-sm mb-3 text-primary flex items-center gap-2">
+                                        <ShieldCheck className="h-4 w-4" /> Education
                                     </h3>
-                                    <ul className="space-y-2 text-sm text-muted-foreground">
+                                    <ul className="space-y-2 text-xs text-muted-foreground">
                                         {education.length > 0 ? (
                                             education.map((edu) => {
                                                 const startYear = new Date(edu.startDate).getFullYear();
@@ -279,7 +296,8 @@ export function About() {
                                                 return (
                                                     <li key={edu._id} className="flex items-start gap-2">
                                                         <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0"></div>
-                                                        <span>{edu.title} ({startYear}-{endYear})</span>
+                                                        <span className="font-medium text-foreground/90">{edu.title}</span>
+                                                        <span className="text-muted-foreground">({startYear}-{endYear})</span>
                                                     </li>
                                                 );
                                             })
@@ -293,14 +311,14 @@ export function About() {
                                 </div>
 
                                 <div
-                                    className="p-4 rounded-xl bg-card border border-primary/10 shadow-sm flex flex-col justify-center items-center text-center group cursor-pointer hover:bg-primary/5 transition-colors"
+                                    className="p-5 rounded-2xl bg-card/90 dark:bg-card/40 border border-border/80 dark:border-primary/20 shadow-xs flex flex-col justify-center items-center text-center group cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all"
                                     onClick={() => window.dispatchEvent(new Event("open-cv-modal"))}
                                 >
-                                    <div className="p-3 rounded-full bg-primary/10 text-primary mb-3 group-hover:scale-110 transition-transform">
-                                        <Download className="h-6 w-6" />
+                                    <div className="p-3 rounded-2xl bg-primary/10 text-primary mb-2.5 group-hover:scale-110 transition-transform">
+                                        <Download className="h-5 w-5" />
                                     </div>
-                                    <h3 className="font-bold text-sm">Download My CV</h3>
-                                    <p className="text-xs text-muted-foreground mt-1">Requires Email Verification</p>
+                                    <h3 className="font-bold text-xs sm:text-sm text-foreground group-hover:text-primary transition-colors">Download My CV</h3>
+                                    <p className="text-[11px] text-muted-foreground mt-0.5">Instant PDF via email verification</p>
                                 </div>
                             </div>
                         )}
