@@ -17,7 +17,8 @@ import {
     User,
     Inbox,
     MailCheck,
-    Globe
+    Globe,
+    HelpCircle
 } from "lucide-react";
 
 export default function AdminSidebar() {
@@ -47,6 +48,7 @@ export default function AdminSidebar() {
                 { name: "Testimonials", href: "/admin/testimonials", icon: MessageCircle },
                 { name: "Career Journey", href: "/admin/career", icon: Briefcase },
                 { name: "Technical Skills", href: "/admin/skills", icon: Award },
+                { name: "FAQs", href: "/admin/faqs", icon: HelpCircle },
             ]
         },
         {

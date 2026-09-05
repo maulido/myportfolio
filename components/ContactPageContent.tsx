@@ -25,12 +25,25 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import { useSettings } from "@/lib/useSettings";
 import { useLanguage } from "@/context/LanguageContext";
+import { getLocalizedField } from "@/lib/localization";
+
+export interface FaqData {
+    _id?: string;
+    question: string;
+    question_id?: string;
+    answer: string;
+    answer_id?: string;
+    category?: string;
+    order?: number;
+    published?: boolean;
+}
 
 interface ContactPageContentProps {
     initialSettings?: Record<string, string | undefined>;
+    initialFaqs?: FaqData[];
 }
 
-export function ContactPageContent({ initialSettings }: ContactPageContentProps) {
+export function ContactPageContent({ initialSettings, initialFaqs }: ContactPageContentProps) {
     const { settings: clientSettings } = useSettings();
     const settings = { ...(initialSettings || {}), ...(clientSettings || {}) };
     const { dictionary, locale } = useLanguage();
@@ -128,28 +141,40 @@ export function ContactPageContent({ initialSettings }: ContactPageContentProps)
         "Flexible Exploration"
     ];
 
-    const faqs = [
+    const defaultFaqs: FaqData[] = [
         {
-            q: "What is your typical turnaround time for new project inquiries?",
-            a: "I review and reply to all professional inquiries within 2 to 4 business hours. If your message is sent during evenings or weekends, I will reply first thing the next business morning."
+            question: "What is your typical turnaround time for new project inquiries?",
+            question_id: "Berapa waktu respon standar Anda untuk pertanyaan proyek baru?",
+            answer: "I review and reply to all professional inquiries within 2 to 4 business hours. If your message is sent during evenings or weekends, I will reply first thing the next business morning.",
+            answer_id: "Saya meninjau dan membalas semua pertanyaan profesional dalam waktu 2 hingga 4 jam kerja. Jika pesan Anda dikirim saat malam hari atau akhir pekan, saya akan membalasnya di pagi hari kerja berikutnya.",
         },
         {
-            q: "Are you available for international or remote contract engagements?",
-            a: "Yes. I have extensive experience collaborating asynchronously across diverse time zones with distributed engineering teams, as well as providing on-site technical architecture consulting."
+            question: "Are you available for international or remote contract engagements?",
+            question_id: "Apakah Anda bersedia untuk kontrak kerja remote atau internasional?",
+            answer: "Yes. I have extensive experience collaborating asynchronously across diverse time zones with distributed engineering teams, as well as providing on-site technical architecture consulting.",
+            answer_id: "Ya. Saya berpengalaman berkolaborasi secara asinkron lintas zona waktu dengan tim engineering terdistribusi, serta menyediakan konsultasi arsitektur teknis on-site.",
         },
         {
-            q: "What are your primary technology domains?",
-            a: "My core expertise bridges two high-impact domains: modern Full-Stack Software Engineering (Next.js, React, TypeScript, Node.js, Cloud Native) and Enterprise Network Infrastructure (Cisco, MikroTik, BGP, OSPF, VLANs, and Network Security)."
+            question: "What are your primary technology domains?",
+            question_id: "Apa saja domain teknologi utama Anda?",
+            answer: "My core expertise bridges two high-impact domains: modern Full-Stack Software Engineering (Next.js, React, TypeScript, Node.js, Cloud Native) and Enterprise Network Infrastructure (Cisco, MikroTik, BGP, OSPF, VLANs, and Network Security).",
+            answer_id: "Keahlian utama saya menghubungkan dua domain berdampak tinggi: Rekayasa Perangkat Lunak Full-Stack modern (Next.js, React, TypeScript, Node.js, Cloud Native) dan Infrastruktur Jaringan Enterprise (Cisco, MikroTik, BGP, OSPF, VLANs, dan Keamanan Jaringan).",
         },
         {
-            q: "Can you sign a mutual Non-Disclosure Agreement (NDA) before sharing project specs?",
-            a: "Absolutely. I respect intellectual property and proprietary architectures. Feel free to request an NDA execution prior to sharing technical documents or repository access."
+            question: "Can you sign a mutual Non-Disclosure Agreement (NDA) before sharing project specs?",
+            question_id: "Bisakah Anda menandatangani Non-Disclosure Agreement (NDA) sebelum pembagian spesifikasi proyek?",
+            answer: "Absolutely. I respect intellectual property and proprietary architectures. Feel free to request an NDA execution prior to sharing technical documents or repository access.",
+            answer_id: "Tentu saja. Saya sangat menghormati hak kekayaan intelektual dan kerahasiaan arsitektur. Anda dapat mengajukan NDA sebelum membagikan dokumen teknis atau akses repositori.",
         },
         {
-            q: "How do you structure project consulting and implementation milestones?",
-            a: "Every engagement begins with a technical discovery phase to define scope, architectural requirements, and risk mitigation. Deliverables are organized into transparent sprint milestones with continuous testing and documentation."
+            question: "How do you structure project consulting and implementation milestones?",
+            question_id: "Bagaimana Anda menyusun milestone konsultasi dan implementasi proyek?",
+            answer: "Every engagement begins with a technical discovery phase to define scope, architectural requirements, and risk mitigation. Deliverables are organized into transparent sprint milestones with continuous testing and documentation.",
+            answer_id: "Setiap proyek dimulai dengan tahap technical discovery untuk menentukan ruang lingkup, kebutuhan arsitektur, dan mitigasi risiko. Deliverables diatur dalam sprint milestones yang transparan dengan pengujian dan dokumentasi berkala.",
         }
     ];
+
+    const activeFaqs = initialFaqs && initialFaqs.length > 0 ? initialFaqs : defaultFaqs;
 
     const copyToClipboard = (text: string, label: string) => {
         navigator.clipboard.writeText(text);
@@ -671,19 +696,22 @@ export function ContactPageContent({ initialSettings }: ContactPageContentProps)
                     </div>
 
                     <div className="space-y-3">
-                        {faqs.map((faq, idx) => {
+                        {activeFaqs.map((faq, idx) => {
                             const isExpanded = expandedFaq === idx;
+                            const question = getLocalizedField(faq, "question", locale, faq.question);
+                            const answer = getLocalizedField(faq, "answer", locale, faq.answer);
+
                             return (
                                 <div
-                                    key={idx}
+                                    key={faq._id || idx}
                                     className="rounded-2xl border border-border bg-card/60 backdrop-blur-md overflow-hidden transition-colors"
                                 >
                                     <button
                                         type="button"
                                         onClick={() => setExpandedFaq(isExpanded ? null : idx)}
-                                        className="w-full flex items-center justify-between p-4 sm:p-5 text-left font-semibold text-sm sm:text-base text-foreground hover:text-primary transition-colors gap-4"
+                                        className="w-full flex items-center justify-between p-4 sm:p-5 text-left font-semibold text-sm sm:text-base text-foreground hover:text-primary transition-colors gap-4 cursor-pointer"
                                     >
-                                        <span>{faq.q}</span>
+                                        <span>{question}</span>
                                         <ChevronDown
                                             className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ${
                                                 isExpanded ? "rotate-180 text-primary" : ""
@@ -698,8 +726,8 @@ export function ContactPageContent({ initialSettings }: ContactPageContentProps)
                                                 exit={{ height: 0, opacity: 0 }}
                                                 transition={{ duration: 0.2 }}
                                             >
-                                                <div className="px-4 sm:px-5 pb-5 text-xs sm:text-sm text-muted-foreground leading-relaxed border-t border-border/40 pt-3">
-                                                    {faq.a}
+                                                <div className="px-4 sm:px-5 pb-5 text-xs sm:text-sm text-muted-foreground leading-relaxed border-t border-border/40 pt-3 whitespace-pre-line">
+                                                    {answer}
                                                 </div>
                                             </motion.div>
                                         )}
