@@ -2,30 +2,118 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import GuestbookEntry from '@/models/GuestbookEntry';
 import { rateLimit } from '@/lib/rate-limit';
+import { requireAuth } from '@/lib/auth-helpers';
 
 const guestbookLimiter = rateLimit({
     interval: 5 * 60 * 1000, // 5 minutes
     uniqueTokenPerInterval: 500,
 });
 
-// GET - Get approved guestbook entries (public)
+// GET - Get approved guestbook entries (public) or admin list
 export async function GET(request: NextRequest) {
     try {
         await dbConnect();
 
         const { searchParams } = new URL(request.url);
-        const page = parseInt(searchParams.get('page') || '1');
-        const limit = parseInt(searchParams.get('limit') || '10');
+        const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
+        const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '10')));
         const skip = (page - 1) * limit;
+        const search = searchParams.get('search')?.trim();
+        const sort = searchParams.get('sort') || 'newest';
+        const isAdminQuery = searchParams.get('admin') === 'true';
 
-        const entries = await GuestbookEntry.find({ approved: true, spam: false })
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit)
-            .select('-email -ipAddress') // Don't expose email and IP
-            .lean();
+        // Admin mode query: requires authentication
+        if (isAdminQuery) {
+            const authResult = await requireAuth();
+            if (authResult instanceof NextResponse) return authResult;
 
-        const total = await GuestbookEntry.countDocuments({ approved: true, spam: false });
+            const status = searchParams.get('status') || 'pending';
+            const adminFilter: Record<string, unknown> = {};
+
+            if (status === 'pending') {
+                adminFilter.approved = false;
+                adminFilter.spam = false;
+            } else if (status === 'approved') {
+                adminFilter.approved = true;
+                adminFilter.spam = false;
+            } else if (status === 'spam') {
+                adminFilter.spam = true;
+            }
+
+            if (search) {
+                adminFilter.$or = [
+                    { name: { $regex: search, $options: 'i' } },
+                    { message: { $regex: search, $options: 'i' } },
+                    { email: { $regex: search, $options: 'i' } }
+                ];
+            }
+
+            const [entries, total, pendingCount, approvedCount, spamCount] = await Promise.all([
+                GuestbookEntry.find(adminFilter)
+                    .sort({ pinned: -1, createdAt: -1 })
+                    .skip(skip)
+                    .limit(limit)
+                    .lean(),
+                GuestbookEntry.countDocuments(adminFilter),
+                GuestbookEntry.countDocuments({ approved: false, spam: false }),
+                GuestbookEntry.countDocuments({ approved: true, spam: false }),
+                GuestbookEntry.countDocuments({ spam: true }),
+            ]);
+
+            return NextResponse.json({
+                success: true,
+                data: entries,
+                pagination: {
+                    page,
+                    limit,
+                    total,
+                    pages: Math.ceil(total / limit)
+                },
+                counts: {
+                    pending: pendingCount,
+                    approved: approvedCount,
+                    spam: spamCount
+                }
+            });
+        }
+
+        // Public mode: only approved and non-spam entries
+        const filter: Record<string, unknown> = { approved: true, spam: false };
+
+        if (search) {
+            filter.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { message: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        // Sorting configuration: pinned entries always appear first
+        const sortConfig: Record<string, 1 | -1> = { pinned: -1 };
+        if (sort === 'popular') {
+            sortConfig.likes = -1;
+            sortConfig.createdAt = -1;
+        } else if (sort === 'oldest') {
+            sortConfig.createdAt = 1;
+        } else {
+            sortConfig.createdAt = -1;
+        }
+
+        const [entries, total, totalPinned, totalLikesResult] = await Promise.all([
+            GuestbookEntry.find(filter)
+                .sort(sortConfig)
+                .skip(skip)
+                .limit(limit)
+                .select('-email -ipAddress') // Never expose email and IP to public
+                .lean(),
+            GuestbookEntry.countDocuments(filter),
+            GuestbookEntry.countDocuments({ approved: true, spam: false, pinned: true }),
+            GuestbookEntry.aggregate([
+                { $match: { approved: true, spam: false } },
+                { $group: { _id: null, totalLikes: { $sum: '$likes' } } }
+            ])
+        ]);
+
+        const totalLikes = totalLikesResult[0]?.totalLikes || 0;
 
         return NextResponse.json(
             {
@@ -36,11 +124,16 @@ export async function GET(request: NextRequest) {
                     limit,
                     total,
                     pages: Math.ceil(total / limit)
+                },
+                stats: {
+                    totalSignatures: total,
+                    totalPinned,
+                    totalLikes
                 }
             },
             {
                 headers: {
-                    'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+                    'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=120',
                 },
             }
         );

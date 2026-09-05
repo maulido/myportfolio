@@ -3,15 +3,81 @@
 import { useState, useEffect, useCallback } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Breadcrumb } from "@/components/Breadcrumb";
-import { motion } from "framer-motion";
-import { MessageSquare, Send, ChevronLeft, ChevronRight } from "lucide-react";
+import { Footer } from "@/components/Footer";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+    MessageSquare,
+    Send,
+    Pin,
+    Heart,
+    Sparkles,
+    Clock,
+    Search,
+    X,
+    Globe,
+    ExternalLink,
+    CheckCircle2,
+    CornerDownRight,
+    User,
+    Calendar,
+    Flame,
+    RefreshCw,
+    ChevronLeft,
+    ChevronRight,
+    PenTool
+} from "lucide-react";
+import toast from "react-hot-toast";
 
 interface GuestbookEntry {
     _id: string;
     name: string;
     website?: string;
     message: string;
+    pinned?: boolean;
+    likes?: number;
+    adminReply?: string;
+    adminRepliedAt?: string;
     createdAt: string;
+}
+
+interface Stats {
+    totalSignatures: number;
+    totalPinned: number;
+    totalLikes: number;
+}
+
+const QUICK_GREETINGS = [
+    "Inspiring portfolio & engineering projects!",
+    "Loved the network lab and gear setup.",
+    "Great blog articles and deep dives.",
+    "Clean, ultra-smooth and responsive UI.",
+    "Greetings from the tech community!"
+];
+
+const AVATAR_GRADIENTS = [
+    "from-indigo-500 to-purple-600",
+    "from-blue-500 to-cyan-500",
+    "from-emerald-500 to-teal-600",
+    "from-rose-500 to-pink-600",
+    "from-amber-500 to-orange-600",
+    "from-violet-500 to-fuchsia-600",
+];
+
+function getAvatarGradient(name: string) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % AVATAR_GRADIENTS.length;
+    return AVATAR_GRADIENTS[index];
+}
+
+function getInitials(name: string) {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
 }
 
 export default function GuestbookPage() {
@@ -20,6 +86,18 @@ export default function GuestbookPage() {
     const [submitting, setSubmitting] = useState(false);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [stats, setStats] = useState<Stats>({
+        totalSignatures: 0,
+        totalPinned: 0,
+        totalLikes: 0,
+    });
+
+    // Filtering & Sorting
+    const [searchQuery, setSearchQuery] = useState("");
+    const [activeSort, setActiveSort] = useState<"newest" | "popular" | "oldest">("newest");
+    const [submittedSuccess, setSubmittedSuccess] = useState(false);
+
+    // Form inputs
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -29,28 +107,59 @@ export default function GuestbookPage() {
     const [charCount, setCharCount] = useState(0);
     const maxChars = 500;
 
-    const fetchEntries = useCallback(async () => {
+    // Liked IDs tracking in localStorage
+    const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+
+    useEffect(() => {
         try {
-            const response = await fetch(`/api/guestbook?page=${page}&limit=10`);
+            const saved = localStorage.getItem("portfolio_guestbook_likes");
+            if (saved) {
+                setLikedIds(new Set(JSON.parse(saved)));
+            }
+        } catch {}
+    }, []);
+
+    const fetchEntries = useCallback(async () => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams({
+                page: String(page),
+                limit: "10",
+                sort: activeSort,
+            });
+            if (searchQuery.trim()) {
+                params.set("search", searchQuery.trim());
+            }
+
+            const response = await fetch(`/api/guestbook?${params.toString()}`);
             const data = await response.json();
             if (data.success) {
-                setEntries(data.data);
-                setTotalPages(data.pagination.pages);
+                setEntries(data.data || []);
+                setTotalPages(data.pagination?.pages || 1);
+                if (data.stats) {
+                    setStats(data.stats);
+                }
+            } else {
+                toast.error(data.error || "Failed to load signatures");
             }
         } catch (error) {
-            console.error('Error fetching entries:', error);
+            console.error("Error fetching guestbook entries:", error);
+            toast.error("Failed to connect to guestbook service");
         } finally {
             setLoading(false);
         }
-    }, [page]);
+    }, [page, activeSort, searchQuery]);
 
     useEffect(() => {
-        fetchEntries();
+        const timer = setTimeout(() => {
+            fetchEntries();
+        }, 250);
+        return () => clearTimeout(timer);
     }, [fetchEntries]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        if (name === 'message') {
+        if (name === "message") {
             if (value.length <= maxChars) {
                 setFormData(prev => ({ ...prev, [name]: value }));
                 setCharCount(value.length);
@@ -60,236 +169,563 @@ export default function GuestbookPage() {
         }
     };
 
+    const handleQuickGreeting = (text: string) => {
+        setFormData(prev => {
+            const current = prev.message.trim();
+            const newMessage = current ? `${current} ${text}` : text;
+            if (newMessage.length <= maxChars) {
+                setCharCount(newMessage.length);
+                return { ...prev, message: newMessage };
+            }
+            return prev;
+        });
+        toast.success("Greeting appended to your message", { duration: 1500 });
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!formData.name.trim() || !formData.message.trim()) {
+            toast.error("Please provide both your name and message.");
+            return;
+        }
+
         setSubmitting(true);
 
         try {
-            const response = await fetch('/api/guestbook', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            const response = await fetch("/api/guestbook", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData)
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                alert(data.message || 'Thank you! Your message will appear after approval.');
+                toast.success(data.message || "Thank you! Your signature will appear after quick approval.", {
+                    duration: 5000,
+                });
                 setFormData({ name: "", email: "", website: "", message: "" });
                 setCharCount(0);
+                setSubmittedSuccess(true);
             } else {
-                // Show specific error message from API
                 if (response.status === 429) {
-                    alert(data.error || 'Too many submissions. Please wait before trying again.');
+                    toast.error(data.error || "Too many submissions. Please wait before trying again.");
                 } else {
-                    alert(data.error || 'Failed to submit message. Please try again.');
+                    toast.error(data.error || "Failed to submit signature.");
                 }
             }
         } catch (error) {
-            console.error('Error submitting:', error);
-            alert('Network error. Please check your connection and try again.');
+            console.error("Error submitting signature:", error);
+            toast.error("Network error. Please try again later.");
         } finally {
             setSubmitting(false);
         }
     };
 
+    const handleLike = async (id: string) => {
+        if (likedIds.has(id)) {
+            toast("You already reacted to this signature!", { icon: "❤️" });
+            return;
+        }
+
+        // Optimistic UI update
+        setEntries(prev => prev.map(entry => {
+            if (entry._id === id) {
+                return { ...entry, likes: (entry.likes || 0) + 1 };
+            }
+            return entry;
+        }));
+
+        const newLiked = new Set(likedIds).add(id);
+        setLikedIds(newLiked);
+        try {
+            localStorage.setItem("portfolio_guestbook_likes", JSON.stringify(Array.from(newLiked)));
+        } catch {}
+
+        try {
+            const res = await fetch(`/api/guestbook/${id}/like`, { method: "POST" });
+            const data = await res.json();
+            if (data.success) {
+                toast.success("Reaction added!", { duration: 1500 });
+            }
+        } catch (error) {
+            console.error("Failed to register like:", error);
+        }
+    };
+
     return (
-        <div className="flex min-h-screen flex-col">
+        <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-primary/20 selection:text-primary">
             <Navbar />
-            <main className="flex-1 pt-24 pb-16">
-                {/* Breadcrumbs */}
-                <div className="container mx-auto px-4 md:px-6 pb-4 max-w-4xl">
-                    <Breadcrumb items={[{ label: "Guestbook" }]} />
-                </div>
 
-                {/* Hero Section */}
-                <section className="container mx-auto px-4 md:px-6 mb-12 max-w-4xl">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5 }}
-                        className="text-center"
-                    >
-                        <div className="flex items-center justify-center gap-3 mb-4">
-                            <MessageSquare className="h-10 w-10 text-primary" />
-                            <h1 className="text-4xl md:text-5xl font-bold text-gradient">
-                                Guestbook
-                            </h1>
-                        </div>
-                        <p className="text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-                            Leave a message, share your thoughts, or just say hi! All messages are moderated before appearing.
-                        </p>
-                    </motion.div>
-                </section>
+            <main className="flex-1 pt-24 sm:pt-28 pb-20">
+                {/* Ambient Glow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[450px] bg-primary/5 rounded-full blur-[140px] pointer-events-none -z-10" />
 
-                <div className="container mx-auto px-4 md:px-6 max-w-4xl space-y-12">
-                    {/* Message Form */}
+                <div className="container mx-auto px-4 md:px-6 max-w-5xl space-y-12">
+                    {/* Breadcrumbs */}
+                    <div className="pb-2">
+                        <Breadcrumb items={[{ label: "Guestbook" }]} />
+                    </div>
+
+                    {/* Hero Header */}
+                    <section className="text-center space-y-4 max-w-3xl mx-auto">
+                        <motion.div
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4 }}
+                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 shadow-xs"
+                        >
+                            <Sparkles className="h-3.5 w-3.5" />
+                            <span>Community & Visitor Signatures</span>
+                        </motion.div>
+
+                        <motion.h1
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4, delay: 0.1 }}
+                            className="text-4xl sm:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground to-primary"
+                        >
+                            Guestbook & Wall of Notes
+                        </motion.h1>
+
+                        <motion.p
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4, delay: 0.15 }}
+                            className="text-base sm:text-lg text-muted-foreground leading-relaxed"
+                        >
+                            Welcome to my digital corner! Leave a message, share thoughts on my engineering projects, feedback on the network lab, or just say hello from around the globe.
+                        </motion.p>
+
+                        {/* Live Community Counters */}
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.96 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.4, delay: 0.2 }}
+                            className="grid grid-cols-3 gap-3 pt-4 max-w-lg mx-auto"
+                        >
+                            <div className="p-3 rounded-2xl bg-card/80 dark:bg-white/[0.03] border border-border/80 dark:border-white/10 shadow-xs">
+                                <div className="text-xl sm:text-2xl font-bold text-primary">
+                                    {stats.totalSignatures}
+                                </div>
+                                <div className="text-[11px] text-muted-foreground font-medium flex items-center justify-center gap-1 mt-0.5">
+                                    <MessageSquare className="h-3 w-3" />
+                                    <span>Signatures</span>
+                                </div>
+                            </div>
+                            <div className="p-3 rounded-2xl bg-card/80 dark:bg-white/[0.03] border border-border/80 dark:border-white/10 shadow-xs">
+                                <div className="text-xl sm:text-2xl font-bold text-amber-500">
+                                    {stats.totalPinned}
+                                </div>
+                                <div className="text-[11px] text-muted-foreground font-medium flex items-center justify-center gap-1 mt-0.5">
+                                    <Pin className="h-3 w-3" />
+                                    <span>Featured</span>
+                                </div>
+                            </div>
+                            <div className="p-3 rounded-2xl bg-card/80 dark:bg-white/[0.03] border border-border/80 dark:border-white/10 shadow-xs">
+                                <div className="text-xl sm:text-2xl font-bold text-rose-500">
+                                    {stats.totalLikes}
+                                </div>
+                                <div className="text-[11px] text-muted-foreground font-medium flex items-center justify-center gap-1 mt-0.5">
+                                    <Heart className="h-3 w-3" />
+                                    <span>Reactions</span>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </section>
+
+                    {/* Interactive Signature Box */}
                     <motion.section
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="border border-border/80 dark:border-primary/20 rounded-xl p-6 md:p-8 bg-card/90 dark:bg-card/40 backdrop-blur-sm shadow-sm"
+                        transition={{ delay: 0.25 }}
+                        className="rounded-3xl border border-border/80 dark:border-white/10 bg-card/80 dark:bg-white/[0.02] backdrop-blur-xl p-6 sm:p-8 shadow-lg relative overflow-hidden"
                     >
-                        <h2 className="text-2xl font-bold mb-6">Leave a Message</h2>
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Name *</label>
-                                    <input
-                                        required
-                                        name="name"
-                                        value={formData.name}
-                                        onChange={handleChange}
-                                        maxLength={100}
-                                        className="flex h-10 w-full rounded-md border border-input bg-background/80 px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                        placeholder="Your name"
-                                    />
+                        <div className="flex items-center justify-between gap-4 mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 rounded-2xl bg-primary/10 text-primary border border-primary/20">
+                                    <PenTool className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold tracking-tight">Sign the Guestbook</h2>
+                                    <p className="text-xs text-muted-foreground">Signatures appear publicly after a quick automated & spam check.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {submittedSuccess ? (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="p-6 rounded-2xl bg-primary/10 border border-primary/20 text-center space-y-3"
+                            >
+                                <div className="h-12 w-12 rounded-full bg-primary/20 text-primary flex items-center justify-center mx-auto">
+                                    <CheckCircle2 className="h-6 w-6" />
+                                </div>
+                                <h3 className="text-lg font-bold text-foreground">Signature Received!</h3>
+                                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                                    Thank you for leaving a note! It will be reviewed and published to the wall shortly.
+                                </p>
+                                <button
+                                    onClick={() => setSubmittedSuccess(false)}
+                                    className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-all shadow-xs"
+                                >
+                                    Sign Another Message
+                                </button>
+                            </motion.div>
+                        ) : (
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <User className="h-3.5 w-3.5 text-primary" />
+                                            Your Name <span className="text-primary">*</span>
+                                        </label>
+                                        <input
+                                            required
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleChange}
+                                            maxLength={100}
+                                            className="w-full h-11 px-3.5 rounded-xl border border-input/80 bg-background/80 dark:bg-white/[0.04] text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                                            placeholder="e.g. Maya Lin"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+                                            Website / GitHub / LinkedIn <span className="text-muted-foreground text-[10px] font-normal">(optional)</span>
+                                        </label>
+                                        <input
+                                            name="website"
+                                            type="url"
+                                            value={formData.website}
+                                            onChange={handleChange}
+                                            className="w-full h-11 px-3.5 rounded-xl border border-input/80 bg-background/80 dark:bg-white/[0.04] text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                                            placeholder="https://github.com/yourhandle"
+                                        />
+                                    </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-sm font-medium">Email (optional, not shown)</label>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                        <span>Email</span>
+                                        <span className="text-muted-foreground text-[10px] font-normal">(optional, stays private, never published)</span>
+                                    </label>
                                     <input
                                         name="email"
                                         type="email"
                                         value={formData.email}
                                         onChange={handleChange}
-                                        className="flex h-10 w-full rounded-md border border-input bg-background/80 px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                        placeholder="your@email.com"
+                                        className="w-full h-11 px-3.5 rounded-xl border border-input/80 bg-background/80 dark:bg-white/[0.04] text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                                        placeholder="your.email@company.com"
                                     />
                                 </div>
-                            </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Website (optional)</label>
-                                <input
-                                    name="website"
-                                    type="url"
-                                    value={formData.website}
-                                    onChange={handleChange}
-                                    className="flex h-10 w-full rounded-md border border-input bg-background/80 px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                    placeholder="https://yourwebsite.com"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-sm font-medium">Message *</label>
-                                    <span className={`text-xs ${charCount > maxChars * 0.9 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                                        {charCount}/{maxChars}
+                                {/* Quick Greeting Pills */}
+                                <div className="pt-1">
+                                    <span className="text-[11px] font-medium text-muted-foreground block mb-2">
+                                        Need ideas? Tap a greeting to append:
                                     </span>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {QUICK_GREETINGS.map((pill, i) => (
+                                            <button
+                                                key={i}
+                                                type="button"
+                                                onClick={() => handleQuickGreeting(pill)}
+                                                className="px-2.5 py-1 rounded-lg text-xs font-medium bg-muted/60 dark:bg-white/[0.04] hover:bg-primary/10 hover:text-primary hover:border-primary/30 border border-border/70 dark:border-white/5 transition-all text-muted-foreground"
+                                            >
+                                                + {pill}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                                <textarea
-                                    required
-                                    name="message"
-                                    value={formData.message}
-                                    onChange={handleChange}
-                                    rows={4}
-                                    className="flex min-h-[120px] w-full rounded-md border border-input bg-background/80 px-3 py-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                    placeholder="Write your message here..."
-                                />
-                            </div>
 
-                            <button
-                                type="submit"
-                                disabled={submitting}
-                                className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6"
-                            >
-                                {submitting ? "Sending..." : (
-                                    <>
-                                        <Send className="mr-2 h-4 w-4" />
-                                        Send Message
-                                    </>
-                                )}
-                            </button>
-                        </form>
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                            <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                                            Your Message <span className="text-primary">*</span>
+                                        </label>
+                                        <span className={`text-[11px] font-mono ${charCount > maxChars * 0.9 ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
+                                            {charCount} / {maxChars}
+                                        </span>
+                                    </div>
+                                    <textarea
+                                        required
+                                        name="message"
+                                        value={formData.message}
+                                        onChange={handleChange}
+                                        rows={4}
+                                        className="w-full p-3.5 rounded-xl border border-input/80 bg-background/80 dark:bg-white/[0.04] text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-y min-h-[110px]"
+                                        placeholder="Write something memorable, share feedback, or leave a warm greeting..."
+                                    />
+                                </div>
+
+                                <div className="flex items-center justify-between pt-2">
+                                    <span className="text-[11px] text-muted-foreground hidden sm:inline">
+                                        Protected with rate limiting and anti-spam verification.
+                                    </span>
+                                    <button
+                                        type="submit"
+                                        disabled={submitting || !formData.name.trim() || !formData.message.trim()}
+                                        className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-all shadow-md hover:shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
+                                    >
+                                        {submitting ? (
+                                            <>
+                                                <RefreshCw className="h-4 w-4 animate-spin" />
+                                                <span>Submitting...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Send className="h-4 w-4" />
+                                                <span>Sign Wall</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        )}
                     </motion.section>
 
-                    {/* Messages List */}
-                    <section className="space-y-6">
-                        <h2 className="text-2xl font-bold">Messages ({entries.length > 0 ? `Page ${page} of ${totalPages}` : '0'})</h2>
+                    {/* Feed Controls: Search & Sort */}
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border/70 dark:border-white/10">
+                        {/* Search Input */}
+                        <div className="relative w-full sm:w-80">
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    setPage(1);
+                                }}
+                                placeholder="Search signatures or names..."
+                                className="w-full h-10 pl-9 pr-8 rounded-full border border-border/80 dark:border-white/10 bg-card/60 dark:bg-white/[0.03] text-xs focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all"
+                            />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => {
+                                        setSearchQuery("");
+                                        setPage(1);
+                                    }}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
+                                >
+                                    <X className="h-3 w-3" />
+                                </button>
+                            )}
+                        </div>
 
+                        {/* Sort Tabs */}
+                        <div className="flex items-center gap-1.5 p-1 rounded-full bg-muted/50 dark:bg-white/[0.03] border border-border/60 dark:border-white/10">
+                            <button
+                                onClick={() => {
+                                    setActiveSort("newest");
+                                    setPage(1);
+                                }}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                                    activeSort === "newest"
+                                        ? "bg-primary text-primary-foreground shadow-xs"
+                                        : "text-muted-foreground hover:text-foreground"
+                                }`}
+                            >
+                                <Clock className="h-3.5 w-3.5" />
+                                <span>Newest</span>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setActiveSort("popular");
+                                    setPage(1);
+                                }}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                                    activeSort === "popular"
+                                        ? "bg-primary text-primary-foreground shadow-xs"
+                                        : "text-muted-foreground hover:text-foreground"
+                                }`}
+                            >
+                                <Flame className="h-3.5 w-3.5 text-amber-300" />
+                                <span>Most Liked</span>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setActiveSort("oldest");
+                                    setPage(1);
+                                }}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                                    activeSort === "oldest"
+                                        ? "bg-primary text-primary-foreground shadow-xs"
+                                        : "text-muted-foreground hover:text-foreground"
+                                }`}
+                            >
+                                <span>Oldest</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Messages Feed */}
+                    <section className="space-y-4">
                         {loading ? (
-                            <div className="flex justify-center py-12">
-                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                            <div className="py-20 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                                <div className="h-10 w-10 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                                <span className="text-xs font-medium">Loading signatures...</span>
                             </div>
                         ) : entries.length > 0 ? (
-                            <>
-                                <div className="space-y-4">
-                                    {entries.map((entry, index) => (
-                                        <motion.div
-                                            key={entry._id}
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: index * 0.05 }}
-                                            className="border border-border/80 rounded-lg p-6 bg-card/90 dark:bg-card/20 shadow-sm hover:border-primary/40 transition-colors"
-                                        >
-                                            <div className="flex items-start justify-between mb-3">
-                                                <div>
-                                                    {entry.website ? (
-                                                        <a
-                                                            href={entry.website}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="font-semibold text-primary hover:underline"
-                                                        >
-                                                            {entry.name}
-                                                        </a>
-                                                    ) : (
-                                                        <span className="font-semibold">{entry.name}</span>
-                                                    )}
-                                                </div>
-                                                <span className="text-xs text-muted-foreground">
-                                                    {new Date(entry.createdAt).toLocaleDateString('en-US', {
-                                                        month: 'short',
-                                                        day: 'numeric',
-                                                        year: 'numeric'
-                                                    })}
-                                                </span>
-                                            </div>
-                                            <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                                                {entry.message}
-                                            </p>
-                                        </motion.div>
-                                    ))}
-                                </div>
+                            <div className="grid gap-4">
+                                <AnimatePresence>
+                                    {entries.map((entry, index) => {
+                                        const isLiked = likedIds.has(entry._id);
+                                        return (
+                                            <motion.article
+                                                key={entry._id}
+                                                initial={{ opacity: 0, y: 15 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, scale: 0.95 }}
+                                                transition={{ duration: 0.3, delay: index * 0.04 }}
+                                                className={`rounded-2xl p-5 sm:p-6 transition-all duration-300 border backdrop-blur-sm relative ${
+                                                    entry.pinned
+                                                        ? "bg-amber-500/[0.03] dark:bg-amber-500/[0.04] border-amber-500/30 dark:border-amber-500/40 shadow-sm"
+                                                        : "bg-card/80 dark:bg-white/[0.02] border-border/80 dark:border-white/10 hover:border-primary/40 shadow-xs"
+                                                }`}
+                                            >
+                                                {/* Pinned Badge */}
+                                                {entry.pinned && (
+                                                    <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 mb-3 shadow-2xs">
+                                                        <Pin className="h-3 w-3" />
+                                                        <span>Pinned Signature</span>
+                                                    </div>
+                                                )}
 
-                                {/* Pagination */}
+                                                <div className="flex items-start justify-between gap-3">
+                                                    {/* Author & Avatar */}
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`h-10 w-10 rounded-xl bg-gradient-to-br ${getAvatarGradient(entry.name)} flex items-center justify-center text-white font-bold text-xs shadow-xs shrink-0`}>
+                                                            {getInitials(entry.name)}
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex items-center gap-2">
+                                                                {entry.website ? (
+                                                                    <a
+                                                                        href={entry.website}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="font-bold text-sm text-foreground hover:text-primary transition-colors inline-flex items-center gap-1 group"
+                                                                    >
+                                                                        <span>{entry.name}</span>
+                                                                        <ExternalLink className="h-3 w-3 opacity-60 group-hover:opacity-100 transition-opacity" />
+                                                                    </a>
+                                                                ) : (
+                                                                    <span className="font-bold text-sm text-foreground">{entry.name}</span>
+                                                                )}
+                                                            </div>
+                                                            <div className="text-[11px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                                                                <Calendar className="h-3 w-3" />
+                                                                <span>
+                                                                    {new Date(entry.createdAt).toLocaleDateString("en-US", {
+                                                                        month: "short",
+                                                                        day: "numeric",
+                                                                        year: "numeric"
+                                                                    })}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Like Button */}
+                                                    <button
+                                                        onClick={() => handleLike(entry._id)}
+                                                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border shrink-0 ${
+                                                            isLiked
+                                                                ? "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30"
+                                                                : "bg-muted/50 dark:bg-white/[0.04] text-muted-foreground hover:text-rose-500 hover:border-rose-500/30 border-border/60 dark:border-white/10"
+                                                        }`}
+                                                        title={isLiked ? "You loved this note" : "Send love"}
+                                                    >
+                                                        <Heart className={`h-3.5 w-3.5 transition-transform ${isLiked ? 'fill-rose-500 text-rose-500 scale-110' : ''}`} />
+                                                        <span>{entry.likes || 0}</span>
+                                                    </button>
+                                                </div>
+
+                                                {/* Message Content */}
+                                                <p className="text-sm text-foreground/90 leading-relaxed mt-3.5 whitespace-pre-wrap">
+                                                    {entry.message}
+                                                </p>
+
+                                                {/* Verified Owner Reply */}
+                                                {entry.adminReply && (
+                                                    <div className="mt-4 pt-3.5 border-t border-border/60 dark:border-white/10 flex items-start gap-3 bg-muted/30 dark:bg-white/[0.02] p-3.5 rounded-xl">
+                                                        <div className="p-1.5 rounded-lg bg-primary/20 text-primary shrink-0 mt-0.5">
+                                                            <CornerDownRight className="h-4 w-4" />
+                                                        </div>
+                                                        <div className="space-y-1 text-xs">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-bold text-foreground">Maulana (Author)</span>
+                                                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-primary/15 text-primary border border-primary/20">
+                                                                    Owner Reply
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-muted-foreground leading-relaxed">
+                                                                {entry.adminReply}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </motion.article>
+                                        );
+                                    })}
+                                </AnimatePresence>
+
+                                {/* Pagination Controls */}
                                 {totalPages > 1 && (
-                                    <div className="flex items-center justify-center gap-2 pt-4">
+                                    <div className="flex items-center justify-between pt-6 border-t border-border/60 dark:border-white/10">
                                         <button
                                             onClick={() => setPage(p => Math.max(1, p - 1))}
                                             disabled={page === 1}
-                                            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10"
+                                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border border-border/80 dark:border-white/10 bg-card/60 hover:bg-muted/70 text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                                         >
                                             <ChevronLeft className="h-4 w-4" />
+                                            <span>Previous</span>
                                         </button>
-                                        <span className="text-sm text-muted-foreground">
-                                            Page {page} of {totalPages}
+
+                                        <span className="text-xs text-muted-foreground font-medium">
+                                            Page <strong className="text-foreground">{page}</strong> of {totalPages}
                                         </span>
+
                                         <button
                                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                                             disabled={page === totalPages}
-                                            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10"
+                                            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border border-border/80 dark:border-white/10 bg-card/60 hover:bg-muted/70 text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                                         >
+                                            <span>Next</span>
                                             <ChevronRight className="h-4 w-4" />
                                         </button>
                                     </div>
                                 )}
-                            </>
+                            </div>
                         ) : (
-                            <div className="text-center py-16 border border-dashed border-border rounded-lg">
-                                <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                                <p className="text-lg text-muted-foreground mb-1">
-                                    No messages yet
+                            <div className="text-center py-20 rounded-3xl border border-dashed border-border/80 dark:border-white/10 p-8">
+                                <div className="h-12 w-12 rounded-2xl bg-muted/60 dark:bg-white/5 flex items-center justify-center mx-auto mb-3 text-muted-foreground">
+                                    <MessageSquare className="h-6 w-6" />
+                                </div>
+                                <h3 className="text-base font-bold text-foreground">No signatures found</h3>
+                                <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                                    {searchQuery ? "No entries match your search keyword. Try clearing your search." : "Be the very first friend or engineer to sign this digital guestbook!"}
                                 </p>
-                                <p className="text-sm text-muted-foreground">
-                                    Be the first to leave one!
-                                </p>
+                                {searchQuery && (
+                                    <button
+                                        onClick={() => setSearchQuery("")}
+                                        className="mt-4 px-4 py-1.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                                    >
+                                        Clear Search Filter
+                                    </button>
+                                )}
                             </div>
                         )}
                     </section>
                 </div>
             </main>
+
+            <Footer />
         </div>
     );
 }

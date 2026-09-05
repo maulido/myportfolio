@@ -16,11 +16,20 @@ export async function PUT(
 
         const { id } = await params;
         const body = await request.json();
-        const { approved, spam } = body;
+        const { approved, spam, pinned, adminReply } = body;
+
+        const updateData: Record<string, unknown> = {};
+        if (approved !== undefined) updateData.approved = Boolean(approved);
+        if (spam !== undefined) updateData.spam = Boolean(spam);
+        if (pinned !== undefined) updateData.pinned = Boolean(pinned);
+        if (adminReply !== undefined) {
+            updateData.adminReply = adminReply ? String(adminReply).trim() : null;
+            updateData.adminRepliedAt = adminReply ? new Date() : null;
+        }
 
         const entry = await GuestbookEntry.findByIdAndUpdate(
             id,
-            { approved, spam },
+            updateData,
             { new: true }
         );
 

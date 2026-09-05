@@ -7,6 +7,10 @@ export interface IGuestbookEntry extends Document {
     message: string;
     approved: boolean;
     spam: boolean;
+    pinned: boolean;
+    likes: number;
+    adminReply?: string;
+    adminRepliedAt?: Date;
     ipAddress?: string;
     createdAt: Date;
     updatedAt: Date;
@@ -41,6 +45,22 @@ const GuestbookEntrySchema = new Schema<IGuestbookEntry>(
         spam: {
             type: Boolean,
             default: false
+        },
+        pinned: {
+            type: Boolean,
+            default: false
+        },
+        likes: {
+            type: Number,
+            default: 0
+        },
+        adminReply: {
+            type: String,
+            trim: true,
+            maxlength: [500, 'Reply cannot exceed 500 characters']
+        },
+        adminRepliedAt: {
+            type: Date
         },
         ipAddress: {
             type: String
