@@ -19,7 +19,8 @@ import {
     ExternalLink, 
     Shield, 
     Layers, 
-    Terminal
+    Terminal,
+    MessageSquare
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -65,6 +66,14 @@ export default function AdminSettingsPage() {
         showGithubActivity: "true",
         contactSectionTitle: "Let's Build Something Exceptional Together",
         contactSectionSubtitle: "Have an ambitious project in mind, need high-availability network design, or looking to collaborate? Reach out and let's turn your vision into reality.",
+
+        // Contact Page (/contact)
+        contactHeroBadge: "Direct Channel & Technical Advisory",
+        contactHeroTitle: "Let's Build Something Exceptional Together",
+        contactHeroSubtitle: "Have an engineering challenge, architectural consultation, or a collaborative project in mind? Reach out directly via the form or my primary communication channels.",
+        contactResponseTime: "Within 2 to 4 hours",
+        contactWorkingHours: "Mon - Fri, 09:00 - 18:00 WIB (UTC+7)",
+        contactMeetingUrl: "",
 
         // About Page
         aboutHeroBadge: "Professional Profile & Engineering Philosophy",
@@ -396,6 +405,82 @@ export default function AdminSettingsPage() {
                                             onChange={handleChange}
                                             placeholder="Tautan URL file PDF resume atau dokumen Google Drive"
                                             className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Contact Page (/contact) & SLA Details */}
+                            <div className="bg-card/40 backdrop-blur-md border border-border rounded-2xl p-6 shadow-sm">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className="p-2 bg-primary/10 rounded-lg">
+                                        <MessageSquare className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-lg font-bold">Contact Page (/contact) & Response Protocol</h2>
+                                        <p className="text-xs text-muted-foreground">Kustomisasi judul, SLA respon, jam kerja, dan tautan booking konsultasi pada halaman /contact</p>
+                                    </div>
+                                </div>
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground">Contact Hero Badge</label>
+                                        <input
+                                            name="contactHeroBadge"
+                                            value={settings.contactHeroBadge || ""}
+                                            onChange={handleChange}
+                                            placeholder="Direct Channel & Technical Advisory"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground">Response Time SLA</label>
+                                        <input
+                                            name="contactResponseTime"
+                                            value={settings.contactResponseTime || ""}
+                                            onChange={handleChange}
+                                            placeholder="Within 2 to 4 hours"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground">Working Hours & Timezone</label>
+                                        <input
+                                            name="contactWorkingHours"
+                                            value={settings.contactWorkingHours || ""}
+                                            onChange={handleChange}
+                                            placeholder="Mon - Fri, 09:00 - 18:00 WIB (UTC+7)"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground">Meeting / Cal.com Booking URL</label>
+                                        <input
+                                            name="contactMeetingUrl"
+                                            value={settings.contactMeetingUrl || ""}
+                                            onChange={handleChange}
+                                            placeholder="https://cal.com/yourname (opsional)"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="text-xs font-semibold text-foreground">Contact Page Headline</label>
+                                        <input
+                                            name="contactHeroTitle"
+                                            value={settings.contactHeroTitle || ""}
+                                            onChange={handleChange}
+                                            placeholder="Let's Build Something Exceptional Together"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
+                                        />
+                                    </div>
+                                    <div className="space-y-2 sm:col-span-2">
+                                        <label className="text-xs font-semibold text-foreground">Contact Page Subtitle / Invitation</label>
+                                        <textarea
+                                            name="contactHeroSubtitle"
+                                            value={settings.contactHeroSubtitle || ""}
+                                            onChange={handleChange}
+                                            rows={2}
+                                            placeholder="Subjudul ajakan kontak pada halaman /contact..."
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
                                         />
                                     </div>
                                 </div>

@@ -1,22 +1,26 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Mail, MapPin, Phone, Send, Copy, Check } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Mail, MapPin, Phone, Send, Copy, Check, Radio, Loader2, CheckCircle2 } from "lucide-react";
 import toast, { Toaster } from 'react-hot-toast';
+import { useSettings } from "@/lib/useSettings";
 
-export function Contact() {
+export function Contact({ settings: initialSettings }: { settings?: Record<string, string | undefined> }) {
+    const { settings: clientSettings } = useSettings();
+    const settings = { ...(initialSettings || {}), ...(clientSettings || {}) };
+
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
     const [copiedKey, setCopiedKey] = useState<string | null>(null);
-    const [contactInfo, setContactInfo] = useState({
-        email: "email@example.com",
-        phone: "+1 (555) 123-4567",
-        location: "Jakarta, Indonesia"
-    });
-    const [contactSettings, setContactSettings] = useState({
-        title: "Get in Touch",
-        subtitle: "Have a project in mind or just want to say hi? I'm always open to discussing new opportunities and creative ideas."
-    });
+
+    const title = settings?.contactSectionTitle || "Let's Build Something Exceptional Together";
+    const subtitle = settings?.contactSectionSubtitle || "Have an engineering challenge or project inquiry? I'm always open to discussing modern network infrastructure and scalable full-stack web applications.";
+    
+    const rawEmail = settings?.contactEmail || "email@example.com";
+    const contactEmail = rawEmail.replace(/^mailto:/i, "");
+    const rawPhone = settings?.contactPhone || "+62 812-3456-7890";
+    const contactLocation = settings?.contactLocation || "Jakarta, Indonesia";
 
     const copyToClipboard = (text: string, label: string, e: React.MouseEvent) => {
         e.preventDefault();
@@ -26,45 +30,22 @@ export function Contact() {
         toast.success(`${label} copied to clipboard!`, {
             duration: 2500,
             style: {
-                background: '#10b981',
+                background: '#0f172a',
                 color: '#fff',
+                border: '1px solid rgba(255,255,255,0.1)',
             },
         });
         setTimeout(() => setCopiedKey(null), 2500);
     };
 
-    useEffect(() => {
-        // Fetch contact info and settings in parallel
-        Promise.all([
-            fetch('/api/contact-info').then(res => res.json()).catch(() => ({})),
-            fetch('/api/settings').then(res => res.json()).catch(() => ({}))
-        ]).then(([contactRes, settingsRes]) => {
-            if (contactRes?.success && contactRes?.data) {
-                setContactInfo(contactRes.data);
-            }
-            if (settingsRes?.success && Array.isArray(settingsRes?.data)) {
-                const sMap: Record<string, string> = {};
-                settingsRes.data.forEach((item: { key: string; value: unknown }) => {
-                    if (item && item.key) sMap[item.key] = String(item.value ?? '');
-                });
-                if (sMap.contactSectionTitle || sMap.contactSectionSubtitle) {
-                    setContactSettings({
-                        title: sMap.contactSectionTitle || "Get in Touch",
-                        subtitle: sMap.contactSectionSubtitle || "Have a project in mind or just want to say hi? I'm always open to discussing new opportunities and creative ideas."
-                    });
-                }
-            }
-        }).catch(err => console.error('Failed to fetch contact data:', err));
-    }, []);
-
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsSubmitting(true);
 
         try {
-            const formData = new FormData(e.target as HTMLFormElement);
+            const formData = new FormData(e.currentTarget);
             const data = {
-                name: `${formData.get('firstName')} ${formData.get('lastName')}`,
+                name: `${formData.get('firstName')} ${formData.get('lastName')}`.trim(),
                 email: formData.get('email') as string,
                 message: formData.get('message') as string,
             };
@@ -80,24 +61,15 @@ export function Contact() {
             const result = await response.json();
 
             if (response.ok && result.success) {
-                toast.success('Message sent successfully! I\'ll get back to you soon.', {
-                    duration: 5000,
-                    style: {
-                        background: '#10b981',
-                        color: '#fff',
-                    },
-                });
-
-                // Reset form
+                setIsSuccess(true);
+                toast.success("Message dispatched successfully!");
                 (e.target as HTMLFormElement).reset();
             } else {
                 throw new Error(result.error || 'Failed to send message');
             }
         } catch (error) {
             console.error('Contact form error:', error);
-            toast.error(error instanceof Error ? error.message : 'Failed to send message. Please try again.', {
-                duration: 4000,
-            });
+            toast.error(error instanceof Error ? error.message : 'Failed to send message. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
@@ -114,57 +86,62 @@ export function Contact() {
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                     viewport={{ once: true }}
-                    className="grid gap-6 lg:grid-cols-2 lg:gap-12"
+                    className="grid gap-10 lg:grid-cols-2 lg:gap-12 items-start"
                 >
                     <div className="space-y-8">
                         <div>
-                            <h2 className="text-4xl font-extrabold tracking-tighter md:text-5xl lg:text-6xl mb-6">
-                                {contactSettings.title.includes(" ") ? (
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold mb-4">
+                                <Radio className="h-3.5 w-3.5 animate-pulse text-emerald-500" />
+                                <span>Direct Communication Channel</span>
+                            </div>
+
+                            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl mb-4">
+                                {title.includes(" ") ? (
                                     <>
-                                        {contactSettings.title.substring(0, contactSettings.title.lastIndexOf(" "))}{" "}
+                                        {title.substring(0, title.lastIndexOf(" "))}{" "}
                                         <span className="text-gradient">
-                                            {contactSettings.title.substring(contactSettings.title.lastIndexOf(" ") + 1)}
+                                            {title.substring(title.lastIndexOf(" ") + 1)}
                                         </span>
                                     </>
                                 ) : (
-                                    <span>{contactSettings.title}</span>
+                                    <span>{title}</span>
                                 )}
                             </h2>
-                            <p className="text-muted-foreground text-lg leading-relaxed max-w-md">
-                                {contactSettings.subtitle}
+                            <p className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-md">
+                                {subtitle}
                             </p>
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-3.5">
                             {[
-                                { icon: <Mail className="h-6 w-6" />, label: "Email", value: contactInfo.email, href: `mailto:${contactInfo.email}`, canCopy: true },
-                                { icon: <Phone className="h-6 w-6" />, label: "Phone", value: contactInfo.phone, href: `tel:${contactInfo.phone.replace(/[^0-9+]/g, '')}`, canCopy: true },
-                                { icon: <MapPin className="h-6 w-6" />, label: "Location", value: contactInfo.location, href: "#", canCopy: false }
+                                { icon: <Mail className="h-5 w-5" />, label: "Email", value: contactEmail, href: `mailto:${contactEmail}`, canCopy: true },
+                                { icon: <Phone className="h-5 w-5" />, label: "Phone & WhatsApp", value: rawPhone, href: `tel:${rawPhone.replace(/[^0-9+]/g, '')}`, canCopy: true },
+                                { icon: <MapPin className="h-5 w-5" />, label: "Base Location", value: contactLocation, href: "#", canCopy: false }
                             ].map((item, i) => (
                                 <motion.div
                                     key={i}
                                     initial={{ opacity: 0, x: -20 }}
                                     whileInView={{ opacity: 1, x: 0 }}
                                     transition={{ delay: i * 0.1 }}
-                                    className="flex items-center justify-between p-3 -mx-3 rounded-2xl transition-colors hover:bg-muted/40 group"
+                                    className="flex items-center justify-between p-3 rounded-2xl border border-border/60 bg-card/60 hover:bg-muted/40 transition-colors group"
                                 >
                                     <a
                                         href={item.href}
                                         className="flex items-center gap-4 flex-1 min-w-0"
                                     >
-                                        <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-md shadow-primary/5 shrink-0">
+                                        <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm shrink-0">
                                             {item.icon}
                                         </div>
                                         <div className="min-w-0 flex-1">
                                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{item.label}</p>
-                                            <p className="font-bold text-foreground group-hover:text-primary transition-colors truncate">{item.value}</p>
+                                            <p className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors truncate">{item.value}</p>
                                         </div>
                                     </a>
                                     {item.canCopy && (
                                         <button
                                             type="button"
                                             onClick={(e) => copyToClipboard(item.value, item.label, e)}
-                                            className="p-2.5 rounded-xl text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-all active:scale-90 shrink-0 ml-2"
+                                            className="p-2 rounded-xl text-muted-foreground/60 hover:text-primary hover:bg-primary/10 transition-all active:scale-90 shrink-0 ml-2"
                                             title={`Copy ${item.label}`}
                                             aria-label={`Copy ${item.label}`}
                                         >
@@ -179,48 +156,64 @@ export function Contact() {
                             ))}
                         </div>
                     </div>
-                    <div className="rounded-2xl border border-border/80 dark:border-primary/20 bg-card/90 dark:bg-card/70 backdrop-blur-md p-6 sm:p-8 shadow-md md:shadow-xl">
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label htmlFor="first-name" className="text-sm font-medium leading-none text-muted-foreground">First name</label>
-                                    <input id="first-name" name="firstName" className="flex h-11 w-full rounded-xl border border-input bg-background/60 px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200" required placeholder="First name" />
+
+                    <div className="rounded-3xl border border-border bg-card/80 backdrop-blur-md p-6 sm:p-8 shadow-xl">
+                        {isSuccess ? (
+                            <div className="text-center py-8 space-y-4">
+                                <div className="h-12 w-12 mx-auto rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                                    <CheckCircle2 className="h-6 w-6" />
                                 </div>
-                                <div className="space-y-2">
-                                    <label htmlFor="last-name" className="text-sm font-medium leading-none text-muted-foreground">Last name</label>
-                                    <input id="last-name" name="lastName" className="flex h-11 w-full rounded-xl border border-input bg-background/60 px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200" required placeholder="Last name" />
+                                <h3 className="text-xl font-bold">Message Received</h3>
+                                <p className="text-sm text-muted-foreground">Thank you for getting in touch. I will review your message promptly.</p>
+                                <button
+                                    onClick={() => setIsSuccess(false)}
+                                    className="px-5 py-2 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors"
+                                >
+                                    Send Another
+                                </button>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label htmlFor="first-name" className="text-xs font-semibold text-muted-foreground">First Name</label>
+                                        <input id="first-name" name="firstName" className="flex h-11 w-full rounded-xl border border-input bg-background/60 px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200" required placeholder="First name" />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label htmlFor="last-name" className="text-xs font-semibold text-muted-foreground">Last Name</label>
+                                        <input id="last-name" name="lastName" className="flex h-11 w-full rounded-xl border border-input bg-background/60 px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200" placeholder="Last name" />
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="space-y-2">
-                                <label htmlFor="email" className="text-sm font-medium leading-none text-muted-foreground">Email</label>
-                                <input id="email" name="email" type="email" className="flex h-11 w-full rounded-xl border border-input bg-background/60 px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200" required placeholder="name@example.com" />
-                            </div>
-                            <div className="space-y-2">
-                                <label htmlFor="message" className="text-sm font-medium leading-none text-muted-foreground">Message</label>
-                                <textarea id="message" name="message" className="flex min-h-[120px] w-full rounded-xl border border-input bg-background/60 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200 resize-y" required placeholder="Your message..." />
-                            </div>
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                type="submit"
-                                disabled={isSubmitting}
-                                className="relative group overflow-hidden inline-flex items-center justify-center whitespace-nowrap rounded-2xl text-sm font-bold transition-all bg-primary text-white shadow-xl shadow-primary/25 h-12 px-6 w-full"
-                            >
-                                <span className="relative z-10 flex items-center gap-2">
-                                    {isSubmitting ? "Dispatching Message..." : (
+                                <div className="space-y-1.5">
+                                    <label htmlFor="email" className="text-xs font-semibold text-muted-foreground">Email</label>
+                                    <input id="email" name="email" type="email" className="flex h-11 w-full rounded-xl border border-input bg-background/60 px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200" required placeholder="name@example.com" />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label htmlFor="message" className="text-xs font-semibold text-muted-foreground">Message</label>
+                                    <textarea id="message" name="message" className="flex min-h-[120px] w-full rounded-xl border border-input bg-background/60 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary transition-all duration-200 resize-y" required placeholder="Describe your project or inquiry..." />
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="w-full h-11 rounded-xl bg-primary text-white font-bold text-sm shadow-md shadow-primary/25 hover:bg-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+                                >
+                                    {isSubmitting ? (
                                         <>
-                                            Send Message
-                                            <Send className="h-4 w-4 ml-1 transition-transform group-hover:translate-x-1" />
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            <span>Sending...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>Send Message</span>
+                                            <Send className="h-4 w-4" />
                                         </>
                                     )}
-                                </span>
-                                <div className="absolute inset-0 bg-gradient-to-r from-accent to-primary opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                            </motion.button>
-                        </form>
+                                </button>
+                            </form>
+                        )}
                     </div>
                 </motion.div>
             </div>
         </section>
     );
 }
-
