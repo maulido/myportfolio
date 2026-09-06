@@ -3,9 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { LayoutDashboard, LogOut, Wrench } from "lucide-react";
+import { LayoutDashboard, LogOut, Wrench, Search, Sparkles } from "lucide-react";
 import Link from "next/link";
 import AdminSidebar from "@/components/admin/AdminSidebar";
+import AdminCommandPalette from "@/components/admin/AdminCommandPalette";
+import DatabaseBackupModal from "@/components/admin/DatabaseBackupModal";
+import AiAssistantModal from "@/components/admin/AiAssistantModal";
 
 export default function AdminLayout({
     children,
@@ -57,7 +60,43 @@ export default function AdminLayout({
                         </div>
                         <span className="font-bold text-xl tracking-tighter">ADMIN<span className="text-primary">CORE</span></span>
                     </div>
+
+                    {/* Quick Command Palette Trigger */}
+                    <button
+                        type="button"
+                        onClick={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}
+                        className="hidden sm:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-background/80 border border-border/80 hover:border-primary/50 text-xs text-muted-foreground hover:text-foreground transition-all shadow-2xs cursor-pointer"
+                        title="Tekan Ctrl+K atau Cmd+K untuk membuka"
+                    >
+                        <Search className="h-3.5 w-3.5 text-primary" />
+                        <span>Cari menu / aksi cepat...</span>
+                        <kbd className="ml-2 px-1.5 py-0.5 text-[10px] font-mono font-semibold bg-muted border border-border rounded-md text-foreground">
+                            Ctrl K
+                        </kbd>
+                    </button>
+
                     <div className="flex items-center gap-3 sm:gap-4">
+                        {/* Mobile Command Palette Trigger Button */}
+                        <button
+                            type="button"
+                            onClick={() => window.dispatchEvent(new CustomEvent("open-command-palette"))}
+                            className="sm:hidden p-2 rounded-lg border border-border hover:bg-muted text-muted-foreground"
+                            title="Command Palette"
+                        >
+                            <Search className="h-4 w-4" />
+                        </button>
+
+                        {/* Gemini AI Assistant Quick Trigger */}
+                        <button
+                            type="button"
+                            onClick={() => window.dispatchEvent(new CustomEvent("open-ai-assistant"))}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+                            title="Buka Gemini AI Assistant"
+                        >
+                            <Sparkles className="h-3.5 w-3.5" />
+                            <span className="hidden md:inline">Gemini AI</span>
+                        </button>
+
                         {isMaintenanceActive && (
                             <Link
                                 href="/admin/settings"
@@ -96,6 +135,15 @@ export default function AdminLayout({
                     </div>
                 </div>
             </main>
+
+            {/* Global Admin Command Palette Modal */}
+            <AdminCommandPalette />
+
+            {/* Global Database Backup & Restore Modal */}
+            <DatabaseBackupModal />
+
+            {/* Global Gemini AI Assistant Modal */}
+            <AiAssistantModal />
         </div>
     );
 }

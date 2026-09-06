@@ -49,3 +49,36 @@ export async function POST(request: NextRequest) {
         );
     }
 }
+
+// DELETE - Bulk delete media files
+export async function DELETE(request: NextRequest) {
+    const authResult = await requireAuth();
+    if (authResult instanceof NextResponse) return authResult;
+
+    try {
+        await dbConnect();
+        const body = await request.json();
+        const { ids } = body;
+
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return NextResponse.json(
+                { success: false, error: 'Array of media IDs is required' },
+                { status: 400 }
+            );
+        }
+
+        const result = await Media.deleteMany({ _id: { $in: ids } });
+
+        return NextResponse.json({
+            success: true,
+            message: `${result.deletedCount} files deleted successfully`,
+            deletedCount: result.deletedCount
+        });
+    } catch (error: unknown) {
+        console.error('Error bulk deleting media:', error);
+        return NextResponse.json(
+            { success: false, error: error instanceof Error ? error.message : 'Failed to bulk delete media' },
+            { status: 500 }
+        );
+    }
+}

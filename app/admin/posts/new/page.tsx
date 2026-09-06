@@ -7,6 +7,7 @@ import Link from "next/link";
 import RichTextEditor from "@/components/RichTextEditor";
 import ImageUpload from "@/components/ImageUpload";
 import { AdminLangTabs } from "@/components/AdminLangTabs";
+import AiTriggerButton from "@/components/admin/AiTriggerButton";
 
 export default function NewPostPage() {
     const router = useRouter();
@@ -115,7 +116,15 @@ export default function NewPostPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium leading-none">Excerpt (English)</label>
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium leading-none">Excerpt (English)</label>
+                                    <AiTriggerButton
+                                        tab="excerpt"
+                                        title={formData.title}
+                                        text={formData.content}
+                                        label="Auto-generate Excerpt (AI)"
+                                    />
+                                </div>
                                 <textarea
                                     required
                                     name="excerpt"
@@ -139,7 +148,14 @@ export default function NewPostPage() {
                     ) : (
                         <>
                             <div className="space-y-2">
-                                <label className="text-sm font-medium leading-none">Judul Artikel (Bahasa Indonesia)</label>
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium leading-none">Judul Artikel (Bahasa Indonesia)</label>
+                                    <AiTriggerButton
+                                        tab="translate"
+                                        text={formData.title}
+                                        label="Terjemahkan Judul (AI)"
+                                    />
+                                </div>
                                 <input
                                     name="title_id"
                                     value={formData.title_id}
@@ -150,7 +166,14 @@ export default function NewPostPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium leading-none">Ringkasan / Excerpt (Bahasa Indonesia)</label>
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium leading-none">Ringkasan / Excerpt (Bahasa Indonesia)</label>
+                                    <AiTriggerButton
+                                        tab="translate"
+                                        text={formData.excerpt}
+                                        label="Terjemahkan Excerpt (AI)"
+                                    />
+                                </div>
                                 <textarea
                                     name="excerpt_id"
                                     value={formData.excerpt_id}

@@ -38,6 +38,8 @@ import {
     Cell,
     Legend
 } from "recharts";
+import SystemHealthWidget from "@/components/admin/SystemHealthWidget";
+import AdminQuickNotes from "@/components/admin/AdminQuickNotes";
 
 // Type definitions
 interface Post {
@@ -826,44 +828,60 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
-            {/* Popular Routes & Content Health Audit */}
-            <div className="grid gap-6 lg:grid-cols-2">
+            {/* System Health Telemetry Widget */}
+            <div id="system-health-section">
+                <SystemHealthWidget />
+            </div>
+
+            {/* Popular Routes, Scratchpad & Content Health Audit */}
+            <div className="grid gap-6 lg:grid-cols-3">
                 {/* Most Visited Pages */}
-                <div className="bg-card/90 dark:bg-card/50 backdrop-blur-md border border-border/80 dark:border-primary/10 rounded-2xl p-6 shadow-xs">
-                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-border/60">
-                        <div>
-                            <h3 className="font-bold text-sm uppercase tracking-widest text-muted-foreground">Top Site Routes</h3>
-                            <p className="text-xs text-muted-foreground">Most traversed portfolio destinations</p>
+                <div className="bg-card/90 dark:bg-card/50 backdrop-blur-md border border-border/80 dark:border-primary/10 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
+                    <div>
+                        <div className="flex items-center justify-between mb-4 pb-3 border-b border-border/60">
+                            <div>
+                                <h3 className="font-bold text-sm uppercase tracking-widest text-muted-foreground">Top Site Routes</h3>
+                                <p className="text-xs text-muted-foreground">Most traversed destinations</p>
+                            </div>
+                            <Link href="/admin/analytics" className="text-xs font-bold text-primary hover:underline">
+                                Full Stats
+                            </Link>
                         </div>
-                        <Link href="/admin/analytics" className="text-xs font-bold text-primary hover:underline">
-                            Full Analytics
+                        <div className="space-y-2.5">
+                            {topPages.length > 0 ? (
+                                topPages.slice(0, 5).map((page, idx) => (
+                                    <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-background/40 border border-border/60">
+                                        <div className="flex items-center gap-2.5 min-w-0">
+                                            <div className="h-6 w-6 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                                                #{idx + 1}
+                                            </div>
+                                            <span className="text-xs font-medium text-foreground truncate" title={page._id}>
+                                                {page._id === "/" ? "/ (Home)" : page._id}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-1 text-xs font-bold text-primary shrink-0 ml-2">
+                                            <Eye className="h-3 w-3 text-muted-foreground" />
+                                            <span>{page.count}</span>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="py-8 text-center text-xs text-muted-foreground">
+                                    No page view analytics recorded yet.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    <div className="pt-4 border-t border-border/60 flex items-center justify-between text-[11px] text-muted-foreground mt-4">
+                        <span>Traffic source tracking</span>
+                        <Link href="/admin/analytics" className="font-bold text-primary hover:underline">
+                            View All
                         </Link>
                     </div>
-                    <div className="space-y-2.5">
-                        {topPages.length > 0 ? (
-                            topPages.slice(0, 5).map((page, idx) => (
-                                <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-background/40 border border-border/60">
-                                    <div className="flex items-center gap-2.5 min-w-0">
-                                        <div className="h-6 w-6 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
-                                            #{idx + 1}
-                                        </div>
-                                        <span className="text-xs font-medium text-foreground truncate" title={page._id}>
-                                            {page._id === "/" ? "/ (Home)" : page._id}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-1 text-xs font-bold text-primary shrink-0 ml-2">
-                                        <Eye className="h-3 w-3 text-muted-foreground" />
-                                        <span>{page.count}</span>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="py-8 text-center text-xs text-muted-foreground">
-                                No page view analytics recorded yet.
-                            </div>
-                        )}
-                    </div>
                 </div>
+
+                {/* Engineering Quick Notes & Scratchpad */}
+                <AdminQuickNotes />
 
                 {/* Content Health & System Diagnostics */}
                 <div className="bg-card/90 dark:bg-card/50 backdrop-blur-md border border-border/80 dark:border-primary/10 rounded-2xl p-6 shadow-xs flex flex-col justify-between">

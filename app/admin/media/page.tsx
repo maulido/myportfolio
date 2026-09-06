@@ -14,6 +14,7 @@ import {
     Image as ImageIcon, 
     Loader2, 
     Check, 
+    CheckSquare,
     RefreshCw, 
     FolderOpen 
 } from "lucide-react";
@@ -50,6 +51,11 @@ export default function AdminMediaPage() {
     // Delete confirmation modal
     const [deleteTarget, setDeleteTarget] = useState<MediaFile | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+
+    // Batch operations state
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [isBatchDeleting, setIsBatchDeleting] = useState(false);
+    const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false);
 
     useEffect(() => {
         fetchFiles();
@@ -95,6 +101,58 @@ export default function AdminMediaPage() {
         } finally {
             setIsDeleting(false);
         }
+    };
+
+    const toggleSelect = (id: string, e?: React.MouseEvent) => {
+        if (e) e.stopPropagation();
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+        );
+    };
+
+    const handleSelectAll = () => {
+        if (selectedIds.length === filteredFiles.length) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(filteredFiles.map(f => f._id));
+        }
+    };
+
+    const handleBatchDelete = async () => {
+        if (selectedIds.length === 0) return;
+        setIsBatchDeleting(true);
+        try {
+            const response = await fetch("/api/media", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ids: selectedIds })
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                setFiles(prev => prev.filter(f => !selectedIds.includes(f._id)));
+                toast.success(`${data.deletedCount || selectedIds.length} files deleted successfully`);
+                setSelectedIds([]);
+                setShowBatchDeleteConfirm(false);
+                if (selectedMedia && selectedIds.includes(selectedMedia._id)) {
+                    setSelectedMedia(null);
+                }
+            } else {
+                toast.error(data.error || "Failed to delete selected files");
+            }
+        } catch {
+            toast.error("Network error deleting files");
+        } finally {
+            setIsBatchDeleting(false);
+        }
+    };
+
+    const handleCopySelectedUrls = () => {
+        const urls = files
+            .filter(f => selectedIds.includes(f._id))
+            .map(f => f.fileUrl)
+            .join("\n");
+        navigator.clipboard.writeText(urls);
+        toast.success(`Copied ${selectedIds.length} URLs to clipboard!`);
     };
 
     const handleRegisterUrl = async (e: React.FormEvent) => {
@@ -313,15 +371,37 @@ export default function AdminMediaPage() {
 
             {/* Filter & Search Bar */}
             <div className="p-4 rounded-2xl bg-card/70 backdrop-blur-md border border-border flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-                <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <input
-                        type="text"
-                        placeholder="Search media files by name..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full h-10 pl-10 pr-4 rounded-xl bg-background border border-input focus:border-primary focus:ring-2 focus:ring-primary/20 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 transition-all outline-none"
-                    />
+                <div className="flex items-center gap-3 flex-1">
+                    <div className="relative flex-1 max-w-md">
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <input
+                            type="text"
+                            placeholder="Search media files by name..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full h-10 pl-10 pr-4 rounded-xl bg-background border border-input focus:border-primary focus:ring-2 focus:ring-primary/20 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 transition-all outline-none"
+                        />
+                    </div>
+
+                    {filteredFiles.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={handleSelectAll}
+                            className={`px-3 h-10 rounded-xl text-xs font-semibold border transition-all flex items-center gap-1.5 cursor-pointer shrink-0 ${
+                                selectedIds.length === filteredFiles.length && filteredFiles.length > 0
+                                    ? "bg-primary text-white border-primary shadow-xs"
+                                    : "bg-card border-border text-foreground hover:bg-muted"
+                            }`}
+                        >
+                            <CheckSquare className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">
+                                {selectedIds.length === filteredFiles.length ? "Deselect All" : "Select All"}
+                            </span>
+                            <span className="sm:hidden">
+                                {selectedIds.length === filteredFiles.length ? "Clear" : "All"}
+                            </span>
+                        </button>
+                    )}
                 </div>
 
                 <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
@@ -388,8 +468,26 @@ export default function AdminMediaPage() {
                         <div
                             key={file._id}
                             onClick={() => setSelectedMedia(file)}
-                            className="group relative flex flex-col justify-between rounded-2xl border border-border/80 bg-card/60 backdrop-blur-md p-3.5 hover:border-primary/50 transition-all duration-300 hover:shadow-lg cursor-pointer space-y-3"
+                            className={`group relative flex flex-col justify-between rounded-2xl border bg-card/60 backdrop-blur-md p-3.5 transition-all duration-300 hover:shadow-lg cursor-pointer space-y-3 ${
+                                selectedIds.includes(file._id)
+                                    ? "border-primary ring-2 ring-primary/30 bg-primary/5"
+                                    : "border-border/80 hover:border-primary/50"
+                            }`}
                         >
+                            {/* Checkbox Selector Button */}
+                            <button
+                                type="button"
+                                onClick={(e) => toggleSelect(file._id, e)}
+                                className={`absolute top-5 left-5 z-20 p-1.5 rounded-lg border transition-all cursor-pointer shadow-xs ${
+                                    selectedIds.includes(file._id)
+                                        ? "bg-primary text-white border-primary"
+                                        : "bg-black/60 text-white/80 border-white/30 hover:bg-black/90 opacity-0 group-hover:opacity-100"
+                                }`}
+                                title={selectedIds.includes(file._id) ? "Batalkan pilihan file" : "Pilih file untuk aksi massal"}
+                            >
+                                <Check className={`h-3 w-3 ${selectedIds.includes(file._id) ? "opacity-100" : "opacity-0"}`} />
+                            </button>
+
                             {/* Preview Box */}
                             {file.fileType === "image" ? (
                                 <div className="relative w-full h-40 rounded-xl overflow-hidden bg-muted border border-border/40">
@@ -583,6 +681,91 @@ export default function AdminMediaPage() {
                                     className="px-4 py-2.5 rounded-xl bg-destructive text-white text-xs font-bold hover:bg-destructive/90 transition-all shadow-md shadow-destructive/20 disabled:opacity-60"
                                 >
                                     {isDeleting ? "Deleting..." : "Confirm Delete"}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Batch Action Floating Toolbar */}
+            <AnimatePresence>
+                {selectedIds.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 40 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 40 }}
+                        className="fixed bottom-6 inset-x-4 max-w-xl mx-auto z-40 bg-card/95 backdrop-blur-md border border-primary/40 rounded-2xl p-3.5 shadow-2xl flex items-center justify-between gap-3 text-xs"
+                    >
+                        <div className="flex items-center gap-2 font-bold text-foreground">
+                            <span className="h-2 w-2 rounded-full bg-primary animate-ping" />
+                            <span>{selectedIds.length} file{selectedIds.length > 1 ? "s" : ""} terpilih</span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={handleCopySelectedUrls}
+                                className="px-3 py-1.5 rounded-xl bg-background border border-border hover:bg-muted text-foreground font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                            >
+                                <Copy className="h-3.5 w-3.5" />
+                                <span>Salin URLs</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setShowBatchDeleteConfirm(true)}
+                                className="px-3.5 py-1.5 rounded-xl bg-destructive hover:bg-destructive/90 text-white font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                            >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                <span>Hapus ({selectedIds.length})</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setSelectedIds([])}
+                                className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                                title="Batal pilihan"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Batch Delete Confirmation Modal */}
+            <AnimatePresence>
+                {showBatchDeleteConfirm && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="w-full max-w-md rounded-3xl bg-card border border-border p-6 shadow-2xl space-y-4"
+                        >
+                            <div className="h-12 w-12 rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center">
+                                <Trash2 className="h-6 w-6" />
+                            </div>
+                            <div className="space-y-1">
+                                <h3 className="text-lg font-bold text-foreground">Hapus {selectedIds.length} File Sekaligus?</h3>
+                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                    Tindakan ini akan menghapus {selectedIds.length} file terpilih secara permanen dari database. Halaman yang merujuk pada URL file ini tidak akan dapat memuatnya lagi.
+                                </p>
+                            </div>
+                            <div className="flex items-center justify-end gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowBatchDeleteConfirm(false)}
+                                    className="px-4 py-2.5 rounded-xl border border-border text-xs font-semibold hover:bg-muted text-foreground cursor-pointer"
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={isBatchDeleting}
+                                    onClick={handleBatchDelete}
+                                    className="px-4 py-2.5 rounded-xl bg-destructive text-white text-xs font-bold hover:bg-destructive/90 transition-all shadow-md shadow-destructive/20 disabled:opacity-60 cursor-pointer"
+                                >
+                                    {isBatchDeleting ? "Menghapus..." : `Ya, Hapus ${selectedIds.length} File`}
                                 </button>
                             </div>
                         </motion.div>

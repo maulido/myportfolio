@@ -40,7 +40,9 @@ import {
     Trash2,
     X,
     Search,
-    Link2
+    Link2,
+    Database,
+    Download
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -907,6 +909,39 @@ export default function AdminSettingsPage() {
                                         )}
                                         <span>{testingTelegram ? "Mengirim Tes..." : "Kirim Pesan Uji Coba ke Telegram"}</span>
                                     </button>
+                                </div>
+                            </div>
+
+                            {/* Database Disaster Recovery & 1-Click Backup Card */}
+                            <div className="bg-card/40 backdrop-blur-md border border-border/80 rounded-2xl p-6 shadow-sm">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2.5 bg-emerald-500/10 text-emerald-600 rounded-xl border border-emerald-500/20">
+                                            <Database className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h2 className="text-lg font-bold text-foreground">Database Disaster Recovery</h2>
+                                                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                                                    1-Click JSON
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground mt-0.5">
+                                                Cadangkan 15 koleksi MongoDB ke file JSON terstruktur atau pulihkan kapan saja tanpa kehilangan relasi.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => window.dispatchEvent(new CustomEvent("open-backup-modal"))}
+                                            className="px-4 py-2 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-all flex items-center gap-2 shadow-xs cursor-pointer"
+                                        >
+                                            <Download className="h-3.5 w-3.5" />
+                                            <span>Buka Alat Backup & Restore</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
