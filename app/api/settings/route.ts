@@ -1,20 +1,59 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { requireAuth } from '@/lib/auth-helpers';
+import { isAuthenticated, requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import Settings from '@/models/Settings';
+
+const SENSITIVE_KEYS = new Set([
+    'telegramBotToken',
+    'telegramChatId',
+    'aiApiKey',
+    'geminiApiKey',
+    'groqApiKey',
+    'openAiApiKey',
+    'deepseekApiKey',
+    'openRouterApiKey',
+    'anthropicApiKey',
+    'mongoCustomUri',
+    'smtpPass',
+    'smtpUser',
+    'adminPassword',
+]);
+
+function isSensitiveSettingKey(key: string): boolean {
+    if (!key) return false;
+    if (SENSITIVE_KEYS.has(key)) return true;
+    const lower = key.toLowerCase();
+    return (
+        lower.includes('token') ||
+        lower.includes('secret') ||
+        lower.includes('password') ||
+        lower.includes('apikey') ||
+        lower.includes('api_key') ||
+        (lower.endsWith('key') && (lower.includes('ai') || lower.includes('bot') || lower.includes('private'))) ||
+        lower.includes('mongocustomuri') ||
+        lower.includes('smtppass')
+    );
+}
 
 export async function GET(req: Request) {
     await dbConnect();
     const { searchParams } = new URL(req.url);
     const key = searchParams.get('key');
+    const authed = await isAuthenticated();
 
     try {
         if (key) {
+            if (isSensitiveSettingKey(key) && !authed) {
+                return NextResponse.json({ success: true, data: null });
+            }
             const setting = await Settings.findOne({ key });
             return NextResponse.json({ success: true, data: setting?.value });
         }
-        const settings = await Settings.find({});
+        let settings = await Settings.find({});
+        if (!authed) {
+            settings = settings.filter(s => !isSensitiveSettingKey(s.key));
+        }
         return NextResponse.json({ success: true, data: settings });
     } catch (error) {
         return NextResponse.json({

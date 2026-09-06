@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
         } catch {
             return NextResponse.json({
                 success: false,
+                error: 'Too many subscription requests. Please wait a few minutes before trying again.',
                 message: 'Too many subscription requests. Please wait a few minutes before trying again.'
             }, { status: 429 });
         }
@@ -34,6 +35,7 @@ export async function POST(req: NextRequest) {
         if (!email || !emailRegex.test(email)) {
             return NextResponse.json({
                 success: false,
+                error: 'A valid email address is required',
                 message: 'A valid email address is required'
             }, { status: 400 });
         }
@@ -47,6 +49,7 @@ export async function POST(req: NextRequest) {
             if (existing.subscribed) {
                 return NextResponse.json({
                     success: false,
+                    error: 'This email is already subscribed to the newsletter.',
                     message: 'This email is already subscribed to the newsletter.'
                 }, { status: 400 });
             } else {
@@ -80,6 +83,7 @@ export async function POST(req: NextRequest) {
         console.error('Newsletter subscription error:', error);
         return NextResponse.json({
             success: false,
+            error: 'Failed to subscribe. Please try again later.',
             message: 'Failed to subscribe. Please try again later.'
         }, { status: 500 });
     }

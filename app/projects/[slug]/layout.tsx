@@ -13,9 +13,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         const { slug } = await params;
         await dbConnect();
         const isObjectId = /^[0-9a-fA-F]{24}$/.test(slug);
-        const project = isObjectId
-            ? await Project.findById(slug).lean()
-            : await Project.findOne({ slug }).lean();
+        let project = await Project.findOne({ slug }).lean();
+        if (!project && isObjectId) {
+            project = await Project.findById(slug).lean();
+        }
 
         if (!project) {
             return {
@@ -69,9 +70,10 @@ export default async function ProjectLayout({ children, params }: LayoutProps) {
     try {
         await dbConnect();
         const isObjectId = /^[0-9a-fA-F]{24}$/.test(slug);
-        project = isObjectId
-            ? await Project.findById(slug).lean()
-            : await Project.findOne({ slug }).lean();
+        project = await Project.findOne({ slug }).lean();
+        if (!project && isObjectId) {
+            project = await Project.findById(slug).lean();
+        }
     } catch (e) {
         console.error("Project Layout fetch error:", e);
     }

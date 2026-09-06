@@ -159,7 +159,7 @@ export default function BlogPage() {
                 setSubscriptionMessage({ text: "Subscribed! You will receive future engineering dispatches.", type: "success" });
                 setSubscriberEmail("");
             } else {
-                setSubscriptionMessage({ text: data.error || "Subscription failed. Please try again.", type: "error" });
+                setSubscriptionMessage({ text: data.error || data.message || "Subscription failed. Please try again.", type: "error" });
             }
         } catch {
             setSubscriptionMessage({ text: "Network error. Please try again later.", type: "error" });

@@ -104,29 +104,10 @@ export default function ProjectDetailPage() {
     const problemStatement = getLocalizedField(project, 'problemStatement', locale, project.problemStatement);
     const solutionApproach = getLocalizedField(project, 'solutionApproach', locale, project.solutionApproach);
 
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
-    const projectJsonLd = {
-        "@context": "https://schema.org",
-        "@type": "SoftwareSourceCode",
-        "name": title,
-        "description": description,
-        "programmingLanguage": project.technologies,
-        "author": {
-            "@type": "Person",
-            "name": "Maulido"
-        },
-        "codeRepository": project.githubUrl,
-        "url": project.liveUrl || project.demoUrl || `${baseUrl}/projects/${project.slug}`
-    };
-
     return (
         <div className="min-h-screen bg-background flex flex-col">
             <Navbar />
             <main className="flex-1 pt-20 pb-20">
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{ __html: JSON.stringify(projectJsonLd) }}
-                />
 
                 {/* Breadcrumbs & Navigation */}
                 <div className="container mx-auto px-4 md:px-6 py-4">

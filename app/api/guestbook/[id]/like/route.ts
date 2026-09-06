@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import dbConnect from '@/lib/db';
 import GuestbookEntry from '@/models/GuestbookEntry';
 import { rateLimit } from '@/lib/rate-limit';
@@ -24,6 +25,13 @@ export async function POST(
         }
 
         const { id } = await params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return NextResponse.json(
+                { success: false, error: 'Invalid signature ID' },
+                { status: 400 }
+            );
+        }
+
         await dbConnect();
 
         const entry = await GuestbookEntry.findOneAndUpdate(

@@ -122,10 +122,13 @@ export default function AdminMessagesPage() {
     const unreadCount = messages.filter(m => !m.read).length;
 
     const filteredMessages = messages.filter(msg => {
+        const name = msg.name || "";
+        const email = msg.email || "";
+        const message = msg.message || "";
         const matchesSearch = 
-            msg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            msg.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            msg.message.toLowerCase().includes(searchQuery.toLowerCase());
+            name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            message.toLowerCase().includes(searchQuery.toLowerCase());
 
         if (filterStatus === "unread") return matchesSearch && !msg.read;
         if (filterStatus === "read") return matchesSearch && msg.read;

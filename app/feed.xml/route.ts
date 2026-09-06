@@ -20,19 +20,21 @@ export async function GET() {
             .limit(50)
             .lean() as unknown as IPost[];
 
+        const safeCdata = (str: string = "") => str.replace(/]]>/g, "]]]]><![CDATA[>");
+
         const itemsXml = posts.map(post => {
             const postUrl = `${baseUrl}/blog/${post.slug}`;
             const pubDate = post.createdAt ? new Date(post.createdAt).toUTCString() : new Date().toUTCString();
             const category = post.category || "Engineering";
-            const tagsXml = (post.tags || []).map(t => `<category><![CDATA[${t}]]></category>`).join("\n        ");
+            const tagsXml = (post.tags || []).map(t => `<category><![CDATA[${safeCdata(t)}]]></category>`).join("\n        ");
 
             return `    <item>
-      <title><![CDATA[${post.title}]]></title>
+      <title><![CDATA[${safeCdata(post.title)}]]></title>
       <link>${postUrl}</link>
       <guid isPermaLink="true">${postUrl}</guid>
       <pubDate>${pubDate}</pubDate>
-      <description><![CDATA[${post.excerpt || ""}]]></description>
-      <category><![CDATA[${category}]]></category>
+      <description><![CDATA[${safeCdata(post.excerpt || "")}]]></description>
+      <category><![CDATA[${safeCdata(category)}]]></category>
       ${tagsXml}
     </item>`;
         }).join("\n");
@@ -40,9 +42,9 @@ export async function GET() {
         const rssXml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title><![CDATA[${siteTitle}]]></title>
+    <title><![CDATA[${safeCdata(siteTitle)}]]></title>
     <link>${baseUrl}/blog</link>
-    <description><![CDATA[${siteDescription}]]></description>
+    <description><![CDATA[${safeCdata(siteDescription)}]]></description>
     <language>id, en</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     <atom:link href="${baseUrl}/feed.xml" rel="self" type="application/rss+xml"/>

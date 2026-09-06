@@ -4,12 +4,16 @@ import Post from "@/models/Post";
 import { notFound } from "next/navigation";
 import { Metadata } from 'next';
 import { BlogPostContent } from "@/components/blog/BlogPostContent";
+import { isAuthenticated } from "@/lib/auth-helpers";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     try {
         const { slug } = await params;
         await dbConnect();
-        const post = await Post.findOne({ slug });
+        let post = await Post.findOne({ slug, published: { $ne: false } });
+        if (!post && (await isAuthenticated())) {
+            post = await Post.findOne({ slug });
+        }
 
         if (!post) {
             return { title: 'Post Not Found' };
@@ -72,7 +76,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     let post;
     try {
         await dbConnect();
-        post = await Post.findOne({ slug });
+        post = await Post.findOne({ slug, published: { $ne: false } });
+        if (!post && (await isAuthenticated())) {
+            post = await Post.findOne({ slug });
+        }
     } catch (e) {
         console.error("Blog Post Error:", e);
         return notFound();

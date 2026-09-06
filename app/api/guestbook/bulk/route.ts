@@ -20,12 +20,20 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        const validIds = ids.filter((id: unknown) => typeof id === 'string' && /^[0-9a-fA-F]{24}$/.test(id));
+        if (validIds.length === 0) {
+            return NextResponse.json(
+                { success: false, error: 'No valid IDs provided' },
+                { status: 400 }
+            );
+        }
+
         let result;
 
         switch (action) {
             case 'approve':
                 result = await GuestbookEntry.updateMany(
-                    { _id: { $in: ids } },
+                    { _id: { $in: validIds } },
                     { approved: true, spam: false }
                 );
                 break;
@@ -33,13 +41,13 @@ export async function POST(request: NextRequest) {
             case 'reject':
             case 'delete':
                 result = await GuestbookEntry.deleteMany(
-                    { _id: { $in: ids } }
+                    { _id: { $in: validIds } }
                 );
                 break;
 
             case 'spam':
                 result = await GuestbookEntry.updateMany(
-                    { _id: { $in: ids } },
+                    { _id: { $in: validIds } },
                     { spam: true, approved: false }
                 );
                 break;

@@ -78,8 +78,10 @@ export default function AdminProjectsListPage() {
     const categories = Array.from(new Set(["all", ...items.map(item => item.category).filter(Boolean)]));
 
     const filteredItems = items.filter((item) => {
-        const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.description.toLowerCase().includes(searchTerm.toLowerCase());
+        const title = item.title || "";
+        const description = item.description || "";
+        const matchesSearch = title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            description.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
         const matchesStatus = statusFilter === "all" || item.status === statusFilter;
         return matchesSearch && matchesCategory && matchesStatus;

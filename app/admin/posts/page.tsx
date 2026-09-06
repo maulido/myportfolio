@@ -39,7 +39,7 @@ export default function AdminBlogPostsListPage() {
 
     const fetchItems = async () => {
         try {
-            const response = await fetch("/api/blog");
+            const response = await fetch("/api/blog?all=true");
             const data = await response.json();
             if (data.success) {
                 setItems(data.data);
@@ -75,8 +75,10 @@ export default function AdminBlogPostsListPage() {
     const categories = ["all", ...Array.from(new Set(items.map(item => item.category).filter(Boolean)))];
 
     const filteredItems = items.filter((item) => {
-        const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.excerpt.toLowerCase().includes(searchTerm.toLowerCase());
+        const title = item.title || "";
+        const excerpt = item.excerpt || "";
+        const matchesSearch = title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            excerpt.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
         const matchesStatus = statusFilter === "all" ||
             (statusFilter === "published" && item.published) ||

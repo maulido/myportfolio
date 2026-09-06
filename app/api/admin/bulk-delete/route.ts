@@ -20,21 +20,29 @@ export async function POST(req: NextRequest) {
             );
         }
 
+        const validIds = ids.filter((id: unknown) => typeof id === 'string' && /^[0-9a-fA-F]{24}$/.test(id));
+        if (validIds.length === 0) {
+            return NextResponse.json(
+                { success: false, message: "No valid IDs provided" },
+                { status: 400 }
+            );
+        }
+
         await dbConnect();
 
         let result;
         switch (type) {
             case 'post':
-                result = await Post.deleteMany({ _id: { $in: ids } });
+                result = await Post.deleteMany({ _id: { $in: validIds } });
                 break;
             case 'project':
-                result = await Project.deleteMany({ _id: { $in: ids } });
+                result = await Project.deleteMany({ _id: { $in: validIds } });
                 break;
             case 'skill':
-                result = await Skill.deleteMany({ _id: { $in: ids } });
+                result = await Skill.deleteMany({ _id: { $in: validIds } });
                 break;
             case 'certification':
-                result = await Certification.deleteMany({ _id: { $in: ids } });
+                result = await Certification.deleteMany({ _id: { $in: validIds } });
                 break;
             default:
                 return NextResponse.json(

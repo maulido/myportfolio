@@ -41,7 +41,7 @@ export default function AdminLayout({
         };
     }, []);
 
-    if (status === "loading") {
+    if (status === "loading" || !session) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background">
                 <div className="animate-spin rounded-full h-10 w-10 border-2 border-primary border-t-transparent" />

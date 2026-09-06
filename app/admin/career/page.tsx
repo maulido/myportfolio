@@ -71,8 +71,10 @@ export default function AdminCareerListPage() {
     };
 
     const filteredItems = items.filter((item) => {
-        const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.organization.toLowerCase().includes(searchTerm.toLowerCase());
+        const title = item.title || "";
+        const org = item.organization || "";
+        const matchesSearch = title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            org.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesType = typeFilter === 'all' || item.type === typeFilter;
         return matchesSearch && matchesType;
     });

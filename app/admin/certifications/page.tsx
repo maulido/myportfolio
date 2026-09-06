@@ -72,8 +72,10 @@ export default function AdminCertificationsListPage() {
     const categories = ["all", ...Array.from(new Set(items.map(item => item.category)))];
 
     const filteredItems = items.filter((item) => {
-        const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.issuer.toLowerCase().includes(searchTerm.toLowerCase());
+        const title = item.title || "";
+        const issuer = item.issuer || "";
+        const matchesSearch = title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            issuer.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
         return matchesSearch && matchesCategory;
     });

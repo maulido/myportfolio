@@ -75,10 +75,12 @@ export default function AdminUsesListPage() {
         }
     };
 
-    const filteredItems = items.filter((item) =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.category.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredItems = items.filter((item) => {
+        const name = item.name || "";
+        const category = item.category || "";
+        return name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            category.toLowerCase().includes(searchTerm.toLowerCase());
+    });
 
     if (loading) {
         return (

@@ -3,6 +3,76 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, Bot, Loader2 } from "lucide-react";
+import Link from "next/link";
+
+function FormattedChatMessage({
+    content,
+    isUser,
+    onCloseChat,
+}: {
+    content: string;
+    isUser: boolean;
+    onCloseChat?: () => void;
+}) {
+    const renderFormattedText = (text: string) => {
+        const parts = text.split(/(\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*)/g);
+        return parts.map((part, pIdx) => {
+            const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+            if (linkMatch) {
+                const [, linkText, linkUrl] = linkMatch;
+                const isInternal = linkUrl.startsWith("/");
+                if (isInternal) {
+                    return (
+                        <Link
+                            key={pIdx}
+                            href={linkUrl}
+                            onClick={onCloseChat}
+                            className={`font-semibold underline underline-offset-2 hover:opacity-80 transition-opacity ${
+                                isUser ? "text-white" : "text-primary"
+                            }`}
+                        >
+                            {linkText}
+                        </Link>
+                    );
+                }
+                return (
+                    <a
+                        key={pIdx}
+                        href={linkUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`font-semibold underline underline-offset-2 hover:opacity-80 transition-opacity ${
+                            isUser ? "text-white" : "text-primary"
+                        }`}
+                    >
+                        {linkText}
+                    </a>
+                );
+            }
+
+            const boldMatch = part.match(/^\*\*([^*]+)\*\*$/);
+            if (boldMatch) {
+                return <strong key={pIdx} className="font-semibold">{boldMatch[1]}</strong>;
+            }
+
+            return part;
+        });
+    };
+
+    const lines = content.split('\n');
+    return (
+        <div className="space-y-1.5 break-words">
+            {lines.map((line, lIdx) => {
+                if (!line.trim()) return <div key={lIdx} className="h-1.5" />;
+                return (
+                    <p key={lIdx} className="leading-relaxed">
+                        {renderFormattedText(line)}
+                    </p>
+                );
+            })}
+        </div>
+    );
+}
 
 export default function ChatWidget() {
     const [isOpen, setIsOpen] = useState(false);
@@ -112,7 +182,11 @@ export default function ChatWidget() {
                                         ? "bg-primary text-white rounded-tr-none shadow-sm"
                                         : "bg-card border border-border rounded-tl-none shadow-sm text-foreground"
                                         }`}>
-                                        {msg.content}
+                                        <FormattedChatMessage
+                                            content={msg.content}
+                                            isUser={msg.role === "user"}
+                                            onCloseChat={() => setIsOpen(false)}
+                                        />
                                     </div>
                                 </div>
                             ))}

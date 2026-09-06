@@ -10,13 +10,17 @@ export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url);
         const slug = searchParams.get('slug');
+        const includeAll = searchParams.get('all') === 'true';
 
-        let posts;
+        const filter: Record<string, unknown> = {};
         if (slug) {
-            posts = await Post.find({ slug }).lean();
-        } else {
-            posts = await Post.find({}).sort({ createdAt: -1 }).lean();
+            filter.slug = slug;
         }
+        if (!includeAll) {
+            filter.published = { $ne: false };
+        }
+
+        const posts = await Post.find(filter).sort({ createdAt: -1 }).lean();
 
         return NextResponse.json(
             { success: true, data: posts },
