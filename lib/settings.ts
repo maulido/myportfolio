@@ -18,6 +18,11 @@ export interface GlobalSettings {
     maintenanceMessage_id?: string;
     maintenanceExpectedEnd?: string;
     maintenanceExpectedEnd_id?: string;
+    telegramEnabled?: string;
+    telegramBotToken?: string;
+    telegramChatId?: string;
+    telegramNotifyContact?: string;
+    telegramNotifyGuestbook?: string;
     [key: string]: string | undefined;
 }
 

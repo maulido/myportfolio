@@ -16,6 +16,11 @@ SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password
 CONTACT_EMAIL=contact@yourdomain.com
 
+# Telegram Notifications (Optional - can also be configured via Admin Settings)
+# Create bot via @BotFather to get token, and find your chat ID via @userinfobot
+TELEGRAM_BOT_TOKEN=123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ
+TELEGRAM_CHAT_ID=123456789
+
 # Analytics (Optional)
 NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
 

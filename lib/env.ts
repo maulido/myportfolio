@@ -19,7 +19,9 @@ const optionalEnvVars = [
     'GEMINI_API_KEY',
     'NEXT_PUBLIC_BASE_URL',
     'UPLOADTHING_SECRET',
-    'UPLOADTHING_APP_ID'
+    'UPLOADTHING_APP_ID',
+    'TELEGRAM_BOT_TOKEN',
+    'TELEGRAM_CHAT_ID'
 ] as const;
 
 export function validateEnv() {
@@ -81,5 +83,7 @@ export const env = {
     NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
     UPLOADTHING_SECRET: process.env.UPLOADTHING_SECRET,
     UPLOADTHING_APP_ID: process.env.UPLOADTHING_APP_ID,
+    TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
+    TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID,
     NODE_ENV: process.env.NODE_ENV || 'development'
 } as const;

@@ -26,7 +26,13 @@ import {
     Clock,
     Wrench,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Bell,
+    Send,
+    Eye,
+    EyeOff,
+    CheckCircle2,
+    HelpCircle
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -39,6 +45,9 @@ export default function AdminSettingsPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [activeTab, setActiveTab] = useState<TabKey>("global");
+    const [testingTelegram, setTestingTelegram] = useState(false);
+    const [showBotToken, setShowBotToken] = useState(false);
+    const [showTelegramGuide, setShowTelegramGuide] = useState(false);
 
     // Comprehensive Settings State
     const [settings, setSettings] = useState<Record<string, string>>({
@@ -62,6 +71,11 @@ export default function AdminSettingsPage() {
         maintenanceMessage_id: "Kami sedang melakukan optimalisasi infrastruktur, peningkatan server, dan pembaruan keamanan. Seluruh layanan akan segera kembali normal.",
         maintenanceExpectedEnd: "Within 2 hours",
         maintenanceExpectedEnd_id: "Dalam 2 jam",
+        telegramEnabled: "false",
+        telegramBotToken: "",
+        telegramChatId: "",
+        telegramNotifyContact: "true",
+        telegramNotifyGuestbook: "true",
 
         // Home Page
         heroTitle: "Digital Architect",
@@ -221,6 +235,40 @@ export default function AdminSettingsPage() {
             toast.error("Failed to save settings");
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleTestTelegram = async () => {
+        const token = settings.telegramBotToken?.trim();
+        const chatId = settings.telegramChatId?.trim();
+
+        if (!token || !chatId) {
+            toast.error("Harap isi Telegram Bot Token dan Chat ID terlebih dahulu!");
+            return;
+        }
+
+        setTestingTelegram(true);
+        try {
+            const res = await fetch("/api/telegram/test", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    botToken: token,
+                    chatId: chatId
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                toast.success(data.message || "Pesan uji coba berhasil dikirim ke Telegram!");
+            } else {
+                toast.error(data.error || "Gagal mengirim pesan uji coba ke Telegram");
+            }
+        } catch (error) {
+            console.error("Failed to test Telegram", error);
+            toast.error("Terjadi kesalahan jaringan saat menguji Telegram");
+        } finally {
+            setTestingTelegram(false);
         }
     };
 
@@ -546,6 +594,192 @@ export default function AdminSettingsPage() {
                                             className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                                         />
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* Telegram Bot Notification Configuration Card */}
+                            <div className="bg-card/40 backdrop-blur-md border border-border rounded-2xl p-6 shadow-sm">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-border/60">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-sky-500/10 rounded-lg text-sky-500">
+                                            <Send className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h2 className="text-lg font-bold">Telegram Instant Notifications</h2>
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                                    settings.telegramEnabled === "true"
+                                                        ? "bg-sky-500 text-white shadow-xs"
+                                                        : "bg-muted text-muted-foreground border border-border/60"
+                                                }`}>
+                                                    {settings.telegramEnabled === "true" ? "AKTIF / ENABLED" : "NONAKTIF / DISABLED"}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground mt-0.5">
+                                                Dapatkan notifikasi instan di Telegram saat ada pesan formulir kontak atau tanda tangan buku tamu baru
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowTelegramGuide(prev => !prev)}
+                                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-muted hover:bg-muted/80 text-foreground transition-colors border border-border cursor-pointer"
+                                        >
+                                            <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                                            <span>{showTelegramGuide ? "Tutup Panduan" : "Panduan Setup (3 Langkah)"}</span>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setSettings(prev => ({
+                                                ...prev,
+                                                telegramEnabled: prev.telegramEnabled === "true" ? "false" : "true"
+                                            }))}
+                                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-xs ${
+                                                settings.telegramEnabled === "true"
+                                                    ? "bg-sky-600 hover:bg-sky-700 text-white shadow-sky-600/25"
+                                                    : "bg-muted hover:bg-muted/80 text-foreground border border-border"
+                                            }`}
+                                        >
+                                            <Bell className="h-3.5 w-3.5" />
+                                            <span>{settings.telegramEnabled === "true" ? "Notifikasi: AKTIF" : "Notifikasi: NONAKTIF"}</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Collapsible Setup Guide */}
+                                {showTelegramGuide && (
+                                    <div className="mb-6 p-4 rounded-xl bg-sky-500/10 border border-sky-500/25 text-foreground space-y-2 text-xs">
+                                        <h4 className="font-bold text-sky-600 dark:text-sky-400 flex items-center gap-1.5">
+                                            <Sparkles className="h-4 w-4" /> Cara Menghubungkan Bot Telegram ke Website:
+                                        </h4>
+                                        <ol className="list-decimal list-inside space-y-1.5 text-muted-foreground">
+                                            <li>
+                                                <strong className="text-foreground">Buat Bot di Telegram:</strong> Buka aplikasi Telegram, cari <code className="px-1.5 py-0.5 rounded bg-background font-mono text-sky-500">@BotFather</code>, kirim <code className="px-1.5 py-0.5 rounded bg-background font-mono">/newbot</code>, lalu ikuti instruksinya hingga mendapatkan <strong>HTTP API Token</strong> (salin ke kolom <em>Bot Token</em> di bawah).
+                                            </li>
+                                            <li>
+                                                <strong className="text-foreground">Mulai Chat dengan Bot:</strong> Klik tautan bot yang baru dibuat (misal <code>t.me/NamaBotAnda_bot</code>) lalu tekan tombol <strong>Start</strong> (<code className="px-1.5 py-0.5 rounded bg-background font-mono">/start</code>) agar bot memiliki izin mengirim pesan ke Anda.
+                                            </li>
+                                            <li>
+                                                <strong className="text-foreground">Dapatkan Chat ID Anda:</strong> Cari akun <code className="px-1.5 py-0.5 rounded bg-background font-mono text-sky-500">@userinfobot</code> di Telegram dan tekan Start. Bot tersebut akan membalas dengan nomor <strong>Id</strong> Anda (misal: <code>123456789</code>). Salin angka tersebut ke kolom <em>Chat ID</em> di bawah. (Jika ingin kirim ke grup, undang bot ke grup tersebut lalu gunakan Chat ID grup yang berawalan minus, mis. <code>-100xxxxxxx</code>).
+                                            </li>
+                                        </ol>
+                                    </div>
+                                )}
+
+                                {/* Channel Events Toggles */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 p-3.5 rounded-xl bg-background/60 border border-border/70">
+                                    <label className="flex items-center gap-3 cursor-pointer select-none">
+                                        <input
+                                            type="checkbox"
+                                            name="telegramNotifyContact"
+                                            checked={settings.telegramNotifyContact !== "false"}
+                                            onChange={(e) => setSettings(prev => ({
+                                                ...prev,
+                                                telegramNotifyContact: e.target.checked ? "true" : "false"
+                                            }))}
+                                            className="h-4 w-4 rounded border-border text-primary focus:ring-primary accent-primary"
+                                        />
+                                        <div>
+                                            <p className="text-xs font-bold text-foreground">Notifikasi Formulir Kontak (/contact)</p>
+                                            <p className="text-[11px] text-muted-foreground">Kirim notifikasi setiap pengunjung mengirim pesan kontak</p>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex items-center gap-3 cursor-pointer select-none">
+                                        <input
+                                            type="checkbox"
+                                            name="telegramNotifyGuestbook"
+                                            checked={settings.telegramNotifyGuestbook !== "false"}
+                                            onChange={(e) => setSettings(prev => ({
+                                                ...prev,
+                                                telegramNotifyGuestbook: e.target.checked ? "true" : "false"
+                                            }))}
+                                            className="h-4 w-4 rounded border-border text-primary focus:ring-primary accent-primary"
+                                        />
+                                        <div>
+                                            <p className="text-xs font-bold text-foreground">Notifikasi Buku Tamu (/guestbook)</p>
+                                            <p className="text-[11px] text-muted-foreground">Kirim notifikasi setiap tanda tangan buku tamu baru masuk untuk dimoderasi</p>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                {/* Form Inputs */}
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-semibold text-foreground">Telegram Bot Token</label>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowBotToken(prev => !prev)}
+                                                className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
+                                            >
+                                                {showBotToken ? (
+                                                    <>
+                                                        <EyeOff className="h-3 w-3" />
+                                                        <span>Sembunyikan</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Eye className="h-3 w-3" />
+                                                        <span>Lihat Token</span>
+                                                    </>
+                                                )}
+                                            </button>
+                                        </div>
+                                        <div className="relative">
+                                            <input
+                                                type={showBotToken ? "text" : "password"}
+                                                name="telegramBotToken"
+                                                value={settings.telegramBotToken || ""}
+                                                onChange={handleChange}
+                                                placeholder="Contoh: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
+                                                className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-mono"
+                                            />
+                                        </div>
+                                        <p className="text-[11px] text-muted-foreground">
+                                            Token rahasia dari @BotFather. Bisa juga dikonfigurasi via <code>TELEGRAM_BOT_TOKEN</code> di <code>.env.local</code>.
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground">Target Chat ID</label>
+                                        <input
+                                            type="text"
+                                            name="telegramChatId"
+                                            value={settings.telegramChatId || ""}
+                                            onChange={handleChange}
+                                            placeholder="Contoh: 123456789 atau -100123456789"
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-mono"
+                                        />
+                                        <p className="text-[11px] text-muted-foreground">
+                                            Chat ID akun Anda (dari @userinfobot) atau ID grup Telegram target notifikasi.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Test Action Button Footer */}
+                                <div className="mt-6 pt-4 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-3">
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                        <CheckCircle2 className="h-4 w-4 text-sky-500 shrink-0" />
+                                        <span>Pesan notifikasi dilengkapi tombol aksi cepat untuk membalas email atau moderasi buku tamu.</span>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={handleTestTelegram}
+                                        disabled={testingTelegram || !settings.telegramBotToken?.trim() || !settings.telegramChatId?.trim()}
+                                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white transition-all shadow-xs disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+                                    >
+                                        {testingTelegram ? (
+                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                        ) : (
+                                            <Send className="h-3.5 w-3.5" />
+                                        )}
+                                        <span>{testingTelegram ? "Mengirim Tes..." : "Kirim Pesan Uji Coba ke Telegram"}</span>
+                                    </button>
                                 </div>
                             </div>
 

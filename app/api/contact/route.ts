@@ -4,6 +4,7 @@ import { rateLimit } from '@/lib/rate-limit';
 import dbConnect from '@/lib/db';
 import ContactMessage from '@/models/ContactMessage';
 import { requireAuth } from '@/lib/auth-helpers';
+import { notifyContactSubmission } from '@/lib/telegram';
 
 const contactLimiter = rateLimit({
   interval: 5 * 60 * 1000, // 5 minutes
@@ -65,6 +66,11 @@ export async function POST(req: Request) {
       email,
       message,
       ip
+    });
+
+    // Send Telegram notification in background (non-blocking)
+    notifyContactSubmission({ name, email, message, ip }).catch((err) => {
+      console.warn('[CONTACT API] Failed to send Telegram notification:', err);
     });
 
     // Attempt to send email if SMTP is configured

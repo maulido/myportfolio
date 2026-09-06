@@ -19,7 +19,8 @@ import {
     Settings,
     FolderOpen,
     TrendingUp,
-    Wrench
+    Wrench,
+    Send
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -96,6 +97,7 @@ export default function AdminDashboard() {
     const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
     const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
     const [isUpdatingMaintenance, setIsUpdatingMaintenance] = useState(false);
+    const [isTelegramEnabled, setIsTelegramEnabled] = useState(false);
 
     // Core entity states
     const [posts, setPosts] = useState<Post[]>([]);
@@ -129,7 +131,8 @@ export default function AdminDashboard() {
                         guestbookRes,
                         pendingGuestbookRes,
                         messagesRes,
-                        subscribersRes
+                        subscribersRes,
+                        telegramRes
                     ] = await Promise.allSettled([
                         fetch("/api/blog"),
                         fetch("/api/projects"),
@@ -140,7 +143,8 @@ export default function AdminDashboard() {
                         fetch("/api/guestbook?limit=5"),
                         fetch("/api/guestbook/pending"),
                         fetch("/api/contact"),
-                        fetch("/api/newsletter")
+                        fetch("/api/newsletter"),
+                        fetch("/api/settings?key=telegramEnabled")
                     ]);
 
                     if (!isMounted) return;
@@ -174,6 +178,14 @@ export default function AdminDashboard() {
                         const d = await maintenanceRes.value.json();
                         if (d.success && d.data !== undefined) {
                             setIsMaintenanceMode(d.data === "true" || d.data === true);
+                        }
+                    }
+
+                    // Handle Telegram Notification Status
+                    if (telegramRes.status === "fulfilled" && telegramRes.value.ok) {
+                        const d = await telegramRes.value.json();
+                        if (d.success && d.data !== undefined) {
+                            setIsTelegramEnabled(d.data === "true" || d.data === true);
                         }
                     }
 
@@ -324,6 +336,17 @@ export default function AdminDashboard() {
                     >
                         <span>View Live Site</span>
                         <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Link>
+
+                    {/* Telegram Alerts Quick Badge */}
+                    <Link
+                        href="/admin/settings"
+                        title="Kelola Notifikasi Telegram di Admin Settings"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-muted hover:bg-muted/80 text-foreground transition-colors border border-border"
+                    >
+                        <Send className="h-3.5 w-3.5 text-sky-500" />
+                        <span>Telegram Alerts</span>
+                        <span className={`h-2 w-2 rounded-full ${isTelegramEnabled ? "bg-sky-500 animate-pulse" : "bg-muted-foreground/40"}`} />
                     </Link>
 
                     {/* Maintenance Mode Instant Toggle */}

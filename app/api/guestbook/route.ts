@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import GuestbookEntry from '@/models/GuestbookEntry';
 import { rateLimit } from '@/lib/rate-limit';
 import { requireAuth } from '@/lib/auth-helpers';
+import { notifyGuestbookSubmission } from '@/lib/telegram';
 
 const guestbookLimiter = rateLimit({
     interval: 5 * 60 * 1000, // 5 minutes
@@ -199,6 +200,17 @@ export async function POST(request: NextRequest) {
             ipAddress: ip,
             approved: false, // Require approval by default
             spam: false
+        });
+
+        // Send Telegram notification in background (non-blocking)
+        notifyGuestbookSubmission({
+            name,
+            message,
+            email,
+            website,
+            ip
+        }).catch((err) => {
+            console.warn('[GUESTBOOK API] Failed to send Telegram notification:', err);
         });
 
         return NextResponse.json({
