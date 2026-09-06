@@ -43,6 +43,15 @@ export function scrubSensitiveStrings(content: string): string {
         .replace(/Bearer\s+[a-zA-Z0-9_\-\.]{20,}/gi, "Bearer [PROTECTED_TOKEN]");
 }
 
+/**
+ * Safely extracts four-digit year from date string/Date object without NaN bugs
+ */
+export function safeGetYear(dateVal?: Date | string | null): string {
+    if (!dateVal) return "";
+    const d = new Date(dateVal);
+    return isNaN(d.getTime()) ? "" : String(d.getFullYear());
+}
+
 export interface WebsiteSeoContext {
     siteMeta: {
         brandName: string;
@@ -215,11 +224,15 @@ export async function getWebsiteKnowledgeData(forceRefresh = false): Promise<{ t
                 category: scrubSensitiveStrings(s.category || "General"),
                 level: s.level || "Intermediate"
             })),
-            career: careerList.map(c => ({
-                title: scrubSensitiveStrings(c.title),
-                organization: scrubSensitiveStrings(c.organization),
-                period: `${c.startDate ? new Date(c.startDate).getFullYear() : ""} - ${c.current ? "Present" : (c.endDate ? new Date(c.endDate).getFullYear() : "")}`
-            })),
+            career: careerList.map(c => {
+                const start = safeGetYear(c.startDate);
+                const end = c.current ? "Present" : safeGetYear(c.endDate);
+                return {
+                    title: scrubSensitiveStrings(c.title),
+                    organization: scrubSensitiveStrings(c.organization),
+                    period: start ? (end ? `${start} - ${end}` : start) : (end || "")
+                };
+            }),
             certifications: certList.map(c => ({
                 title: scrubSensitiveStrings(c.title),
                 issuer: scrubSensitiveStrings(c.issuer)
@@ -290,9 +303,10 @@ export async function getWebsiteKnowledgeData(forceRefresh = false): Promise<{ t
         if (careerList.length > 0) {
             lines.push("## RIWAYAT KARIR & PENGALAMAN KERJA (EXPERIENCE)");
             careerList.forEach(c => {
-                const start = c.startDate ? new Date(c.startDate).getFullYear() : "";
-                const end = c.current ? "Sekarang" : (c.endDate ? new Date(c.endDate).getFullYear() : "");
-                lines.push(`- **${scrubSensitiveStrings(c.title)}** di **${scrubSensitiveStrings(c.organization)}** (${start} - ${end})`);
+                const start = safeGetYear(c.startDate);
+                const end = c.current ? "Sekarang" : safeGetYear(c.endDate);
+                const period = start ? (end ? ` (${start} - ${end})` : ` (${start})`) : (end ? ` (${end})` : "");
+                lines.push(`- **${scrubSensitiveStrings(c.title)}** di **${scrubSensitiveStrings(c.organization)}**${period}`);
                 if (c.description) lines.push(`  ${scrubSensitiveStrings(c.description.slice(0, 150))}...`);
             });
             lines.push("");

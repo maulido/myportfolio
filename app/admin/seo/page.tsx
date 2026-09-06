@@ -186,6 +186,7 @@ export default function AdminSeoPage() {
                                 new CustomEvent("open-ai-assistant", {
                                     detail: {
                                         tab: "seo",
+                                        seoMode: "audit",
                                         title: `${pageMetadata.name} (${pageMetadata.path})`,
                                         text: `URL: ${pageMetadata.path}\nJudul: ${pageMetadata.title}\nDeskripsi: ${pageMetadata.description}`
                                     }

@@ -3,7 +3,8 @@
 import { Sparkles } from "lucide-react";
 
 interface AiTriggerButtonProps {
-    tab?: "translate" | "excerpt" | "tags" | "improve";
+    tab?: "translate" | "excerpt" | "tags" | "improve" | "seo";
+    seoMode?: "audit" | "optimize" | "ideas";
     text?: string;
     title?: string;
     label?: string;
@@ -12,6 +13,7 @@ interface AiTriggerButtonProps {
 
 export default function AiTriggerButton({
     tab = "translate",
+    seoMode,
     text,
     title,
     label = "AI Assistant",
@@ -22,7 +24,7 @@ export default function AiTriggerButton({
         e.stopPropagation();
         window.dispatchEvent(
             new CustomEvent("open-ai-assistant", {
-                detail: { tab, text, title }
+                detail: { tab, seoMode, text, title }
             })
         );
     };

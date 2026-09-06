@@ -42,9 +42,10 @@ export default function AiAssistantModal() {
 
     useEffect(() => {
         const handleOpen = (e: Event) => {
-            const customEvent = e as CustomEvent<{ tab?: AiTab; text?: string; title?: string }>;
+            const customEvent = e as CustomEvent<{ tab?: AiTab; seoMode?: "audit" | "optimize" | "ideas"; text?: string; title?: string }>;
             if (customEvent?.detail) {
                 if (customEvent.detail.tab) setActiveTab(customEvent.detail.tab);
+                if (customEvent.detail.seoMode) setSeoMode(customEvent.detail.seoMode);
                 if (customEvent.detail.text !== undefined) setInputText(customEvent.detail.text);
                 if (customEvent.detail.title !== undefined) setInputTitle(customEvent.detail.title);
             }
