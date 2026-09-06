@@ -30,6 +30,9 @@ export default function AdminQuickNotes() {
         loadNotes();
         return () => {
             isMounted = false;
+            if (autoSaveTimerRef.current) {
+                clearTimeout(autoSaveTimerRef.current);
+            }
         };
     }, []);
 

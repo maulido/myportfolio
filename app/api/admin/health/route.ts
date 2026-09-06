@@ -94,7 +94,15 @@ export async function GET() {
         const token = process.env.GITHUB_TOKEN || process.env.NEXT_PUBLIC_GITHUB_TOKEN;
         if (token) headers["Authorization"] = `Bearer ${token}`;
 
-        const res = await fetch("https://api.github.com/rate_limit", { headers });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        const res = await fetch("https://api.github.com/rate_limit", { 
+            headers,
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
         if (res.ok) {
             const data = await res.json();
             githubRateRemaining = data.resources?.core?.remaining ?? 60;

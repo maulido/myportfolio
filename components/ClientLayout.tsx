@@ -43,12 +43,7 @@ function ClientLayoutInner({
 
     // 1. Never block admin or auth routes
     if (isAdminOrAuth) {
-        return (
-            <>
-                {children}
-                <CommandPalette />
-            </>
-        );
+        return <>{children}</>;
     }
 
     // 2. Direct access to standalone maintenance page

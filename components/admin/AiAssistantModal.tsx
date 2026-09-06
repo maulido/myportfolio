@@ -32,11 +32,12 @@ export default function AiAssistantModal() {
     useEffect(() => {
         const handleOpen = (e: Event) => {
             const customEvent = e as CustomEvent<{ tab?: AiTab; text?: string; title?: string }>;
-            if (customEvent.detail) {
+            if (customEvent?.detail) {
                 if (customEvent.detail.tab) setActiveTab(customEvent.detail.tab);
-                if (customEvent.detail.text) setInputText(customEvent.detail.text);
-                if (customEvent.detail.title) setInputTitle(customEvent.detail.title);
+                if (customEvent.detail.text !== undefined) setInputText(customEvent.detail.text);
+                if (customEvent.detail.title !== undefined) setInputTitle(customEvent.detail.title);
             }
+            setMissingKeyError(false);
             setIsOpen(true);
         };
 

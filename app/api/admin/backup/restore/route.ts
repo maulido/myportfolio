@@ -26,7 +26,7 @@ export async function POST(req: Request) {
 
     try {
         const body = await req.json();
-        const payloadData = body.data || body;
+        const payloadData = body.data?.data || body.data || body;
         const mode = body.mode || "upsert"; // "upsert" or "replace"
 
         if (!payloadData || typeof payloadData !== "object") {
@@ -72,32 +72,33 @@ export async function POST(req: Request) {
                 }
                 restoreSummary[key] = items.length;
             } else {
-                // Upsert mode
+                // Upsert mode: strip _id to avoid MongoDB immutable field modification error
                 let count = 0;
                 for (const item of items) {
+                    const { _id, ...cleanItem } = item;
                     if (key === "settings" && item.key) {
                         await Model.findOneAndUpdate(
                             { key: item.key },
-                            { $set: item },
+                            { $set: cleanItem },
                             { upsert: true, new: true }
                         );
                         count++;
-                    } else if (item._id) {
+                    } else if (_id) {
                         await Model.findByIdAndUpdate(
-                            item._id,
-                            { $set: item },
+                            _id,
+                            { $set: cleanItem },
                             { upsert: true, new: true }
                         );
                         count++;
-                    } else if (item.slug) {
+                    } else if (cleanItem.slug) {
                         await Model.findOneAndUpdate(
-                            { slug: item.slug },
-                            { $set: item },
+                            { slug: cleanItem.slug },
+                            { $set: cleanItem },
                             { upsert: true, new: true }
                         );
                         count++;
                     } else {
-                        await Model.create(item);
+                        await Model.create(cleanItem);
                         count++;
                     }
                 }
