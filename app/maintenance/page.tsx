@@ -5,6 +5,9 @@ import { getGlobalSettings } from "@/lib/settings";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function generateMetadata(): Promise<Metadata> {
     const settings = await getGlobalSettings();
     const title = settings.maintenanceTitle || "System Maintenance | Scheduled Upgrades";

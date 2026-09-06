@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import Project from '@/models/Project';
@@ -63,11 +64,19 @@ export async function PUT(
             );
         }
 
+        try {
+            revalidatePath('/projects');
+            revalidatePath('/');
+            if (project.slug) revalidatePath(`/projects/${project.slug}`);
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
+
         return NextResponse.json({ success: true, data: project });
     } catch (error) {
         console.error('Error updating project:', error);
         return NextResponse.json(
-            { success: false, error: 'Failed to update project' },
+            { success: false, error: error instanceof Error ? error.message : 'Failed to update project' },
             { status: 500 }
         );
     }
@@ -99,11 +108,19 @@ export async function DELETE(
             );
         }
 
+        try {
+            revalidatePath('/projects');
+            revalidatePath('/');
+            if (project.slug) revalidatePath(`/projects/${project.slug}`);
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
+
         return NextResponse.json({ success: true, data: project });
     } catch (error) {
         console.error('Error deleting project:', error);
         return NextResponse.json(
-            { success: false, error: 'Failed to delete project' },
+            { success: false, error: error instanceof Error ? error.message : 'Failed to delete project' },
             { status: 500 }
         );
     }

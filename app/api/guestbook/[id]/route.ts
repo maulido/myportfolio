@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import GuestbookEntry from '@/models/GuestbookEntry';
@@ -40,6 +41,13 @@ export async function PUT(
             );
         }
 
+        try {
+            revalidatePath('/guestbook');
+            revalidatePath('/');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
+
         return NextResponse.json({ success: true, data: entry });
     } catch (error: unknown) {
         console.error('Error updating entry:', error);
@@ -71,11 +79,18 @@ export async function DELETE(
             );
         }
 
+        try {
+            revalidatePath('/guestbook');
+            revalidatePath('/');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
+
         return NextResponse.json({ success: true, data: entry });
     } catch (error) {
         console.error('Error deleting entry:', error);
         return NextResponse.json(
-            { success: false, error: 'Failed to delete entry' },
+            { success: false, error: error instanceof Error ? error.message : 'Failed to delete entry' },
             { status: 500 }
         );
     }

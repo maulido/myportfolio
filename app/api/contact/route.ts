@@ -5,6 +5,7 @@ import dbConnect from '@/lib/db';
 import ContactMessage from '@/models/ContactMessage';
 import { requireAuth } from '@/lib/auth-helpers';
 import { notifyContactSubmission } from '@/lib/telegram';
+import { getGlobalSettings } from '@/lib/settings';
 
 const contactLimiter = rateLimit({
   interval: 5 * 60 * 1000, // 5 minutes
@@ -86,9 +87,12 @@ export async function POST(req: Request) {
           },
         });
 
+        const settings = await getGlobalSettings();
+        const recipientEmail = settings.contactEmail || process.env.CONTACT_EMAIL || process.env.SMTP_USER;
+
         await transporter.sendMail({
           from: `"${name}" <${process.env.SMTP_USER}>`,
-          to: process.env.CONTACT_EMAIL || process.env.SMTP_USER,
+          to: recipientEmail,
           subject: `Portfolio Contact: ${name}`,
           text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
           html: `

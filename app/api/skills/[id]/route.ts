@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import Skill from '@/models/Skill';
@@ -71,6 +72,13 @@ export async function PUT(
             );
         }
 
+        try {
+            revalidatePath('/');
+            revalidatePath('/about');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
+
         return NextResponse.json({ success: true, data: skill });
     } catch (error: unknown) {
         console.error("API PUT Skill Error:", error);
@@ -107,6 +115,13 @@ export async function DELETE(
                 { success: false, error: "Skill not found" },
                 { status: 404 }
             );
+        }
+
+        try {
+            revalidatePath('/');
+            revalidatePath('/about');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
         }
 
         return NextResponse.json({ success: true, data: {} });

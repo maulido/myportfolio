@@ -148,10 +148,15 @@ export default function AdminSettingsPage() {
 
         // Projects Page
         projectsHeroBadge: "Engineering Portfolio",
+        projectsHeroBadge_id: "Portofolio Rekayasa",
         projectsHeroTitle: "Engineered Solutions & Projects",
+        projectsHeroTitle_id: "Solusi & Proyek Terekayasa",
         projectsHeroSubtitle: "A showcase of production network architectures, full-stack web applications, and open-source systems.",
+        projectsHeroSubtitle_id: "Koleksi arsitektur jaringan produksi, aplikasi web full-stack, dan sistem sumber terbuka.",
         projectsCtaTitle: "Have an ambitious project in mind?",
+        projectsCtaTitle_id: "Punya proyek ambisius yang ingin dibangun?",
         projectsCtaSubtitle: "Whether you need high-availability network infrastructure or modern full-stack web engineering, let's connect.",
+        projectsCtaSubtitle_id: "Baik Anda membutuhkan infrastruktur jaringan berkeandalan tinggi atau rekayasa web full-stack modern, mari terhubung.",
 
         // Certifications Page
         certificationsHeroBadge: "Verified Credentials & Accreditations",
@@ -162,10 +167,15 @@ export default function AdminSettingsPage() {
 
         // Blog Page
         blogHeroBadge: "Technical Publications & Notes",
+        blogHeroBadge_id: "Publikasi Teknis & Catatan",
         blogHeroTitle: "Engineering Insights & Deep Dives",
+        blogHeroTitle_id: "Wawasan Rekayasa & Ulasan Mendalam",
         blogHeroSubtitle: "Architectural post-mortems, hands-on tutorials, and engineering principles.",
+        blogHeroSubtitle_id: "Cetak biru arsitektur, tutorial praktis, dan prinsip-prinsip rekayasa.",
         blogNewsletterTitle: "Stay Updated with Technical Insights",
+        blogNewsletterTitle_id: "Tetap Terinformasi dengan Wawasan Teknis",
         blogNewsletterDesc: "Subscribe to receive notifications when new deep dives and post-mortems are published.",
+        blogNewsletterDesc_id: "Berlangganan untuk menerima pemberitahuan saat ulasan mendalam baru diterbitkan.",
 
         // Gallery & Uses
         galleryHeroBadge: "Visual Archive & Moments",
@@ -1451,55 +1461,117 @@ export default function AdminSettingsPage() {
                                     </div>
                                 </div>
                                 <div className="grid gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-foreground">Projects Hero Badge</label>
-                                        <input
-                                            name="projectsHeroBadge"
-                                            value={settings.projectsHeroBadge || ""}
-                                            onChange={handleChange}
-                                            placeholder="e.g. Engineering Portfolio"
-                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                                        />
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold text-foreground">Projects Hero Badge [EN]</label>
+                                            <input
+                                                name="projectsHeroBadge"
+                                                value={settings.projectsHeroBadge || ""}
+                                                onChange={handleChange}
+                                                placeholder="e.g. Engineering Portfolio"
+                                                className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold text-foreground">Projects Hero Badge [ID]</label>
+                                            <input
+                                                name="projectsHeroBadge_id"
+                                                value={settings.projectsHeroBadge_id || ""}
+                                                onChange={handleChange}
+                                                placeholder="mis. Portofolio Rekayasa"
+                                                className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-foreground">Projects Hero Title</label>
-                                        <input
-                                            name="projectsHeroTitle"
-                                            value={settings.projectsHeroTitle || ""}
-                                            onChange={handleChange}
-                                            placeholder="e.g. Engineered Solutions & Projects"
-                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
-                                        />
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold text-foreground">Projects Hero Title [EN]</label>
+                                            <input
+                                                name="projectsHeroTitle"
+                                                value={settings.projectsHeroTitle || ""}
+                                                onChange={handleChange}
+                                                placeholder="e.g. Engineered Solutions & Projects"
+                                                className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold text-foreground">Projects Hero Title [ID]</label>
+                                            <input
+                                                name="projectsHeroTitle_id"
+                                                value={settings.projectsHeroTitle_id || ""}
+                                                onChange={handleChange}
+                                                placeholder="mis. Solusi & Proyek Terekayasa"
+                                                className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
+                                            />
+                                        </div>
                                     </div>
+
                                     <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-foreground">Projects Hero Subtitle</label>
+                                        <label className="text-xs font-semibold text-foreground">Projects Hero Subtitle [EN]</label>
                                         <textarea
                                             name="projectsHeroSubtitle"
                                             value={settings.projectsHeroSubtitle || ""}
                                             onChange={handleChange}
                                             rows={2}
-                                            placeholder="Deskripsi kurasi karya produksi..."
+                                            placeholder="A showcase of production network architectures..."
                                             className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-foreground">Bottom CTA Banner Title</label>
-                                        <input
-                                            name="projectsCtaTitle"
-                                            value={settings.projectsCtaTitle || ""}
+                                        <label className="text-xs font-semibold text-foreground">Projects Hero Subtitle [ID]</label>
+                                        <textarea
+                                            name="projectsHeroSubtitle_id"
+                                            value={settings.projectsHeroSubtitle_id || ""}
                                             onChange={handleChange}
-                                            placeholder="e.g. Have an ambitious project in mind?"
-                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
+                                            rows={2}
+                                            placeholder="Koleksi arsitektur jaringan produksi, aplikasi web..."
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
                                         />
                                     </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold text-foreground">Bottom CTA Banner Title [EN]</label>
+                                            <input
+                                                name="projectsCtaTitle"
+                                                value={settings.projectsCtaTitle || ""}
+                                                onChange={handleChange}
+                                                placeholder="e.g. Have an ambitious project in mind?"
+                                                className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold text-foreground">Bottom CTA Banner Title [ID]</label>
+                                            <input
+                                                name="projectsCtaTitle_id"
+                                                value={settings.projectsCtaTitle_id || ""}
+                                                onChange={handleChange}
+                                                placeholder="mis. Punya proyek ambisius yang ingin dibangun?"
+                                                className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
+                                            />
+                                        </div>
+                                    </div>
+
                                     <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-foreground">Bottom CTA Banner Subtitle</label>
+                                        <label className="text-xs font-semibold text-foreground">Bottom CTA Banner Subtitle [EN]</label>
                                         <textarea
                                             name="projectsCtaSubtitle"
                                             value={settings.projectsCtaSubtitle || ""}
                                             onChange={handleChange}
                                             rows={2}
-                                            placeholder="Teks ajakan kolaborasi di bawah daftar proyek..."
+                                            placeholder="Whether you need high-availability network infrastructure..."
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground">Bottom CTA Banner Subtitle [ID]</label>
+                                        <textarea
+                                            name="projectsCtaSubtitle_id"
+                                            value={settings.projectsCtaSubtitle_id || ""}
+                                            onChange={handleChange}
+                                            rows={2}
+                                            placeholder="Baik Anda membutuhkan infrastruktur jaringan berkeandalan tinggi..."
                                             className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
                                         />
                                     </div>
@@ -1593,55 +1665,117 @@ export default function AdminSettingsPage() {
                                     </div>
                                 </div>
                                 <div className="grid gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-foreground">Blog Hero Badge</label>
-                                        <input
-                                            name="blogHeroBadge"
-                                            value={settings.blogHeroBadge || ""}
-                                            onChange={handleChange}
-                                            placeholder="e.g. Technical Publications & Notes"
-                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                                        />
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold text-foreground">Blog Hero Badge [EN]</label>
+                                            <input
+                                                name="blogHeroBadge"
+                                                value={settings.blogHeroBadge || ""}
+                                                onChange={handleChange}
+                                                placeholder="e.g. Technical Publications & Notes"
+                                                className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold text-foreground">Blog Hero Badge [ID]</label>
+                                            <input
+                                                name="blogHeroBadge_id"
+                                                value={settings.blogHeroBadge_id || ""}
+                                                onChange={handleChange}
+                                                placeholder="mis. Publikasi Teknis & Catatan"
+                                                className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-foreground">Blog Hero Title</label>
-                                        <input
-                                            name="blogHeroTitle"
-                                            value={settings.blogHeroTitle || ""}
-                                            onChange={handleChange}
-                                            placeholder="e.g. Engineering Insights & Deep Dives"
-                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
-                                        />
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold text-foreground">Blog Hero Title [EN]</label>
+                                            <input
+                                                name="blogHeroTitle"
+                                                value={settings.blogHeroTitle || ""}
+                                                onChange={handleChange}
+                                                placeholder="e.g. Engineering Insights & Deep Dives"
+                                                className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold text-foreground">Blog Hero Title [ID]</label>
+                                            <input
+                                                name="blogHeroTitle_id"
+                                                value={settings.blogHeroTitle_id || ""}
+                                                onChange={handleChange}
+                                                placeholder="mis. Wawasan Rekayasa & Ulasan Mendalam"
+                                                className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
+                                            />
+                                        </div>
                                     </div>
+
                                     <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-foreground">Blog Hero Subtitle</label>
+                                        <label className="text-xs font-semibold text-foreground">Blog Hero Subtitle [EN]</label>
                                         <textarea
                                             name="blogHeroSubtitle"
                                             value={settings.blogHeroSubtitle || ""}
                                             onChange={handleChange}
                                             rows={2}
-                                            placeholder="Deskripsi kurasi tulisan teknik..."
+                                            placeholder="Architectural post-mortems, hands-on tutorials..."
                                             className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-foreground">Blog Newsletter Card Title</label>
-                                        <input
-                                            name="blogNewsletterTitle"
-                                            value={settings.blogNewsletterTitle || ""}
+                                        <label className="text-xs font-semibold text-foreground">Blog Hero Subtitle [ID]</label>
+                                        <textarea
+                                            name="blogHeroSubtitle_id"
+                                            value={settings.blogHeroSubtitle_id || ""}
                                             onChange={handleChange}
-                                            placeholder="e.g. Stay Updated with Technical Insights"
-                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
+                                            rows={2}
+                                            placeholder="Cetak biru arsitektur, tutorial praktis, dan prinsip..."
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
                                         />
                                     </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold text-foreground">Blog Newsletter Card Title [EN]</label>
+                                            <input
+                                                name="blogNewsletterTitle"
+                                                value={settings.blogNewsletterTitle || ""}
+                                                onChange={handleChange}
+                                                placeholder="e.g. Stay Updated with Technical Insights"
+                                                className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold text-foreground">Blog Newsletter Card Title [ID]</label>
+                                            <input
+                                                name="blogNewsletterTitle_id"
+                                                value={settings.blogNewsletterTitle_id || ""}
+                                                onChange={handleChange}
+                                                placeholder="mis. Tetap Terinformasi dengan Wawasan Teknis"
+                                                className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-semibold"
+                                            />
+                                        </div>
+                                    </div>
+
                                     <div className="space-y-2">
-                                        <label className="text-xs font-semibold text-foreground">Blog Newsletter Card Description</label>
+                                        <label className="text-xs font-semibold text-foreground">Blog Newsletter Card Description [EN]</label>
                                         <textarea
                                             name="blogNewsletterDesc"
                                             value={settings.blogNewsletterDesc || ""}
                                             onChange={handleChange}
                                             rows={2}
-                                            placeholder="Deskripsi manfaat berlangganan tulisan..."
+                                            placeholder="Subscribe to receive notifications when new deep dives..."
+                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-foreground">Blog Newsletter Card Description [ID]</label>
+                                        <textarea
+                                            name="blogNewsletterDesc_id"
+                                            value={settings.blogNewsletterDesc_id || ""}
+                                            onChange={handleChange}
+                                            rows={2}
+                                            placeholder="Berlangganan untuk menerima pemberitahuan saat ulasan mendalam baru diterbitkan..."
                                             className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm resize-none"
                                         />
                                     </div>

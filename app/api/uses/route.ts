@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import UsesItem from '@/models/UsesItem';
@@ -52,6 +53,13 @@ export async function POST(request: Request) {
 
         const body = await request.json();
         const item = await UsesItem.create(body);
+
+        try {
+            revalidatePath('/uses');
+            revalidatePath('/');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
 
         return NextResponse.json({ success: true, data: item }, { status: 201 });
     } catch (error: unknown) {

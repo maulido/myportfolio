@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import Testimonial from '@/models/Testimonial';
@@ -17,7 +18,10 @@ export async function GET(
         }
         return NextResponse.json({ success: true, data: testimonial });
     } catch (error) {
-        return NextResponse.json({ success: false, error: error }, { status: 400 });
+        return NextResponse.json(
+            { success: false, error: error instanceof Error ? error.message : "Failed to fetch testimonial" },
+            { status: 400 }
+        );
     }
 }
 
@@ -37,9 +41,19 @@ export async function PUT(
         if (!testimonial) {
             return NextResponse.json({ success: false, error: "Testimonial not found" }, { status: 404 });
         }
+
+        try {
+            revalidatePath('/');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
+
         return NextResponse.json({ success: true, data: testimonial });
     } catch (error) {
-        return NextResponse.json({ success: false, error: error }, { status: 400 });
+        return NextResponse.json(
+            { success: false, error: error instanceof Error ? error.message : "Failed to update testimonial" },
+            { status: 400 }
+        );
     }
 }
 
@@ -58,8 +72,18 @@ export async function DELETE(
         if (!deletedTestimonial) {
             return NextResponse.json({ success: false, error: "Testimonial not found" }, { status: 404 });
         }
+
+        try {
+            revalidatePath('/');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
+
         return NextResponse.json({ success: true, data: {} });
     } catch (error) {
-        return NextResponse.json({ success: false, error: error }, { status: 400 });
+        return NextResponse.json(
+            { success: false, error: error instanceof Error ? error.message : "Failed to delete testimonial" },
+            { status: 400 }
+        );
     }
 }

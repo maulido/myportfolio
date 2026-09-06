@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import OTP from '@/models/OTP';
+import { getGlobalSettings } from '@/lib/settings';
 
 export async function POST(req: Request) {
     try {
@@ -21,12 +22,14 @@ export async function POST(req: Request) {
         // Delete OTP after successful verification
         await OTP.deleteOne({ _id: record._id });
 
-        // In a real app, you would return a signed URL or a temporary token.
-        // For now, we'll return success and the frontend will handle the download.
+        // Retrieve configured resume URL from settings, falling back to default /cv.pdf
+        const settings = await getGlobalSettings();
+        const downloadUrl = settings.resumeUrl || "/cv.pdf";
+
         return NextResponse.json({
             success: true,
             message: "OTP verified!",
-            downloadUrl: "/cv.pdf" // Path to the CV in public folder
+            downloadUrl
         });
     } catch (error) {
         console.error("OTP Verify Error:", error);

@@ -51,6 +51,9 @@ export async function GET() {
             }
         });
     } catch (error) {
-        return NextResponse.json({ success: false, error: error }, { status: 400 });
+        return NextResponse.json({
+            success: false,
+            error: error instanceof Error ? error.message : "Failed to fetch session stats"
+        }, { status: 400 });
     }
 }

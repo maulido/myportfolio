@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import Post from '@/models/Post';
@@ -27,7 +28,10 @@ export async function GET(req: Request) {
             }
         );
     } catch (error) {
-        return NextResponse.json({ success: false, error: error }, { status: 400 });
+        return NextResponse.json(
+            { success: false, error: error instanceof Error ? error.message : "Failed to fetch posts" },
+            { status: 400 }
+        );
     }
 }
 
@@ -40,8 +44,21 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
         const post = await Post.create(body);
+
+        try {
+            revalidatePath('/blog');
+            revalidatePath('/');
+            const postSlug = Array.isArray(post) ? post[0]?.slug : (post as { slug?: string })?.slug;
+            if (postSlug) revalidatePath(`/blog/${postSlug}`);
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
+
         return NextResponse.json({ success: true, data: post }, { status: 201 });
     } catch (error) {
-        return NextResponse.json({ success: false, error: error }, { status: 400 });
+        return NextResponse.json(
+            { success: false, error: error instanceof Error ? error.message : "Failed to create post" },
+            { status: 400 }
+        );
     }
 }

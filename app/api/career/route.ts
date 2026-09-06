@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import CareerJourney from '@/models/CareerJourney';
@@ -49,6 +50,14 @@ export async function POST(req: Request) {
         }
 
         const career = await CareerJourney.create(body);
+
+        try {
+            revalidatePath('/');
+            revalidatePath('/about');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
+
         return NextResponse.json({ success: true, data: career }, { status: 201 });
     } catch (error: unknown) {
         console.error("API POST Career Error:", error);

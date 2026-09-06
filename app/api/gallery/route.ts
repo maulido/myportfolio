@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import GalleryItem from '@/models/GalleryItem';
@@ -41,6 +42,14 @@ export async function POST(req: Request) {
         }
 
         const item = await GalleryItem.create(body);
+
+        try {
+            revalidatePath('/gallery');
+            revalidatePath('/');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
+
         return NextResponse.json({ success: true, data: item }, { status: 201 });
     } catch (error: unknown) {
         console.error("API POST Gallery Error:", error);

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import GalleryItem from '@/models/GalleryItem';
@@ -40,6 +41,13 @@ export async function DELETE(
 
         // Delete from database
         await GalleryItem.findByIdAndDelete(id);
+
+        try {
+            revalidatePath('/gallery');
+            revalidatePath('/');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
 
         return NextResponse.json({ success: true, data: {} });
     } catch (error: unknown) {
@@ -88,6 +96,14 @@ export async function PUT(
         if (!item) {
             return NextResponse.json({ success: false, error: "Gallery item not found" }, { status: 404 });
         }
+
+        try {
+            revalidatePath('/gallery');
+            revalidatePath('/');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
+
         return NextResponse.json({ success: true, data: item });
     } catch (error: unknown) {
         console.error('Update error:', error);

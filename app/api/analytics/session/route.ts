@@ -57,6 +57,9 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ success: true, data: session });
     } catch (error) {
-        return NextResponse.json({ success: false, error: error }, { status: 400 });
+        return NextResponse.json({
+            success: false,
+            error: error instanceof Error ? error.message : "Failed to record session"
+        }, { status: 400 });
     }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import CareerJourney from '@/models/CareerJourney';
@@ -65,6 +66,13 @@ export async function PUT(
             return NextResponse.json({ success: false, error: "Career entry not found" }, { status: 404 });
         }
 
+        try {
+            revalidatePath('/');
+            revalidatePath('/about');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
+
         return NextResponse.json({ success: true, data: career });
     } catch (error: unknown) {
         console.error("API PUT Career Error:", error);
@@ -99,6 +107,13 @@ export async function DELETE(
 
         if (!career) {
             return NextResponse.json({ success: false, error: "Career entry not found" }, { status: 404 });
+        }
+
+        try {
+            revalidatePath('/');
+            revalidatePath('/about');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
         }
 
         return NextResponse.json({ success: true, data: {} });

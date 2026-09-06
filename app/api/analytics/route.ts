@@ -18,7 +18,10 @@ export async function GET(request: Request) {
         const stats = await Analytics.find(query);
         return NextResponse.json({ success: true, data: stats });
     } catch (error) {
-        return NextResponse.json({ success: false, error: error }, { status: 400 });
+        return NextResponse.json({
+            success: false,
+            error: error instanceof Error ? error.message : "Failed to fetch analytics"
+        }, { status: 400 });
     }
 }
 
@@ -38,6 +41,9 @@ export async function POST(request: Request) {
         );
         return NextResponse.json({ success: true, data: stat });
     } catch (error) {
-        return NextResponse.json({ success: false, error: error }, { status: 400 });
+        return NextResponse.json({
+            success: false,
+            error: error instanceof Error ? error.message : "Failed to record analytics"
+        }, { status: 400 });
     }
 }

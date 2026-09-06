@@ -1,19 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
-import mongoose from 'mongoose';
-
-// Simple analytics event model
-const AnalyticsEventSchema = new mongoose.Schema({
-    event: { type: String, required: true },
-    properties: { type: mongoose.Schema.Types.Mixed },
-    timestamp: { type: Date, default: Date.now },
-    userAgent: String,
-    ip: String,
-}, { timestamps: true });
-
-const AnalyticsEvent = mongoose.models.AnalyticsEvent ||
-    mongoose.model('AnalyticsEvent', AnalyticsEventSchema);
+import AnalyticsEvent from '@/models/AnalyticsEvent';
 
 export async function POST(req: NextRequest) {
     try {

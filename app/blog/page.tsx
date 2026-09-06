@@ -73,11 +73,21 @@ export default function BlogPage() {
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
     const { get } = useSettings();
-    const heroBadge = get("blogHeroBadge", "Technical Publications & Notes");
-    const heroTitle = get("blogHeroTitle", "Engineering Insights & Dispatches");
-    const heroSubtitle = get("blogHeroSubtitle", "Architectural blueprints, network routing analyses, full-stack optimizations, and lessons learned from production.");
-    const newsletterTitle = get("blogNewsletterTitle", "Stay Updated with Technical Analyses");
-    const newsletterDesc = get("blogNewsletterDesc", "Receive occasional in-depth articles on network security, distributed systems, and modern full-stack development. No spam, ever.");
+    const heroBadge = locale === 'id'
+        ? get("blogHeroBadge_id", "Publikasi Teknis & Catatan")
+        : get("blogHeroBadge", "Technical Publications & Notes");
+    const heroTitle = locale === 'id'
+        ? get("blogHeroTitle_id", "Wawasan Rekayasa & Publikasi")
+        : get("blogHeroTitle", "Engineering Insights & Dispatches");
+    const heroSubtitle = locale === 'id'
+        ? get("blogHeroSubtitle_id", "Cetak biru arsitektur, analisis routing jaringan, optimasi full-stack, dan pelajaran dari lingkungan produksi.")
+        : get("blogHeroSubtitle", "Architectural blueprints, network routing analyses, full-stack optimizations, and lessons learned from production.");
+    const newsletterTitle = locale === 'id'
+        ? get("blogNewsletterTitle_id", "Dapatkan Pembaruan Analisis Teknis")
+        : get("blogNewsletterTitle", "Stay Updated with Technical Analyses");
+    const newsletterDesc = locale === 'id'
+        ? get("blogNewsletterDesc_id", "Dapatkan artikel mendalam sesekali tentang keamanan jaringan, sistem terdistribusi, dan pengembangan full-stack modern. Bebas spam.")
+        : get("blogNewsletterDesc", "Receive occasional in-depth articles on network security, distributed systems, and modern full-stack development. No spam, ever.");
 
     // Newsletter state
     const [subscriberEmail, setSubscriberEmail] = useState("");

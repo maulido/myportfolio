@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import OTP from '@/models/OTP';
-import nodemailer from 'nodemailer';
+import { sendEmail } from '@/lib/email';
 import { rateLimit } from '@/lib/rate-limit';
 
 const otpLimiter = rateLimit({
@@ -39,22 +39,10 @@ export async function POST(req: Request) {
             { upsert: true }
         );
 
-        // Send OTP via email
-        const transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: Number(process.env.SMTP_PORT) || 587,
-            secure: process.env.SMTP_SECURE === 'true',
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS,
-            },
-        });
-
-        await transporter.sendMail({
-            from: `"Portfolio Verification" <${process.env.SMTP_USER}>`,
+        // Send OTP via email helper
+        const emailResult = await sendEmail({
             to: email,
             subject: "Your CV Download OTP",
-            text: `Your OTP is: ${otp}. It will expire in 5 minutes.`,
             html: `
                 <div style="font-family: sans-serif; padding: 20px; text-align: center;">
                     <h2>CV Download Verification</h2>
@@ -66,6 +54,10 @@ export async function POST(req: Request) {
                 </div>
             `
         });
+
+        if (!emailResult.success) {
+            console.error("Failed to send OTP email:", emailResult.error);
+        }
 
         return NextResponse.json({ success: true, message: "OTP sent successfully" });
     } catch (error) {

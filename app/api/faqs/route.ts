@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import Faq from '@/models/Faq';
@@ -107,6 +108,13 @@ export async function POST(request: Request) {
             order: typeof body.order === 'number' ? body.order : 0,
             published: body.published !== false
         });
+
+        try {
+            revalidatePath('/');
+            revalidatePath('/contact');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
 
         return NextResponse.json({ success: true, data: faq }, { status: 201 });
     } catch (error: unknown) {

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import Certification from '@/models/Certification';
@@ -18,9 +19,20 @@ export async function DELETE(
         if (!deletedCert) {
             return NextResponse.json({ success: false, error: "Certification not found" }, { status: 404 });
         }
+
+        try {
+            revalidatePath('/certifications');
+            revalidatePath('/');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
+
         return NextResponse.json({ success: true, data: {} });
     } catch (error) {
-        return NextResponse.json({ success: false, error: error }, { status: 400 });
+        return NextResponse.json(
+            { success: false, error: error instanceof Error ? error.message : "Failed to delete certification" },
+            { status: 400 }
+        );
     }
 }
 
@@ -40,9 +52,20 @@ export async function PUT(
         if (!cert) {
             return NextResponse.json({ success: false, error: "Certification not found" }, { status: 404 });
         }
+
+        try {
+            revalidatePath('/certifications');
+            revalidatePath('/');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
+
         return NextResponse.json({ success: true, data: cert });
     } catch (error) {
-        return NextResponse.json({ success: false, error: error }, { status: 400 });
+        return NextResponse.json(
+            { success: false, error: error instanceof Error ? error.message : "Failed to update certification" },
+            { status: 400 }
+        );
     }
 }
 
@@ -60,6 +83,9 @@ export async function GET(
         }
         return NextResponse.json({ success: true, data: cert });
     } catch (error) {
-        return NextResponse.json({ success: false, error: error }, { status: 400 });
+        return NextResponse.json(
+            { success: false, error: error instanceof Error ? error.message : "Failed to fetch certification" },
+            { status: 400 }
+        );
     }
 }

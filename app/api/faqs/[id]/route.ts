@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import Faq from '@/models/Faq';
@@ -67,6 +68,13 @@ export async function PUT(
             );
         }
 
+        try {
+            revalidatePath('/');
+            revalidatePath('/contact');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
+
         return NextResponse.json({ success: true, data: faq });
     } catch (error: unknown) {
         console.error('Error updating FAQ:', error);
@@ -97,11 +105,18 @@ export async function DELETE(
             );
         }
 
+        try {
+            revalidatePath('/');
+            revalidatePath('/contact');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
+
         return NextResponse.json({ success: true, data: faq });
     } catch (error) {
         console.error('Error deleting FAQ:', error);
         return NextResponse.json(
-            { success: false, error: 'Failed to delete FAQ' },
+            { success: false, error: error instanceof Error ? error.message : 'Failed to delete FAQ' },
             { status: 500 }
         );
     }

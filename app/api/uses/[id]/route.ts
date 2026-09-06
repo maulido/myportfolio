@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import UsesItem from '@/models/UsesItem';
@@ -57,6 +58,13 @@ export async function PUT(
             );
         }
 
+        try {
+            revalidatePath('/uses');
+            revalidatePath('/');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
+
         return NextResponse.json({ success: true, data: item });
     } catch (error: unknown) {
         console.error('Error updating uses item:', error);
@@ -88,11 +96,18 @@ export async function DELETE(
             );
         }
 
+        try {
+            revalidatePath('/uses');
+            revalidatePath('/');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
+
         return NextResponse.json({ success: true, data: item });
     } catch (error) {
         console.error('Error deleting uses item:', error);
         return NextResponse.json(
-            { success: false, error: 'Failed to delete uses item' },
+            { success: false, error: error instanceof Error ? error.message : 'Failed to delete uses item' },
             { status: 500 }
         );
     }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import Settings from '@/models/Settings';
@@ -110,6 +111,13 @@ export async function PUT(req: Request) {
 
         console.log('✅ Settings updated:', settings ? 'Success' : 'Failed');
         console.log('📄 Updated data:', settings?.aboutMe);
+
+        try {
+            revalidatePath('/about');
+            revalidatePath('/');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
 
         return NextResponse.json({ success: true, data: settings.aboutMe });
     } catch (error: unknown) {

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import Skill from '@/models/Skill';
@@ -59,6 +60,14 @@ export async function POST(req: Request) {
         }
 
         const skill = await Skill.create(body);
+
+        try {
+            revalidatePath('/');
+            revalidatePath('/about');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
+
         return NextResponse.json({ success: true, data: skill }, { status: 201 });
     } catch (error: unknown) {
         console.error("API POST Skills Error:", error);

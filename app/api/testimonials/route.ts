@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import Testimonial from '@/models/Testimonial';
@@ -17,7 +18,10 @@ export async function GET() {
             }
         );
     } catch (error) {
-        return NextResponse.json({ success: false, error: error }, { status: 400 });
+        return NextResponse.json(
+            { success: false, error: error instanceof Error ? error.message : "Failed to fetch testimonials" },
+            { status: 400 }
+        );
     }
 }
 
@@ -30,8 +34,18 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
         const testimonial = await Testimonial.create(body);
-        return NextResponse.json({ success: true, data: testimonial });
+
+        try {
+            revalidatePath('/');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
+        }
+
+        return NextResponse.json({ success: true, data: testimonial }, { status: 201 });
     } catch (error) {
-        return NextResponse.json({ success: false, error: error }, { status: 400 });
+        return NextResponse.json(
+            { success: false, error: error instanceof Error ? error.message : "Failed to create testimonial" },
+            { status: 400 }
+        );
     }
 }

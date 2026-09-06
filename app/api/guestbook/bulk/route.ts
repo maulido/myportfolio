@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireAuth } from '@/lib/auth-helpers';
 import dbConnect from '@/lib/db';
 import GuestbookEntry from '@/models/GuestbookEntry';
@@ -48,6 +49,13 @@ export async function POST(request: NextRequest) {
                     { success: false, error: 'Invalid action' },
                     { status: 400 }
                 );
+        }
+
+        try {
+            revalidatePath('/guestbook');
+            revalidatePath('/');
+        } catch (revErr) {
+            console.warn("revalidatePath error:", revErr);
         }
 
         return NextResponse.json({

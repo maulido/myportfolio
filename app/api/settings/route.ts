@@ -17,7 +17,10 @@ export async function GET(req: Request) {
         const settings = await Settings.find({});
         return NextResponse.json({ success: true, data: settings });
     } catch (error) {
-        return NextResponse.json({ success: false, error: error }, { status: 400 });
+        return NextResponse.json({
+            success: false,
+            error: error instanceof Error ? error.message : "Failed to fetch settings"
+        }, { status: 400 });
     }
 }
 
