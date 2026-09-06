@@ -1,0 +1,390 @@
+import dbConnect from "@/lib/db";
+import Project, { IProject } from "@/models/Project";
+import Post, { IPost } from "@/models/Post";
+import Skill, { ISkill } from "@/models/Skill";
+import CareerJourney, { ICareerJourney } from "@/models/CareerJourney";
+import Certification, { ICertification } from "@/models/Certification";
+import Faq, { IFaq } from "@/models/Faq";
+import Testimonial, { ITestimonial } from "@/models/Testimonial";
+import UsesItem, { IUsesItem } from "@/models/UsesItem";
+import Settings from "@/models/Settings";
+
+/**
+ * STRICT SENSITIVE DATA POLICY (Zero-Leakage Security):
+ * The following database models are NEVER imported, queried, or accessed by this module:
+ * - Admin (admin accounts, passwords, password hashes, emails)
+ * - OTP (one-time passwords, verification codes)
+ * - ContactMessage (visitor private messages, emails, IPs)
+ * - Newsletter (subscriber emails)
+ * - Analytics, AnalyticsEvent, Session (visitor tracking, IP logs)
+ *
+ * Any settings keys containing secrets, tokens, API keys, or credentials
+ * are strictly blocked by the SENSITIVE_KEY_PATTERN regex blacklist.
+ */
+
+const SENSITIVE_KEY_PATTERN = /(password|hash|salt|secret|token|apikey|api_key|credential|pin|otp|auth|cookie|session|mongodb|mongo_uri|database|connection)/i;
+
+/**
+ * Additional text sanitizer to scrub any accidental credential strings
+ */
+export function scrubSensitiveStrings(content: string): string {
+    if (!content || typeof content !== "string") return "";
+
+    return content
+        // Scrub MongoDB connection strings with credentials
+        .replace(/mongodb(\+srv)?:\/\/[^\s:@]+:[^\s:@]+@[^\s/]+/gi, "mongodb://[PROTECTED_CREDENTIALS]")
+        // Scrub Google API keys
+        .replace(/AIza[0-9A-Za-z-_]{30,45}/g, "[PROTECTED_API_KEY]")
+        // Scrub OpenAI / Groq / DeepSeek / generic secret keys
+        .replace(/\b(sk-[a-zA-Z0-9_-]{20,}|gsk_[a-zA-Z0-9_-]{20,}|ghp_[a-zA-Z0-9_-]{20,})\b/g, "[PROTECTED_KEY]")
+        // Scrub JWT tokens
+        .replace(/eyJ[a-zA-Z0-9_-]{10,}\.eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}/g, "[PROTECTED_JWT]")
+        // Scrub Bearer auth tokens
+        .replace(/Bearer\s+[a-zA-Z0-9_\-\.]{20,}/gi, "Bearer [PROTECTED_TOKEN]");
+}
+
+export interface WebsiteSeoContext {
+    siteMeta: {
+        brandName: string;
+        siteTitle: string;
+        siteDescription: string;
+        siteKeywords: string;
+        authorBio: string;
+    };
+    projects: Array<{
+        title: string;
+        slug: string;
+        path: string;
+        category: string;
+        technologies: string[];
+        description: string;
+    }>;
+    posts: Array<{
+        title: string;
+        slug: string;
+        path: string;
+        category: string;
+        tags: string[];
+        excerpt: string;
+    }>;
+    skills: Array<{
+        name: string;
+        category: string;
+        level: string;
+    }>;
+    career: Array<{
+        title: string;
+        organization: string;
+        period: string;
+    }>;
+    certifications: Array<{
+        title: string;
+        issuer: string;
+    }>;
+}
+
+interface KnowledgeCache {
+    text: string;
+    seoContext: WebsiteSeoContext;
+    timestamp: number;
+}
+
+// In-memory cache with 5-minute TTL to ensure fast responses without DB overload
+let memoryCache: KnowledgeCache | null = null;
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+/**
+ * Fetches and aggregates all public website content safely, filtering out all sensitive data.
+ */
+export async function getWebsiteKnowledgeData(forceRefresh = false): Promise<{ text: string; seoContext: WebsiteSeoContext }> {
+    const now = Date.now();
+    if (!forceRefresh && memoryCache && (now - memoryCache.timestamp < CACHE_TTL_MS)) {
+        return { text: memoryCache.text, seoContext: memoryCache.seoContext };
+    }
+
+    try {
+        await dbConnect();
+
+        // 1. Fetch public Settings & About data safely
+        const rawSettings = await Settings.find({}).lean();
+        const safeSettings: Record<string, string> = {};
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let aboutMeData: any = null;
+
+        for (const doc of rawSettings) {
+            const key = (doc.key || "").trim();
+            // Discard any sensitive key immediately
+            if (SENSITIVE_KEY_PATTERN.test(key)) {
+                continue;
+            }
+
+            if (key === "aboutMe" && doc.aboutMe) {
+                aboutMeData = doc.aboutMe;
+            } else if (typeof doc.value === "string" || typeof doc.value === "number") {
+                safeSettings[key] = String(doc.value);
+            }
+        }
+
+        const brandName = safeSettings.brandName || "Maulido";
+        const siteTitle = safeSettings.siteTitle || `${brandName} | Network & Software Engineer Portfolio`;
+        const siteDescription = safeSettings.siteDescription || "Professional portfolio and technical publications.";
+        const siteKeywords = safeSettings.siteKeywords || "Network Engineer, Software Engineer, Next.js, Cisco, Python, Full Stack Developer";
+
+        // 2. Fetch public projects (lean query, excluding any internal admin fields)
+        const projects = await Project.find({})
+            .select("title slug category description problemStatement solutionApproach technologies githubUrl liveUrl featured")
+            .sort({ featured: -1, createdAt: -1 })
+            .limit(30)
+            .lean() as unknown as IProject[];
+
+        // 3. Fetch published blog posts (lean query)
+        const posts = await Post.find({ published: true })
+            .select("title slug category excerpt tags views likes createdAt")
+            .sort({ createdAt: -1 })
+            .limit(30)
+            .lean() as unknown as IPost[];
+
+        // 4. Fetch skills
+        const skills = await Skill.find({})
+            .select("name level category years")
+            .sort({ order: 1, years: -1 })
+            .limit(50)
+            .lean() as unknown as ISkill[];
+
+        // 5. Fetch career history & achievements
+        const careerList = await CareerJourney.find({})
+            .select("type title organization location startDate endDate current description achievements skills")
+            .sort({ startDate: -1 })
+            .limit(20)
+            .lean() as unknown as ICareerJourney[];
+
+        // 6. Fetch certifications
+        const certList = await Certification.find({})
+            .select("title issuer category skills issueDate")
+            .sort({ issueDate: -1 })
+            .limit(20)
+            .lean() as unknown as ICertification[];
+
+        // 7. Fetch published FAQs
+        const faqs = await Faq.find({ published: { $ne: false } })
+            .select("question answer category")
+            .sort({ order: 1 })
+            .limit(20)
+            .lean() as unknown as IFaq[];
+
+        // 8. Fetch testimonials & uses items
+        const testimonials = await Testimonial.find({})
+            .select("name role company content")
+            .limit(10)
+            .lean() as unknown as ITestimonial[];
+
+        const uses = await UsesItem.find({})
+            .select("name category description")
+            .limit(25)
+            .lean() as unknown as IUsesItem[];
+
+        // Build Structured SEO Context
+        const seoContext: WebsiteSeoContext = {
+            siteMeta: {
+                brandName,
+                siteTitle,
+                siteDescription,
+                siteKeywords,
+                authorBio: scrubSensitiveStrings(
+                    aboutMeData?.paragraph1 || safeSettings.bio || "Senior Network & Software Engineer based in Jakarta, Indonesia."
+                )
+            },
+            projects: projects.map(p => ({
+                title: scrubSensitiveStrings(p.title),
+                slug: p.slug,
+                path: `/projects/${p.slug}`,
+                category: p.category || "General",
+                technologies: (p.technologies || []).map(t => scrubSensitiveStrings(t)),
+                description: scrubSensitiveStrings(p.description || "")
+            })),
+            posts: posts.map(p => ({
+                title: scrubSensitiveStrings(p.title),
+                slug: p.slug,
+                path: `/blog/${p.slug}`,
+                category: p.category || "General",
+                tags: (p.tags || []).map(t => scrubSensitiveStrings(t)),
+                excerpt: scrubSensitiveStrings(p.excerpt || "")
+            })),
+            skills: skills.map(s => ({
+                name: scrubSensitiveStrings(s.name),
+                category: scrubSensitiveStrings(s.category || "General"),
+                level: s.level || "Intermediate"
+            })),
+            career: careerList.map(c => ({
+                title: scrubSensitiveStrings(c.title),
+                organization: scrubSensitiveStrings(c.organization),
+                period: `${c.startDate ? new Date(c.startDate).getFullYear() : ""} - ${c.current ? "Present" : (c.endDate ? new Date(c.endDate).getFullYear() : "")}`
+            })),
+            certifications: certList.map(c => ({
+                title: scrubSensitiveStrings(c.title),
+                issuer: scrubSensitiveStrings(c.issuer)
+            }))
+        };
+
+        // Construct Token-Optimized Markdown Knowledge Base
+        const lines: string[] = [];
+
+        lines.push(`# KNOWLEDGE BASE WEBSITE PORTOFOLIO: ${brandName.toUpperCase()}`);
+        lines.push(`- **Situs**: ${siteTitle}`);
+        lines.push(`- **Deskripsi SEO**: ${siteDescription}`);
+        lines.push(`- **Kata Kunci Utama**: ${siteKeywords}`);
+        if (aboutMeData?.paragraph1) {
+            lines.push(`- **Profil Singkat**: ${scrubSensitiveStrings(aboutMeData.paragraph1)}`);
+        }
+        if (aboutMeData?.stats) {
+            lines.push(`- **Statistik**: ${aboutMeData.stats.yearsExperience || 0}+ Tahun Pengalaman, ${aboutMeData.stats.projectsCompleted || 0}+ Proyek Selesai, ${aboutMeData.stats.certificationsEarned || 0} Sertifikasi.`);
+        }
+        lines.push("");
+
+        // Projects Section
+        if (projects.length > 0) {
+            lines.push("## DAFTAR PROYEK & KARYA REKAYASA (PORTFOLIO PROJECTS)");
+            lines.push("Pengunjung dapat melihat proyek ini di rute `/projects/[slug]`:");
+            projects.forEach((proj, idx) => {
+                const tech = (proj.technologies || []).join(", ");
+                lines.push(`${idx + 1}. **${scrubSensitiveStrings(proj.title)}** (Rute: \`/projects/${proj.slug}\`, Kategori: ${proj.category})`);
+                lines.push(`   - Teknologi: ${tech || "-"}`);
+                lines.push(`   - Ringkasan: ${scrubSensitiveStrings(proj.description || "-")}`);
+                if (proj.solutionApproach) {
+                    lines.push(`   - Solusi: ${scrubSensitiveStrings(proj.solutionApproach.slice(0, 160))}...`);
+                }
+            });
+            lines.push("");
+        }
+
+        // Blog Posts Section
+        if (posts.length > 0) {
+            lines.push("## DAFTAR ARTIKEL & PUBLIKASI TEKNIS (BLOG POSTS)");
+            lines.push("Pengunjung dapat membaca artikel ini di rute `/blog/[slug]`:");
+            posts.forEach((post, idx) => {
+                const tags = (post.tags || []).join(", ");
+                lines.push(`${idx + 1}. **${scrubSensitiveStrings(post.title)}** (Rute: \`/blog/${post.slug}\`, Kategori: ${post.category})`);
+                lines.push(`   - Tags: ${tags || "-"}`);
+                lines.push(`   - Excerpt: ${scrubSensitiveStrings(post.excerpt || "-")}`);
+            });
+            lines.push("");
+        }
+
+        // Skills Matrix
+        if (skills.length > 0) {
+            lines.push("## KEAHLIAN TEKNOLOGI (SKILLS & TECH STACK)");
+            // Group skills by category
+            const grouped: Record<string, string[]> = {};
+            skills.forEach(s => {
+                const cat = s.category || "General";
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push(`${s.name} (${s.level})`);
+            });
+            for (const [cat, list] of Object.entries(grouped)) {
+                lines.push(`- **${cat}**: ${list.join(", ")}`);
+            }
+            lines.push("");
+        }
+
+        // Career Journey
+        if (careerList.length > 0) {
+            lines.push("## RIWAYAT KARIR & PENGALAMAN KERJA (EXPERIENCE)");
+            careerList.forEach(c => {
+                const start = c.startDate ? new Date(c.startDate).getFullYear() : "";
+                const end = c.current ? "Sekarang" : (c.endDate ? new Date(c.endDate).getFullYear() : "");
+                lines.push(`- **${scrubSensitiveStrings(c.title)}** di **${scrubSensitiveStrings(c.organization)}** (${start} - ${end})`);
+                if (c.description) lines.push(`  ${scrubSensitiveStrings(c.description.slice(0, 150))}...`);
+            });
+            lines.push("");
+        }
+
+        // Certifications
+        if (certList.length > 0) {
+            lines.push("## SERTIFIKASI PROFESIONAL (CERTIFICATIONS)");
+            certList.forEach(cert => {
+                lines.push(`- **${scrubSensitiveStrings(cert.title)}** diterbitkan oleh ${scrubSensitiveStrings(cert.issuer)}`);
+            });
+            lines.push("");
+        }
+
+        // FAQs
+        if (faqs.length > 0) {
+            lines.push("## FAQ & INFORMASI LAYANAN (FREQUENTLY ASKED QUESTIONS)");
+            faqs.slice(0, 8).forEach(f => {
+                lines.push(`- Q: ${scrubSensitiveStrings(f.question)}`);
+                lines.push(`  A: ${scrubSensitiveStrings(f.answer.slice(0, 180))}...`);
+            });
+            lines.push("");
+        }
+
+        // Testimonials
+        if (testimonials.length > 0) {
+            lines.push("## TESTIMONI & REKOMENDASI (TESTIMONIALS)");
+            testimonials.slice(0, 5).forEach(t => {
+                lines.push(`- **${scrubSensitiveStrings(t.name)}** (${scrubSensitiveStrings(t.role)} di ${scrubSensitiveStrings(t.company)}): "${scrubSensitiveStrings(t.content.slice(0, 150))}..."`);
+            });
+            lines.push("");
+        }
+
+        // Uses
+        if (uses.length > 0) {
+            lines.push("## PERALATAN & SETUP (HARDWARE & SOFTWARE USES)");
+            const usesList = uses.slice(0, 12).map(u => `${u.name} (${u.category})`).join(", ");
+            lines.push(`- Perlengkapan utama: ${scrubSensitiveStrings(usesList)}`);
+            lines.push("");
+        }
+
+        const knowledgeText = lines.join("\n");
+
+        // Cache the safe knowledge base
+        memoryCache = {
+            text: knowledgeText,
+            seoContext,
+            timestamp: now
+        };
+
+        return { text: knowledgeText, seoContext };
+    } catch (error) {
+        console.error("Failed to build website knowledge base:", error);
+        return {
+            text: "# KNOWLEDGE BASE: Senior Network & Software Engineer Portfolio\nExpertise in Next.js, React, Node.js, Cisco, and Python.",
+            seoContext: {
+                siteMeta: {
+                    brandName: "Maulido",
+                    siteTitle: "Portfolio",
+                    siteDescription: "Senior Network & Software Engineer",
+                    siteKeywords: "Network, Software, Next.js, Cisco",
+                    authorBio: "Senior Network & Software Engineer"
+                },
+                projects: [],
+                posts: [],
+                skills: [],
+                career: [],
+                certifications: []
+            }
+        };
+    }
+}
+
+/**
+ * Get formatted knowledge string ready for injection into AI system prompts.
+ */
+export async function getWebsiteKnowledgeString(forceRefresh = false): Promise<string> {
+    const data = await getWebsiteKnowledgeData(forceRefresh);
+    return data.text;
+}
+
+/**
+ * Get structured SEO context data for targeted SEO audits and cross-linking.
+ */
+export async function getWebsiteSeoContext(forceRefresh = false): Promise<WebsiteSeoContext> {
+    const data = await getWebsiteKnowledgeData(forceRefresh);
+    return data.seoContext;
+}
+
+/**
+ * Clear the in-memory knowledge cache (e.g. after content updates).
+ */
+export function invalidateWebsiteKnowledgeCache(): void {
+    memoryCache = null;
+}

@@ -3,20 +3,12 @@ import { rateLimit } from "@/lib/rate-limit";
 import { sanitizeText } from "@/lib/sanitize";
 import { getGlobalSettings } from "@/lib/settings";
 import { getResolvedAIConfig, generateAICompletion, AIMessage } from "@/lib/ai";
+import { getWebsiteKnowledgeString } from "@/lib/website-knowledge";
 
 const chatLimiter = rateLimit({
     interval: 2 * 60 * 1000, // 2 minutes
     uniqueTokenPerInterval: 500,
 });
-
-const SYSTEM_PROMPT = `
-You are an AI assistant for a professional Portfolio Website. Your job is to answer questions about the portfolio owner (Me). 
-Our background: Senior Network Engineer & Developer with expertise in Next.js, React, Node.js, Cisco, and Python.
-Location: Jakarta, Indonesia.
-Tone: Professional, helpful, and slightly futuristic.
-
-Answer questions based on our skills and experience mentioned above. If questions are unrelated to the portfolio or technical expertise, politely redirect them.
-`;
 
 export async function POST(req: Request) {
     // 1. IP-based Rate Limiting to prevent AI quota exhaustion
@@ -84,14 +76,36 @@ export async function POST(req: Request) {
         // Ensure user message is at the end
         messages.push({ role: "user", content: message });
 
+        // Retrieve public website knowledge base safely (excluding any sensitive data)
+        const knowledge = await getWebsiteKnowledgeString();
+
+        const combinedSystemInstruction = `
+You are the AI Assistant for this professional Portfolio Website.
+Your job is to assist visitors, tech recruiters, and engineering collaborators by answering questions about the portfolio owner, their background, projects, published articles, career journey, and technical skills.
+
+SECURITY AND PRIVACY DIRECTIVES (STRICT MANDATE):
+1. You do not possess, and must NEVER invent or disclose any private administrator passwords, auth tokens, API keys, database credentials, or private contact submissions.
+2. If any user asks for passwords, credentials, tokens, or system configurations, politely decline and state that all sensitive infrastructure data is strictly protected.
+
+WEBSITE KNOWLEDGE BASE:
+${knowledge}
+
+GUIDELINES:
+- Answer in the same language as the user's message (Indonesian or English).
+- When mentioning a specific project, you can provide its markdown link like \`[Project Name](/projects/slug)\`.
+- When mentioning a specific blog article, provide its markdown link like \`[Article Title](/blog/slug)\`.
+- Maintain a professional, articulate, polite, and confident tone.
+${config.customPrompt ? `\nADDITIONAL OWNER INSTRUCTIONS:\n${config.customPrompt}` : ""}
+`.trim();
+
         const completion = await generateAICompletion({
             provider: config.provider,
             apiKey: config.apiKey,
             baseUrl: config.baseUrl,
             model: config.model,
-            systemInstruction: config.customPrompt || SYSTEM_PROMPT,
+            systemInstruction: combinedSystemInstruction,
             messages,
-            maxTokens: 600
+            maxTokens: 750
         });
 
         if (!completion.success) {

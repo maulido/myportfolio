@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-helpers";
 import { getGlobalSettings } from "@/lib/settings";
 import { getResolvedAIConfig, generateAICompletion } from "@/lib/ai";
+import { getWebsiteKnowledgeString, getWebsiteSeoContext } from "@/lib/website-knowledge";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +78,78 @@ Teks:
 ${text}
 
 Hanya berikan teks hasil perbaikan tanpa catatan atau pembuka.`;
+        } else if (action === "seo_audit") {
+            const knowledge = await getWebsiteKnowledgeString();
+            const langName = targetLang === "id" ? "Bahasa Indonesia" : "English";
+            prompt = `Anda adalah Ahli Strategi SEO & Technical Content Director untuk website portofolio profesional.
+Analisis data website berikut dan berikan Audit SEO & Rekomendasi Konten yang mendalam.
+
+KNOWLEDGE BASE WEBSITE (Semua data publik portofolio):
+${knowledge}
+
+${title || text ? `KONTEN / HALAMAN YANG SEDANG DITINJAU:
+Judul: "${title || ""}"
+Isi / Cuplikan:
+${(text || "").slice(0, 2000)}
+` : `FOKUS: Audit Arsitektur SEO & Strategi Konten Keseluruhan Website.`}
+
+Instruksi Output (${langName}):
+Berikan laporan terstruktur dalam format Markdown yang rapi dan profesional dengan poin-poin berikut:
+1. 📊 **Evaluasi Kesehatan SEO & Konten**: Skor perkiraan (1-100) dan ringkasan kondisi SEO saat ini.
+2. 🔗 **Peluang Internal Linking (Cross-Linking)**: Rekomendasikan secara spesifik artikel mana yang harus menautkan ke proyek mana (sebutkan rute persis seperti \`/projects/slug\` atau \`/blog/slug\` yang ada di data).
+3. 🎯 **Kata Kunci & Search Intent Potensial**: Kata kunci rekayasa perangkat lunak dan jaringan yang berpeluang menduduki peringkat tinggi di Google Search.
+4. 💡 **Celah Konten (Content Gaps)**: Topik apa yang penting dari keahlian pemilik yang belum dibuatkan artikel atau studi kasus proyek.
+5. 🚀 **Rencana Aksi Prioritas**: 3-5 langkah konkret yang dapat langsung dieksekusi oleh pemilik portofolio hari ini.`;
+        } else if (action === "seo_optimize") {
+            const seoContext = await getWebsiteSeoContext();
+            const existingProjects = seoContext.projects.map(p => `• [${p.title}](${p.path}) - Tech: ${p.technologies.slice(0, 3).join(", ")}`).slice(0, 10).join("\n");
+            const existingPosts = seoContext.posts.map(p => `• [${p.title}](${p.path}) - Tags: ${p.tags.slice(0, 3).join(", ")}`).slice(0, 10).join("\n");
+            const langName = targetLang === "id" ? "Bahasa Indonesia" : "English";
+
+            prompt = `Anda adalah Konsultan SEO On-Page spesialis situs rekayasa teknologi dan portofolio.
+Tugas Anda adalah mengoptimalkan judul, meta tag, struktur heading, dan strategi tautan internal untuk konten berikut agar memiliki CTR tinggi di SERP Google.
+
+DATA EXISTING WEBSITE UNTUK INTERNAL LINKING:
+Proyek:
+${existingProjects || "(Belum ada data proyek)"}
+
+Artikel Blog:
+${existingPosts || "(Belum ada data artikel)"}
+
+KONTEN YANG DIOPTIMALKAN:
+Judul: "${title || "Tanpa Judul"}"
+Draft / Teks Konten:
+${(text || "").slice(0, 3000)}
+
+Berikan rekomendasi dalam format Markdown (${langName}):
+### 1. 🏷️ Rekomendasi Title Tag (50-60 Karakter)
+Berikan 3 opsi variasi judul yang kaya kata kunci dan menarik klik (sertakan jumlah karakter di sampingnya).
+
+### 2. 📝 Meta Description Optimal (150-160 Karakter)
+Berikan 2 opsi deskripsi ringkas dengan call-to-action yang kuat (sertakan jumlah karakter).
+
+### 3. 📑 Struktur Heading (H1, H2, H3)
+Susunan outline heading yang ideal untuk keterbacaan (readability) dan SEO Google.
+
+### 4. 🎯 Target Keywords
+- **Primary Keyword**: (1 kata kunci utama)
+- **Secondary / LSI Keywords**: (4-6 kata kunci turunan)
+
+### 5. 🔗 Rekomendasi Internal Links (Tautan Antar Konten)
+Sebutkan bagian mana dalam teks ini yang sebaiknya menautkan ke proyek atau artikel yang sudah ada di atas beserta teks jangkar (anchor text) yang disarankan.`;
+        } else if (action === "content_ideas") {
+            const knowledge = await getWebsiteKnowledgeString();
+            const langName = targetLang === "id" ? "Bahasa Indonesia" : "English";
+
+            prompt = `Anda adalah Technical Content Strategist.
+Berdasarkan seluruh keahlian, riwayat karir, sertifikasi, serta daftar proyek & artikel yang saat ini sudah ada di website portofolio berikut:
+
+${knowledge}
+
+Buatlah rekomendasi ide konten baru yang berkualitas tinggi dan memiliki nilai SEO tinggi dalam ${langName}:
+1. ✍️ **5 Ide Artikel Blog Teknis Baru**: Lengkap dengan Judul Usulan, Target Kata Kunci, Masalah Teknis yang Dibahas, dan Alasan Mengapa ini Menguntungkan SEO Portofolio.
+2. 💻 **3 Ide Showcase Proyek Baru**: Fitur atau arsitektur sistem yang sebaiknya ditambahkan ke portofolio untuk melengkapi keahlian yang belum terwakili secara visual.
+3. 🎯 **Target Audiens & Intent**: Bagaimana konten ini dapat menarik perhatian Tech Recruiter, Engineering Managers, dan Klien.`;
         } else {
             return NextResponse.json(
                 { success: false, error: `Action '${action}' not supported` },
@@ -89,7 +162,8 @@ Hanya berikan teks hasil perbaikan tanpa catatan atau pembuka.`;
             apiKey: config.apiKey,
             baseUrl: config.baseUrl,
             model: config.model,
-            prompt
+            prompt,
+            maxTokens: 1500
         });
 
         if (!completion.success) {

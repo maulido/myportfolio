@@ -12,19 +12,22 @@ import {
     Wand2, 
     Loader2, 
     Bot,
-    KeyRound
+    KeyRound,
+    Globe,
+    ShieldCheck
 } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { useSettings } from "@/lib/useSettings";
 import { AI_PROVIDERS } from "@/lib/ai";
 
-type AiTab = "translate" | "excerpt" | "tags" | "improve";
+type AiTab = "translate" | "excerpt" | "tags" | "improve" | "seo";
 
 export default function AiAssistantModal() {
     const { settings } = useSettings();
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<AiTab>("translate");
+    const [seoMode, setSeoMode] = useState<"audit" | "optimize" | "ideas">("audit");
     const [inputText, setInputText] = useState("");
     const [inputTitle, setInputTitle] = useState("");
     const [targetLang, setTargetLang] = useState<"id" | "en">("id");
@@ -54,7 +57,7 @@ export default function AiAssistantModal() {
     }, []);
 
     const handleRunAi = async () => {
-        if (!inputText.trim() && activeTab !== "excerpt") {
+        if (!inputText.trim() && activeTab !== "excerpt" && !(activeTab === "seo" && (seoMode === "audit" || seoMode === "ideas"))) {
             toast.error("Silakan masukkan teks input terlebih dahulu");
             return;
         }
@@ -67,6 +70,11 @@ export default function AiAssistantModal() {
         if (activeTab === "excerpt") action = "generate_excerpt";
         else if (activeTab === "tags") action = "generate_tags";
         else if (activeTab === "improve") action = "improve_writing";
+        else if (activeTab === "seo") {
+            if (seoMode === "audit") action = "seo_audit";
+            else if (seoMode === "optimize") action = "seo_optimize";
+            else if (seoMode === "ideas") action = "content_ideas";
+        }
 
         try {
             const res = await fetch("/api/admin/ai", {
@@ -203,12 +211,25 @@ export default function AiAssistantModal() {
                             <Wand2 className="h-3.5 w-3.5 text-purple-500" />
                             <span>Polish Tone</span>
                         </button>
+
+                        <button
+                            type="button"
+                            onClick={() => { setActiveTab("seo"); setOutputResult(""); }}
+                            className={`flex-1 min-w-[110px] py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                                activeTab === "seo"
+                                    ? "bg-background text-foreground shadow-xs font-bold"
+                                    : "text-muted-foreground hover:text-foreground"
+                            }`}
+                        >
+                            <Globe className="h-3.5 w-3.5 text-blue-500" />
+                            <span>SEO &amp; Audit</span>
+                        </button>
                     </div>
 
                     {/* Inputs */}
                     <div className="space-y-4">
                         {/* Target Language Selector */}
-                        {(activeTab === "translate" || activeTab === "excerpt" || activeTab === "improve") && (
+                        {(activeTab === "translate" || activeTab === "excerpt" || activeTab === "improve" || activeTab === "seo") && (
                             <div className="flex items-center justify-between p-3 rounded-xl bg-background/60 border border-border/70 text-xs">
                                 <span className="font-semibold text-muted-foreground">Target Bahasa Output:</span>
                                 <div className="flex items-center gap-2">
@@ -238,14 +259,70 @@ export default function AiAssistantModal() {
                             </div>
                         )}
 
-                        {activeTab === "excerpt" && (
+                        {/* SEO Mode Selector & Safety Shield Banner */}
+                        {activeTab === "seo" && (
+                            <div className="space-y-3">
+                                <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs">
+                                    <ShieldCheck className="h-4 w-4 shrink-0 text-emerald-500 mt-0.5" />
+                                    <div>
+                                        <div className="font-bold flex items-center gap-1.5">
+                                            <span>Safe Website Knowledge Engine</span>
+                                            <span className="text-[10px] px-1.5 py-0.5 bg-emerald-500/20 rounded font-mono font-medium">Sensitive Data Filtered</span>
+                                        </div>
+                                        <p className="text-[11px] text-emerald-700 dark:text-emerald-300/90 mt-0.5 leading-relaxed">
+                                            AI membaca seluruh proyek, artikel, keahlian, dan metrik publik situs Anda untuk rekomendasi SEO &amp; internal cross-linking. Password, auth token, dan API key otomatis dikecualikan 100%.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-1.5 p-1 rounded-xl bg-muted/60 border border-border/80">
+                                    <button
+                                        type="button"
+                                        onClick={() => { setSeoMode("audit"); setOutputResult(""); }}
+                                        className={`flex-1 py-1.5 px-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                                            seoMode === "audit"
+                                                ? "bg-background text-foreground shadow-xs font-bold"
+                                                : "text-muted-foreground hover:text-foreground"
+                                        }`}
+                                    >
+                                        📊 Audit Seluruh Situs
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setSeoMode("optimize"); setOutputResult(""); }}
+                                        className={`flex-1 py-1.5 px-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                                            seoMode === "optimize"
+                                                ? "bg-background text-foreground shadow-xs font-bold"
+                                                : "text-muted-foreground hover:text-foreground"
+                                        }`}
+                                    >
+                                        🎯 Optimasi Konten Ini
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setSeoMode("ideas"); setOutputResult(""); }}
+                                        className={`flex-1 py-1.5 px-2.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                                            seoMode === "ideas"
+                                                ? "bg-background text-foreground shadow-xs font-bold"
+                                                : "text-muted-foreground hover:text-foreground"
+                                        }`}
+                                    >
+                                        💡 Ide Topik &amp; Projek
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {(activeTab === "excerpt" || (activeTab === "seo" && (seoMode === "optimize" || seoMode === "audit"))) && (
                             <div className="space-y-1.5">
-                                <label className="text-xs font-semibold text-foreground">Judul Artikel / Projek (Opsional)</label>
+                                <label className="text-xs font-semibold text-foreground">
+                                    {activeTab === "seo" ? "Judul Halaman / Artikel (Opsional)" : "Judul Artikel / Projek (Opsional)"}
+                                </label>
                                 <input
                                     type="text"
                                     value={inputTitle}
                                     onChange={(e) => setInputTitle(e.target.value)}
-                                    placeholder="Contoh: Merancang Arsitektur BGP Multihoming..."
+                                    placeholder="Contoh: Merancang Arsitektur BGP Multihoming atau /projects/network-automation"
                                     className="w-full px-3.5 py-2 rounded-xl bg-background border border-border/80 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary"
                                 />
                             </div>
@@ -257,12 +334,21 @@ export default function AiAssistantModal() {
                                 {activeTab === "excerpt" && "Draf Konten Lengkap / Paragraf Utama:"}
                                 {activeTab === "tags" && "Teks Konten untuk Dianalisis:"}
                                 {activeTab === "improve" && "Draf Teks yang Ingin Dipoles:"}
+                                {activeTab === "seo" && seoMode === "audit" && "Fokus Halaman / Catatan Khusus (Biarkan kosong untuk audit seluruh website):"}
+                                {activeTab === "seo" && seoMode === "optimize" && "Draf Konten / Teks yang Ingin Dioptimalkan:"}
+                                {activeTab === "seo" && seoMode === "ideas" && "Preferensi Topik / Minat Khusus (Opsional):"}
                             </label>
                             <textarea
-                                rows={4}
+                                rows={activeTab === "seo" && (seoMode === "audit" || seoMode === "ideas") ? 3 : 4}
                                 value={inputText}
                                 onChange={(e) => setInputText(e.target.value)}
-                                placeholder="Ketik atau tempelkan teks di sini..."
+                                placeholder={
+                                    activeTab === "seo" && seoMode === "audit"
+                                        ? "Kosongkan untuk mengaudit seluruh website, atau ketik topik/halaman tertentu yang ingin dianalisis..."
+                                        : activeTab === "seo" && seoMode === "ideas"
+                                        ? "Kosongkan untuk ide umum berdasarkan skill & projek Anda, atau ketik teknologi tertentu..."
+                                        : "Ketik atau tempelkan teks di sini..."
+                                }
                                 className="w-full p-3.5 rounded-xl bg-background border border-border/80 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-primary resize-y"
                             />
                         </div>
@@ -288,6 +374,9 @@ export default function AiAssistantModal() {
                                             {activeTab === "excerpt" && "Buat Excerpt Cerdas"}
                                             {activeTab === "tags" && "Analisis & Buat Tag"}
                                             {activeTab === "improve" && "Sempurnakan Tulisan"}
+                                            {activeTab === "seo" && seoMode === "audit" && "Jalankan Audit SEO Website"}
+                                            {activeTab === "seo" && seoMode === "optimize" && "Optimasi SEO & Internal Links"}
+                                            {activeTab === "seo" && seoMode === "ideas" && "Hasilkan Ide Konten & Projek"}
                                         </span>
                                     </>
                                 )}

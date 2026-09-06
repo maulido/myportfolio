@@ -178,13 +178,34 @@ export default function AdminSeoPage() {
                         Inspect real-time Google search snippets, OpenGraph cards, Twitter cards, and sitemap health.
                     </p>
                 </div>
-                <Link
-                    href="/admin/settings"
-                    className="inline-flex items-center gap-2 px-4 h-10 rounded-xl bg-primary text-white hover:bg-primary/90 text-xs font-bold transition-all shadow-md shadow-primary/25"
-                >
-                    <SettingsIcon className="h-4 w-4" />
-                    <span>Edit Meta in Settings</span>
-                </Link>
+                <div className="flex items-center gap-2.5">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            window.dispatchEvent(
+                                new CustomEvent("open-ai-assistant", {
+                                    detail: {
+                                        tab: "seo",
+                                        title: `${pageMetadata.name} (${pageMetadata.path})`,
+                                        text: `URL: ${pageMetadata.path}\nJudul: ${pageMetadata.title}\nDeskripsi: ${pageMetadata.description}`
+                                    }
+                                })
+                            );
+                        }}
+                        className="inline-flex items-center gap-2 px-4 h-10 rounded-xl bg-gradient-to-r from-purple-600 to-primary text-white hover:opacity-95 text-xs font-bold transition-all shadow-md shadow-purple-500/20 cursor-pointer"
+                        title="Jalankan Audit SEO berbasis AI untuk halaman ini"
+                    >
+                        <Sparkles className="h-4 w-4" />
+                        <span>Audit SEO AI</span>
+                    </button>
+                    <Link
+                        href="/admin/settings"
+                        className="inline-flex items-center gap-2 px-4 h-10 rounded-xl bg-card border border-border hover:bg-muted text-foreground text-xs font-bold transition-all shadow-2xs"
+                    >
+                        <SettingsIcon className="h-4 w-4" />
+                        <span>Edit Meta di Settings</span>
+                    </Link>
+                </div>
             </div>
 
             {/* Page Selector Tabs */}
