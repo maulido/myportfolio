@@ -54,7 +54,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         const [projects, posts] = await Promise.race([
             Promise.all([
                 Project.find({}).select('slug updatedAt').lean().exec(),
-                Post.find({}).select('slug updatedAt').lean().exec()
+                Post.find({ published: true }).select('slug updatedAt').lean().exec()
             ]),
             new Promise<never>((_, reject) =>
                 setTimeout(() => reject(new Error('Query timeout')), 5000)

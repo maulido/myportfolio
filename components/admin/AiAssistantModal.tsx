@@ -14,7 +14,8 @@ import {
     Bot,
     KeyRound,
     Globe,
-    ShieldCheck
+    ShieldCheck,
+    ArrowDownToLine
 } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -35,6 +36,7 @@ export default function AiAssistantModal() {
     const [isLoading, setIsLoading] = useState(false);
     const [copied, setCopied] = useState(false);
     const [missingKeyError, setMissingKeyError] = useState(false);
+    const [targetField, setTargetField] = useState<string | null>(null);
 
     const provider = settings.aiProvider || "gemini";
     const preset = AI_PROVIDERS[provider] || AI_PROVIDERS.gemini;
@@ -42,12 +44,15 @@ export default function AiAssistantModal() {
 
     useEffect(() => {
         const handleOpen = (e: Event) => {
-            const customEvent = e as CustomEvent<{ tab?: AiTab; seoMode?: "audit" | "optimize" | "ideas"; text?: string; title?: string }>;
+            const customEvent = e as CustomEvent<{ tab?: AiTab; seoMode?: "audit" | "optimize" | "ideas"; text?: string; title?: string; targetField?: string }>;
             if (customEvent?.detail) {
                 if (customEvent.detail.tab) setActiveTab(customEvent.detail.tab);
                 if (customEvent.detail.seoMode) setSeoMode(customEvent.detail.seoMode);
                 if (customEvent.detail.text !== undefined) setInputText(customEvent.detail.text);
                 if (customEvent.detail.title !== undefined) setInputTitle(customEvent.detail.title);
+                setTargetField(customEvent.detail.targetField || null);
+            } else {
+                setTargetField(null);
             }
             setMissingKeyError(false);
             setIsOpen(true);
@@ -112,6 +117,17 @@ export default function AiAssistantModal() {
         setCopied(true);
         toast.success("Berhasil disalin ke clipboard!");
         setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleApplyToForm = () => {
+        if (!outputResult || !targetField) return;
+        window.dispatchEvent(
+            new CustomEvent("apply-ai-content", {
+                detail: { field: targetField, content: outputResult }
+            })
+        );
+        toast.success(`Berhasil menerapkan konten ke kolom '${targetField}'!`);
+        setIsOpen(false);
     };
 
     if (!isOpen) return null;
@@ -392,23 +408,36 @@ export default function AiAssistantModal() {
                                         <Sparkles className="h-3.5 w-3.5 text-purple-500" />
                                         Hasil Generasi AI
                                     </span>
-                                    <button
-                                        type="button"
-                                        onClick={handleCopy}
-                                        className="px-2.5 py-1 rounded-lg bg-background border border-border/80 hover:bg-muted text-[11px] font-semibold text-foreground flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
-                                    >
-                                        {copied ? (
-                                            <>
-                                                <Check className="h-3 w-3 text-emerald-500" />
-                                                <span className="text-emerald-500">Tersalin</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Copy className="h-3 w-3 text-muted-foreground" />
-                                                <span>Salin Hasil</span>
-                                            </>
+                                    <div className="flex items-center gap-2">
+                                        {targetField && (
+                                            <button
+                                                type="button"
+                                                onClick={handleApplyToForm}
+                                                className="px-2.5 py-1 rounded-lg bg-primary hover:bg-primary/90 text-white text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                                                title={`Terapkan langsung ke kolom '${targetField}'`}
+                                            >
+                                                <ArrowDownToLine className="h-3 w-3" />
+                                                <span>Terapkan ke Form</span>
+                                            </button>
                                         )}
-                                    </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleCopy}
+                                            className="px-2.5 py-1 rounded-lg bg-background border border-border/80 hover:bg-muted text-[11px] font-semibold text-foreground flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                                        >
+                                            {copied ? (
+                                                <>
+                                                    <Check className="h-3 w-3 text-emerald-500" />
+                                                    <span className="text-emerald-500">Tersalin</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy className="h-3 w-3 text-muted-foreground" />
+                                                    <span>Salin Hasil</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="p-3 rounded-xl bg-background border border-border/60 text-xs font-sans text-foreground leading-relaxed whitespace-pre-wrap selection:bg-purple-500/20">
                                     {outputResult}

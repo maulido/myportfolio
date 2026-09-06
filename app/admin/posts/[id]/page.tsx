@@ -58,6 +58,21 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
         fetchPost();
     }, [id]);
 
+    useEffect(() => {
+        const handleApplyContent = (e: Event) => {
+            const customEvent = e as CustomEvent<{ field: string; content: string }>;
+            if (customEvent.detail) {
+                const { field, content } = customEvent.detail;
+                setFormData((prev) => ({
+                    ...prev,
+                    [field]: content,
+                }));
+            }
+        };
+        window.addEventListener("apply-ai-content", handleApplyContent);
+        return () => window.removeEventListener("apply-ai-content", handleApplyContent);
+    }, []);
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         const checked = (e.target as HTMLInputElement).checked;
@@ -151,6 +166,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                                     <label className="text-sm font-medium leading-none">Excerpt (English)</label>
                                     <AiTriggerButton
                                         tab="excerpt"
+                                        targetField="excerpt"
                                         title={formData.title}
                                         text={formData.content}
                                         label="Auto-generate Excerpt (AI)"
@@ -183,6 +199,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                                     <label className="text-sm font-medium leading-none">Judul Artikel (Bahasa Indonesia)</label>
                                     <AiTriggerButton
                                         tab="translate"
+                                        targetField="title_id"
                                         text={formData.title}
                                         label="Terjemahkan Judul (AI)"
                                     />
@@ -201,6 +218,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                                     <label className="text-sm font-medium leading-none">Ringkasan / Excerpt (Bahasa Indonesia)</label>
                                     <AiTriggerButton
                                         tab="translate"
+                                        targetField="excerpt_id"
                                         text={formData.excerpt}
                                         label="Terjemahkan Excerpt (AI)"
                                     />
@@ -216,7 +234,15 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium leading-none">Konten Artikel (Bahasa Indonesia)</label>
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium leading-none">Konten Artikel (Bahasa Indonesia)</label>
+                                    <AiTriggerButton
+                                        tab="translate"
+                                        targetField="content_id"
+                                        text={formData.content}
+                                        label="Terjemahkan Konten (AI)"
+                                    />
+                                </div>
                                 <RichTextEditor
                                     content={formData.content_id}
                                     onChange={(content_id) => setFormData(prev => ({ ...prev, content_id }))}
@@ -247,7 +273,16 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Tags (comma separated)</label>
+                            <div className="flex items-center justify-between">
+                                <label className="text-sm font-medium leading-none">Tags (comma separated)</label>
+                                <AiTriggerButton
+                                    tab="tags"
+                                    targetField="tags"
+                                    title={formData.title}
+                                    text={formData.content || formData.excerpt}
+                                    label="Suggest Tags (AI)"
+                                />
+                            </div>
                             <input
                                 name="tags"
                                 value={formData.tags}

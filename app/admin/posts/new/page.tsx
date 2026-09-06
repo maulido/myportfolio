@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Sparkles, Trash2 } from "lucide-react";
 import Link from "next/link";
 import RichTextEditor from "@/components/RichTextEditor";
 import ImageUpload from "@/components/ImageUpload";
@@ -26,6 +26,66 @@ export default function NewPostPage() {
         published: true,
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [savedDraft, setSavedDraft] = useState<typeof formData | null>(null);
+
+    // Draft auto-restore detection
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem("draft_admin_post_new");
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed && (parsed.title || parsed.content || parsed.excerpt)) {
+                    setSavedDraft(parsed);
+                }
+            }
+        } catch (e) {
+            console.error("Failed to restore draft from localStorage", e);
+        }
+    }, []);
+
+    // Draft auto-save to localStorage
+    useEffect(() => {
+        if (formData.title || formData.content || formData.excerpt) {
+            const timer = setTimeout(() => {
+                try {
+                    localStorage.setItem("draft_admin_post_new", JSON.stringify(formData));
+                } catch {
+                    // quota exceeded or private mode
+                }
+            }, 800);
+            return () => clearTimeout(timer);
+        }
+    }, [formData]);
+
+    // Listen for AI assistant apply content event
+    useEffect(() => {
+        const handleApplyContent = (e: Event) => {
+            const customEvent = e as CustomEvent<{ field: string; content: string }>;
+            if (customEvent.detail) {
+                const { field, content } = customEvent.detail;
+                setFormData((prev) => ({
+                    ...prev,
+                    [field]: content,
+                }));
+            }
+        };
+        window.addEventListener("apply-ai-content", handleApplyContent);
+        return () => window.removeEventListener("apply-ai-content", handleApplyContent);
+    }, []);
+
+    const restoreDraft = () => {
+        if (savedDraft) {
+            setFormData(savedDraft);
+            setSavedDraft(null);
+        }
+    };
+
+    const discardDraft = () => {
+        try {
+            localStorage.removeItem("draft_admin_post_new");
+        } catch {}
+        setSavedDraft(null);
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -56,6 +116,9 @@ export default function NewPostPage() {
             });
 
             if (res.ok) {
+                try {
+                    localStorage.removeItem("draft_admin_post_new");
+                } catch {}
                 router.push("/admin/posts");
             } else {
                 alert("Failed to create post");
@@ -73,12 +136,39 @@ export default function NewPostPage() {
             <div className="max-w-4xl mx-auto space-y-8">
                 <div className="flex items-center gap-4">
                     <Link href="/admin">
-                        <button type="button" className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10">
+                        <button type="button" className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 w-10 cursor-pointer">
                             <ArrowLeft className="h-4 w-4" />
                         </button>
                     </Link>
                     <h1 className="text-3xl font-bold tracking-tight">Create New Post</h1>
                 </div>
+
+                {/* Draft Recovery Banner */}
+                {savedDraft && (
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-900 dark:text-blue-200">
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                            <Sparkles className="h-4 w-4 text-blue-500 shrink-0" />
+                            <span>Draf tersimpan dari sesi sebelumnya ditemukan: &quot;{savedDraft.title || "Tanpa Judul"}&quot;</span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <button
+                                type="button"
+                                onClick={restoreDraft}
+                                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-xs transition-colors cursor-pointer"
+                            >
+                                Pulihkan Draf
+                            </button>
+                            <button
+                                type="button"
+                                onClick={discardDraft}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 hover:bg-blue-500/20 text-muted-foreground hover:text-foreground rounded-lg text-xs transition-colors cursor-pointer"
+                            >
+                                <Trash2 className="h-3 w-3" />
+                                <span>Buang</span>
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="space-y-8 rounded-xl border border-primary/10 bg-card/10 backdrop-blur-sm p-8">
                     {/* Multilingual Tabs */}
@@ -120,6 +210,7 @@ export default function NewPostPage() {
                                     <label className="text-sm font-medium leading-none">Excerpt (English)</label>
                                     <AiTriggerButton
                                         tab="excerpt"
+                                        targetField="excerpt"
                                         title={formData.title}
                                         text={formData.content}
                                         label="Auto-generate Excerpt (AI)"
@@ -152,6 +243,7 @@ export default function NewPostPage() {
                                     <label className="text-sm font-medium leading-none">Judul Artikel (Bahasa Indonesia)</label>
                                     <AiTriggerButton
                                         tab="translate"
+                                        targetField="title_id"
                                         text={formData.title}
                                         label="Terjemahkan Judul (AI)"
                                     />
@@ -170,6 +262,7 @@ export default function NewPostPage() {
                                     <label className="text-sm font-medium leading-none">Ringkasan / Excerpt (Bahasa Indonesia)</label>
                                     <AiTriggerButton
                                         tab="translate"
+                                        targetField="excerpt_id"
                                         text={formData.excerpt}
                                         label="Terjemahkan Excerpt (AI)"
                                     />
@@ -185,7 +278,15 @@ export default function NewPostPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium leading-none">Konten Artikel (Bahasa Indonesia)</label>
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium leading-none">Konten Artikel (Bahasa Indonesia)</label>
+                                    <AiTriggerButton
+                                        tab="translate"
+                                        targetField="content_id"
+                                        text={formData.content}
+                                        label="Terjemahkan Konten (AI)"
+                                    />
+                                </div>
                                 <RichTextEditor
                                     content={formData.content_id}
                                     onChange={(content_id) => setFormData(prev => ({ ...prev, content_id }))}
@@ -216,7 +317,16 @@ export default function NewPostPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">Tags (comma separated)</label>
+                            <div className="flex items-center justify-between">
+                                <label className="text-sm font-medium leading-none">Tags (comma separated)</label>
+                                <AiTriggerButton
+                                    tab="tags"
+                                    targetField="tags"
+                                    title={formData.title}
+                                    text={formData.content || formData.excerpt}
+                                    label="Suggest Tags (AI)"
+                                />
+                            </div>
                             <input
                                 name="tags"
                                 value={formData.tags}

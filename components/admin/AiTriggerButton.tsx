@@ -9,6 +9,7 @@ interface AiTriggerButtonProps {
     title?: string;
     label?: string;
     className?: string;
+    targetField?: string;
 }
 
 export default function AiTriggerButton({
@@ -17,14 +18,15 @@ export default function AiTriggerButton({
     text,
     title,
     label = "AI Assistant",
-    className = ""
+    className = "",
+    targetField
 }: AiTriggerButtonProps) {
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
         window.dispatchEvent(
             new CustomEvent("open-ai-assistant", {
-                detail: { tab, seoMode, text, title }
+                detail: { tab, seoMode, text, title, targetField }
             })
         );
     };

@@ -6,6 +6,7 @@ import { ArrowLeft, Save, Loader2, X } from "lucide-react";
 import Link from "next/link";
 import ImageUpload from "@/components/ImageUpload";
 import { AdminLangTabs } from "@/components/AdminLangTabs";
+import AiTriggerButton from "@/components/admin/AiTriggerButton";
 
 export default function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -73,6 +74,21 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
         };
         fetchProject();
     }, [id]);
+
+    useEffect(() => {
+        const handleApplyContent = (e: Event) => {
+            const customEvent = e as CustomEvent<{ field: string; content: string }>;
+            if (customEvent.detail) {
+                const { field, content } = customEvent.detail;
+                setFormData((prev) => ({
+                    ...prev,
+                    [field]: content,
+                }));
+            }
+        };
+        window.addEventListener("apply-ai-content", handleApplyContent);
+        return () => window.removeEventListener("apply-ai-content", handleApplyContent);
+    }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -180,9 +196,19 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
 
                         <div className="grid gap-4 md:grid-cols-2">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium leading-none">
-                                    {langTab === "en" ? "Title (EN) *" : "Judul Proyek (ID)"}
-                                </label>
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium leading-none">
+                                        {langTab === "en" ? "Title (EN) *" : "Judul Proyek (ID)"}
+                                    </label>
+                                    {langTab === "id" && (
+                                        <AiTriggerButton
+                                            tab="translate"
+                                            text={formData.title}
+                                            targetField="title_id"
+                                            label="Terjemahkan Judul (AI)"
+                                        />
+                                    )}
+                                </div>
                                 {langTab === "en" ? (
                                     <input
                                         required
@@ -217,9 +243,27 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">
-                                {langTab === "en" ? "Description (EN) *" : "Deskripsi Proyek (ID)"}
-                            </label>
+                            <div className="flex items-center justify-between">
+                                <label className="text-sm font-medium leading-none">
+                                    {langTab === "en" ? "Description (EN) *" : "Deskripsi Proyek (ID)"}
+                                </label>
+                                {langTab === "en" ? (
+                                    <AiTriggerButton
+                                        tab="excerpt"
+                                        title={formData.title}
+                                        text={formData.problemStatement ? `${formData.problemStatement}\n${formData.solutionApproach}` : formData.title}
+                                        targetField="description"
+                                        label="Generate Description (AI)"
+                                    />
+                                ) : (
+                                    <AiTriggerButton
+                                        tab="translate"
+                                        text={formData.description}
+                                        targetField="description_id"
+                                        label="Terjemahkan Deskripsi (AI)"
+                                    />
+                                )}
+                            </div>
                             {langTab === "en" ? (
                                 <textarea
                                     required
@@ -265,7 +309,16 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium leading-none">Tags / Technologies (comma separated)</label>
+                                <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium leading-none">Tags / Technologies (comma separated)</label>
+                                    <AiTriggerButton
+                                        tab="tags"
+                                        title={formData.title}
+                                        text={`${formData.title} ${formData.description}`}
+                                        targetField="tags"
+                                        label="Suggest Tech (AI)"
+                                    />
+                                </div>
                                 <input
                                     name="tags"
                                     value={formData.tags}
@@ -347,9 +400,19 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                         </h2>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">
-                                {langTab === "en" ? "Problem Statement (EN)" : "Deskripsi Masalah (ID)"}
-                            </label>
+                            <div className="flex items-center justify-between">
+                                <label className="text-sm font-medium leading-none">
+                                    {langTab === "en" ? "Problem Statement (EN)" : "Deskripsi Masalah (ID)"}
+                                </label>
+                                {langTab === "id" && (
+                                    <AiTriggerButton
+                                        tab="translate"
+                                        text={formData.problemStatement}
+                                        targetField="problemStatement_id"
+                                        label="Terjemahkan Masalah (AI)"
+                                    />
+                                )}
+                            </div>
                             {langTab === "en" ? (
                                 <textarea
                                     name="problemStatement"
@@ -372,9 +435,19 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium leading-none">
-                                {langTab === "en" ? "Solution Approach (EN)" : "Pendekatan Solusi (ID)"}
-                            </label>
+                            <div className="flex items-center justify-between">
+                                <label className="text-sm font-medium leading-none">
+                                    {langTab === "en" ? "Solution Approach (EN)" : "Pendekatan Solusi (ID)"}
+                                </label>
+                                {langTab === "id" && (
+                                    <AiTriggerButton
+                                        tab="translate"
+                                        text={formData.solutionApproach}
+                                        targetField="solutionApproach_id"
+                                        label="Terjemahkan Solusi (AI)"
+                                    />
+                                )}
+                            </div>
                             {langTab === "en" ? (
                                 <textarea
                                     name="solutionApproach"
