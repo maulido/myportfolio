@@ -28,10 +28,10 @@ export async function POST(req: Request) {
             message: `Koneksi berhasil! Pesan uji coba terkirim dari bot @${result.bot?.username || result.bot?.first_name}.`,
             bot: result.bot
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('[TELEGRAM TEST API ERROR]', error);
         return NextResponse.json(
-            { success: false, error: error?.message || 'Gagal menguji koneksi Telegram.' },
+            { success: false, error: error instanceof Error ? error.message : 'Gagal menguji koneksi Telegram.' },
             { status: 500 }
         );
     }

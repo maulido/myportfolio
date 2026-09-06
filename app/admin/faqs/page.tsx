@@ -14,7 +14,7 @@ import {
     Globe2,
     Layers
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 interface FaqItem {
     _id: string;

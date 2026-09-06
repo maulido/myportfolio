@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, HelpCircle } from "lucide-react";
 import Link from "next/link";
@@ -27,14 +27,7 @@ export default function EditFaqPage({ params }: PageProps) {
         published: true,
     });
 
-    useEffect(() => {
-        params.then((resolved) => {
-            setId(resolved.id);
-            fetchFaq(resolved.id);
-        });
-    }, [params]);
-
-    const fetchFaq = async (faqId: string) => {
+    const fetchFaq = useCallback(async (faqId: string) => {
         try {
             const response = await fetch(`/api/faqs/${faqId}`);
             const data = await response.json();
@@ -58,7 +51,14 @@ export default function EditFaqPage({ params }: PageProps) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [router]);
+
+    useEffect(() => {
+        params.then((resolved) => {
+            setId(resolved.id);
+            fetchFaq(resolved.id);
+        });
+    }, [params, fetchFaq]);
 
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>

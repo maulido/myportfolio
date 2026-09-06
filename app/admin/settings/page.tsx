@@ -23,7 +23,6 @@ import {
     MessageSquare,
     Building2,
     MapPin,
-    Clock,
     Wrench,
     ChevronLeft,
     ChevronRight,

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useSyncExternalStore } from "react";
 import { en, TranslationDictionary } from "@/locales/en";
 import { id } from "@/locales/id";
 
@@ -25,33 +25,40 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
     // Deterministic initial state: always start with 'en' to guarantee identical SSR & initial client hydration
     const [locale, setLocaleState] = useState<Language>("en");
-    const [mounted, setMounted] = useState(false);
+    const mounted = useSyncExternalStore(
+        () => () => {},
+        () => true,
+        () => false
+    );
 
     // Sync saved preference from URL query param, localStorage, or cookie strictly AFTER hydration
     useEffect(() => {
-        setMounted(true);
-
         try {
+            let targetLocale: Language | null = null;
+
             // Priority 1: Check URL search query param (e.g. ?lang=id)
             const urlParams = new URLSearchParams(window.location.search);
             const queryLang = urlParams.get("lang") as Language | null;
             if (queryLang === "en" || queryLang === "id") {
-                setLocaleState(queryLang);
-                return;
+                targetLocale = queryLang;
+            } else {
+                // Priority 2: Saved user preference in localStorage
+                const savedLang = localStorage.getItem("portfolio_lang") as Language | null;
+                if (savedLang === "en" || savedLang === "id") {
+                    targetLocale = savedLang;
+                } else {
+                    // Priority 3: Saved user cookie
+                    const cookieMatch = document.cookie.match(/(?:^|;\s*)portfolio_lang=([^;]+)/);
+                    if (cookieMatch && (cookieMatch[1] === "en" || cookieMatch[1] === "id")) {
+                        targetLocale = cookieMatch[1] as Language;
+                    }
+                }
             }
 
-            // Priority 2: Saved user preference in localStorage
-            const savedLang = localStorage.getItem("portfolio_lang") as Language | null;
-            if (savedLang === "en" || savedLang === "id") {
-                setLocaleState(savedLang);
-                return;
-            }
-
-            // Priority 3: Saved user cookie
-            const cookieMatch = document.cookie.match(/(?:^|;\s*)portfolio_lang=([^;]+)/);
-            if (cookieMatch && (cookieMatch[1] === "en" || cookieMatch[1] === "id")) {
-                setLocaleState(cookieMatch[1] as Language);
-                return;
+            if (targetLocale && targetLocale !== "en") {
+                queueMicrotask(() => {
+                    setLocaleState(targetLocale);
+                });
             }
         } catch {
             // Silently handle any storage/browser restrictions

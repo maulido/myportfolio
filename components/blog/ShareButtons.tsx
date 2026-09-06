@@ -1,7 +1,7 @@
 "use client";
 
 import { Twitter, Linkedin, Facebook, Link2, Share2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import toast from 'react-hot-toast';
 
 interface ShareButtonsProps {
@@ -12,17 +12,23 @@ interface ShareButtonsProps {
 
 export function ShareButtons({ title, url, description }: ShareButtonsProps) {
     const [copied, setCopied] = useState(false);
-    const [shareUrl, setShareUrl] = useState(url || '');
-    const [canNativeShare, setCanNativeShare] = useState(false);
 
-    useEffect(() => {
-        if (!url && typeof window !== 'undefined') {
-            setShareUrl(window.location.href);
-        }
-        if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
-            setCanNativeShare(true);
-        }
-    }, [url]);
+    const locationHref = useSyncExternalStore(
+        (callback) => {
+            window.addEventListener('popstate', callback);
+            return () => window.removeEventListener('popstate', callback);
+        },
+        () => window.location.href,
+        () => ''
+    );
+
+    const canNativeShare = useSyncExternalStore(
+        () => () => {},
+        () => typeof navigator !== 'undefined' && typeof navigator.share === 'function',
+        () => false
+    );
+
+    const shareUrl = url || locationHref;
 
     const shareText = description || title;
 

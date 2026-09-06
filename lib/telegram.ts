@@ -135,7 +135,7 @@ interface SendTelegramOptions {
 /**
  * Core function to send message via Telegram Bot API with automatic retry fallback
  */
-export async function sendTelegramMessage(options: SendTelegramOptions): Promise<{ success: boolean; data?: any; error?: string }> {
+export async function sendTelegramMessage(options: SendTelegramOptions): Promise<{ success: boolean; data?: unknown; error?: string }> {
     const { text, inlineKeyboard, customToken, customChatId } = options;
 
     const creds = await getTelegramCredentials();
@@ -152,7 +152,7 @@ export async function sendTelegramMessage(options: SendTelegramOptions): Promise
 
     const cleanInlineKeyboard = filterValidInlineKeyboard(inlineKeyboard);
 
-    const payload: Record<string, any> = {
+    const payload: Record<string, unknown> = {
         chat_id: targetChatId,
         text,
         parse_mode: 'HTML',
@@ -224,10 +224,11 @@ export async function sendTelegramMessage(options: SendTelegramOptions): Promise
             success: true,
             data: data.result
         };
-    } catch (err: any) {
-        const errorMessage = err?.name === 'AbortError' 
+    } catch (err: unknown) {
+        const errorObj = err instanceof Error ? err : null;
+        const errorMessage = errorObj?.name === 'AbortError' 
             ? 'Koneksi ke Telegram API timeout (melebihi 7 detik)' 
-            : err?.message || 'Terjadi gangguan jaringan saat menghubungi Telegram';
+            : errorObj?.message || 'Terjadi gangguan jaringan saat menghubungi Telegram';
         console.error('[TELEGRAM ERROR]', errorMessage);
         return {
             success: false,
@@ -320,10 +321,10 @@ export async function testTelegramConnection(tokenOverride?: string, chatIdOverr
             success: true,
             bot: botInfo
         };
-    } catch (err: any) {
+    } catch (err: unknown) {
         return {
             success: false,
-            error: err?.message || 'Gagal menghubungi Telegram API.'
+            error: err instanceof Error ? err.message : 'Gagal menghubungi Telegram API.'
         };
     }
 }

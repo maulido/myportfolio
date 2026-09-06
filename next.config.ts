@@ -10,7 +10,14 @@ const nextConfig: NextConfig = {
       {
         protocol: 'https',
         hostname: 'utfs.io',
-        pathname: '/f/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.ufs.sh',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ufs.sh',
       },
     ],
     formats: ['image/avif', 'image/webp'],
@@ -68,7 +75,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: https: blob:",
               "font-src 'self' https://fonts.gstatic.com",
-              "connect-src 'self' https://www.google-analytics.com https://utfs.io",
+              "connect-src 'self' https://www.google-analytics.com https://utfs.io https://*.uploadthing.com https://uploadthing.com https://*.ufs.sh https://ufs.sh https://api.github.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'"
