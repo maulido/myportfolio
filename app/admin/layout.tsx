@@ -86,15 +86,15 @@ export default function AdminLayout({
                             <Search className="h-4 w-4" />
                         </button>
 
-                        {/* Gemini AI Assistant Quick Trigger */}
+                        {/* AI Assistant Quick Trigger */}
                         <button
                             type="button"
                             onClick={() => window.dispatchEvent(new CustomEvent("open-ai-assistant"))}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/30 text-xs font-bold transition-all shadow-2xs cursor-pointer"
-                            title="Buka Gemini AI Assistant"
+                            title="Buka AI Content Assistant"
                         >
                             <Sparkles className="h-3.5 w-3.5" />
-                            <span className="hidden md:inline">Gemini AI</span>
+                            <span className="hidden md:inline">AI Assistant</span>
                         </button>
 
                         {isMaintenanceActive && (
@@ -142,7 +142,7 @@ export default function AdminLayout({
             {/* Global Database Backup & Restore Modal */}
             <DatabaseBackupModal />
 
-            {/* Global Gemini AI Assistant Modal */}
+            {/* Global AI Content Assistant Modal */}
             <AiAssistantModal />
         </div>
     );

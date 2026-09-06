@@ -14,11 +14,15 @@ import {
     Bot,
     KeyRound
 } from "lucide-react";
+import Link from "next/link";
 import toast from "react-hot-toast";
+import { useSettings } from "@/lib/useSettings";
+import { AI_PROVIDERS } from "@/lib/ai";
 
 type AiTab = "translate" | "excerpt" | "tags" | "improve";
 
 export default function AiAssistantModal() {
+    const { settings } = useSettings();
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<AiTab>("translate");
     const [inputText, setInputText] = useState("");
@@ -28,6 +32,10 @@ export default function AiAssistantModal() {
     const [isLoading, setIsLoading] = useState(false);
     const [copied, setCopied] = useState(false);
     const [missingKeyError, setMissingKeyError] = useState(false);
+
+    const provider = settings.aiProvider || "gemini";
+    const preset = AI_PROVIDERS[provider] || AI_PROVIDERS.gemini;
+    const model = settings.aiModel || (provider === "gemini" ? (settings.geminiModel || preset.defaultModel) : preset.defaultModel);
 
     useEffect(() => {
         const handleOpen = (e: Event) => {
@@ -77,7 +85,7 @@ export default function AiAssistantModal() {
                 setOutputResult(json.result);
                 toast.success("AI selesai menghasilkan respon!");
             } else {
-                if (json.error?.includes("GEMINI_API_KEY")) {
+                if (json.error?.includes("API_KEY") || json.error?.includes("API Key") || json.error?.includes("belum dikonfigurasi")) {
                     setMissingKeyError(true);
                 }
                 toast.error(json.error || "Gagal memproses permintaan AI");
@@ -111,9 +119,9 @@ export default function AiAssistantModal() {
                             </div>
                             <div>
                                 <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
-                                    <span>Gemini AI Content Assistant</span>
+                                    <span>AI Content Assistant</span>
                                     <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
-                                        Pro & Fast
+                                        {preset.name.split(" ")[0]} • {model}
                                     </span>
                                 </h2>
                                 <p className="text-xs text-muted-foreground mt-0.5">
@@ -134,10 +142,10 @@ export default function AiAssistantModal() {
                         <div className="mb-4 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs space-y-1.5">
                             <div className="font-bold flex items-center gap-1.5">
                                 <KeyRound className="h-4 w-4 text-amber-500" />
-                                <span>GEMINI_API_KEY Diperlukan</span>
+                                <span>API Key Diperlukan ({preset.name})</span>
                             </div>
                             <p>
-                                Fitur AI ditenagai oleh Google Gemini. Tambahkan <code className="px-1.5 py-0.5 rounded bg-background font-mono text-amber-600 dark:text-amber-300">GEMINI_API_KEY=AIzaSy...</code> ke dalam file <code className="font-mono">.env.local</code> proyek Anda. Anda dapat memperoleh API key gratis di <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="underline font-bold">Google AI Studio</a>.
+                                Layanan AI saat ini menggunakan provider <strong>{preset.name}</strong>. Silakan masukkan API Key di menu <Link href="/admin/settings" onClick={() => setIsOpen(false)} className="underline font-bold text-primary">Admin Settings &gt; Database &amp; AI Services</Link>.
                             </p>
                         </div>
                     )}
@@ -270,7 +278,7 @@ export default function AiAssistantModal() {
                                 {isLoading ? (
                                     <>
                                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                        <span>Memproses dengan Gemini...</span>
+                                        <span>Memproses dengan AI...</span>
                                     </>
                                 ) : (
                                     <>
@@ -321,15 +329,24 @@ export default function AiAssistantModal() {
                 </div>
 
                 {/* Footer */}
-                <div className="mt-6 pt-4 border-t border-border/80 flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1.5">
-                        <Bot className="h-3.5 w-3.5 text-purple-500" />
-                        Model: Google Gemini 1.5 Flash
-                    </span>
+                <div className="mt-6 pt-4 border-t border-border/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <Bot className="h-3.5 w-3.5 text-purple-500 shrink-0" />
+                        <span>
+                            Provider: <strong className="text-foreground font-semibold">{preset.name}</strong> • Model: <code className="font-mono text-[11px] bg-muted px-1.5 py-0.5 rounded text-foreground">{model}</code>
+                        </span>
+                        <Link
+                            href="/admin/settings"
+                            onClick={() => setIsOpen(false)}
+                            className="text-[11px] text-primary hover:underline font-semibold ml-1 shrink-0"
+                        >
+                            Ubah di Settings
+                        </Link>
+                    </div>
                     <button
                         type="button"
                         onClick={() => setIsOpen(false)}
-                        className="px-4 py-1.5 rounded-xl bg-muted/80 hover:bg-muted text-foreground text-xs font-semibold transition-colors"
+                        className="px-4 py-1.5 rounded-xl bg-muted/80 hover:bg-muted text-foreground text-xs font-semibold transition-colors cursor-pointer self-end sm:self-auto"
                     >
                         Tutup
                     </button>

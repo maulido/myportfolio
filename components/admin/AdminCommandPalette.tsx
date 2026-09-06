@@ -151,13 +151,13 @@ export default function AdminCommandPalette() {
             keywords: ["cv", "resume", "salin", "copy", "download", "pdf"]
         },
         {
-            id: "act-gemini-ai",
-            title: "Gemini AI Content Assistant",
+            id: "act-ai-assistant",
+            title: "AI Content Assistant",
             subtitle: "Bilingual translator, smart excerpt generator & tone polisher",
             category: "Quick Action",
             icon: Sparkles,
             action: () => window.dispatchEvent(new CustomEvent("open-ai-assistant")),
-            keywords: ["ai", "gemini", "translate", "terjemah", "bilingual", "excerpt", "seo", "polish", "content"]
+            keywords: ["ai", "assistant", "gemini", "openai", "groq", "deepseek", "translate", "terjemah", "bilingual", "excerpt", "seo", "polish", "content"]
         },
         {
             id: "act-backup-modal",

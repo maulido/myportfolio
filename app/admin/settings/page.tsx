@@ -1553,7 +1553,7 @@ export default function AdminSettingsPage() {
                                                 </span>
                                             </div>
                                             <p className="text-xs text-muted-foreground mt-1 max-w-2xl">
-                                                Kelola koneksi basis data MongoDB cluster dan API Key Google Gemini AI secara langsung dari antarmuka Admin dengan pengujian latensi real-time.
+                                                Kelola koneksi basis data MongoDB cluster dan API Universal AI Engine (Gemini, OpenAI, Groq, DeepSeek, Ollama, OpenRouter) secara langsung dari antarmuka Admin dengan pengujian latensi real-time.
                                             </p>
                                         </div>
                                     </div>
