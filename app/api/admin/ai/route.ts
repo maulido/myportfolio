@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { requireAuth } from "@/lib/auth-helpers";
 import { getGlobalSettings } from "@/lib/settings";
+import { getResolvedAIConfig, generateAICompletion } from "@/lib/ai";
 
 export const dynamic = "force-dynamic";
 
@@ -10,14 +10,23 @@ export async function POST(req: Request) {
     if (authResult instanceof NextResponse) return authResult;
 
     const settings = await getGlobalSettings();
-    const apiKey = settings.geminiApiKey?.trim() || process.env.GEMINI_API_KEY?.trim();
-    const modelName = settings.geminiModel?.trim() || "gemini-1.5-flash";
+    const config = getResolvedAIConfig(settings);
 
-    if (!apiKey) {
+    if (!config.enabled) {
         return NextResponse.json(
             {
                 success: false,
-                error: "GEMINI_API_KEY belum dikonfigurasi. Silakan atur di Admin Settings > Integrations atau tambahkan ke .env.local untuk mengaktifkan AI Assistant."
+                error: "Layanan AI saat ini dinonaktifkan di Admin Settings > Integrations."
+            },
+            { status: 400 }
+        );
+    }
+
+    if (!config.apiKey && config.provider !== "ollama") {
+        return NextResponse.json(
+            {
+                success: false,
+                error: `API Key untuk provider '${config.provider}' belum dikonfigurasi. Silakan atur di Admin Settings > Database & AI Services.`
             },
             { status: 400 }
         );
@@ -33,11 +42,6 @@ export async function POST(req: Request) {
                 { status: 400 }
             );
         }
-
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({
-            model: modelName
-        });
 
         let prompt = "";
         if (action === "generate_excerpt") {
@@ -80,13 +84,28 @@ Hanya berikan teks hasil perbaikan tanpa catatan atau pembuka.`;
             );
         }
 
-        const result = await model.generateContent(prompt);
-        const output = result.response.text().trim();
+        const completion = await generateAICompletion({
+            provider: config.provider,
+            apiKey: config.apiKey,
+            baseUrl: config.baseUrl,
+            model: config.model,
+            prompt
+        });
+
+        if (!completion.success) {
+            return NextResponse.json(
+                { success: false, error: completion.error || "Gagal memproses permintaan AI" },
+                { status: 500 }
+            );
+        }
 
         return NextResponse.json({
             success: true,
             action,
-            result: output
+            result: completion.text,
+            provider: completion.provider,
+            model: completion.model,
+            latencyMs: completion.latencyMs
         });
     } catch (error) {
         console.error("Gemini AI API error:", error);

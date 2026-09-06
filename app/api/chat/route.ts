@@ -1,8 +1,8 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
 import { sanitizeText } from "@/lib/sanitize";
 import { getGlobalSettings } from "@/lib/settings";
+import { getResolvedAIConfig, generateAICompletion, AIMessage } from "@/lib/ai";
 
 const chatLimiter = rateLimit({
     interval: 2 * 60 * 1000, // 2 minutes
@@ -16,7 +16,6 @@ Location: Jakarta, Indonesia.
 Tone: Professional, helpful, and slightly futuristic.
 
 Answer questions based on our skills and experience mentioned above. If questions are unrelated to the portfolio or technical expertise, politely redirect them.
-If the GEMINI_API_KEY is not configured, fall back to a helpful simulation mode.
 `;
 
 export async function POST(req: Request) {
@@ -32,20 +31,17 @@ export async function POST(req: Request) {
     }
 
     const settings = await getGlobalSettings();
-    const apiKey = settings.geminiApiKey?.trim() || process.env.GEMINI_API_KEY?.trim();
-    const modelName = settings.geminiModel?.trim() || "gemini-1.5-flash";
-    const customPrompt = settings.geminiCustomPrompt?.trim();
-    const isAiDisabled = settings.geminiEnabled === "false";
+    const config = getResolvedAIConfig(settings);
 
-    if (isAiDisabled) {
+    if (!config.enabled) {
         return NextResponse.json({
             response: "Asisten AI saat ini dinonaktifkan oleh administrator situs. Silakan gunakan form kontak untuk menghubungi secara langsung."
         });
     }
 
-    if (!apiKey) {
+    if (!config.apiKey && config.provider !== "ollama") {
         return NextResponse.json({
-            response: "I'm currently running in simulation mode because the API Key is not set. However, I can tell you that the owner is a Senior Network Engineer and Developer based in Jakarta!"
+            response: "I'm currently running in simulation mode because the AI provider API Key is not set. However, I can tell you that the owner is a Senior Network Engineer and Developer based in Jakarta!"
         });
     }
 
@@ -63,39 +59,52 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Message cannot be empty." }, { status: 400 });
         }
 
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({
-            model: modelName,
-            systemInstruction: customPrompt || SYSTEM_PROMPT
-        });
-
-        // Filter and sanitize history: ensure it starts with user and alternates
-        const validHistory: { role: string; parts: { text: string }[] }[] = [];
+        // Build standard conversation history messages
+        const messages: AIMessage[] = [];
         if (Array.isArray(body?.history)) {
             for (const item of body.history) {
-                if ((item.role === 'user' || item.role === 'model') && Array.isArray(item.parts) && item.parts.length > 0) {
-                    // Skip if consecutive duplicate roles
-                    if (validHistory.length === 0 && item.role !== 'user') continue;
-                    if (validHistory.length > 0 && validHistory[validHistory.length - 1].role === item.role) continue;
-                    validHistory.push(item);
+                const role = (item.role === 'model' || item.role === 'assistant') ? 'assistant' : 'user';
+                let content = "";
+                if (typeof item.content === 'string') {
+                    content = item.content;
+                } else if (Array.isArray(item.parts)) {
+                    content = item.parts.map((p: { text?: string }) => p?.text || "").join("");
+                }
+
+                if (content.trim()) {
+                    // Prevent consecutive duplicate roles
+                    if (messages.length > 0 && messages[messages.length - 1].role === role) {
+                        continue;
+                    }
+                    messages.push({ role, content: content.trim() });
                 }
             }
         }
 
-        const chat = model.startChat({
-            history: validHistory,
-            generationConfig: {
-                maxOutputTokens: 500,
-            },
+        // Ensure user message is at the end
+        messages.push({ role: "user", content: message });
+
+        const completion = await generateAICompletion({
+            provider: config.provider,
+            apiKey: config.apiKey,
+            baseUrl: config.baseUrl,
+            model: config.model,
+            systemInstruction: config.customPrompt || SYSTEM_PROMPT,
+            messages,
+            maxTokens: 600
         });
 
-        const result = await chat.sendMessage(message);
-        const response = await result.response;
-        const text = response.text();
+        if (!completion.success) {
+            console.error("AI Completion Failed:", completion.error);
+            return NextResponse.json(
+                { error: completion.error || "Gagal mendapatkan respon dari asisten AI." },
+                { status: 500 }
+            );
+        }
 
-        return NextResponse.json({ response: text });
+        return NextResponse.json({ response: completion.text });
     } catch (error: unknown) {
-        console.error("Gemini API Error:", error);
+        console.error("AI Chat API Error:", error);
         return NextResponse.json({ error: "Failed to get response from AI assistant." }, { status: 500 });
     }
 }

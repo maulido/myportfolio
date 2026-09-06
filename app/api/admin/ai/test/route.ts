@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { requireAuth } from "@/lib/auth-helpers";
 import { getGlobalSettings } from "@/lib/settings";
+import { getResolvedAIConfig, generateAICompletion, AI_PROVIDERS } from "@/lib/ai";
 
 export const dynamic = "force-dynamic";
 
@@ -11,65 +11,71 @@ export async function POST(req: Request) {
 
     try {
         const body = await req.json().catch(() => ({}));
-        const inputKey = body?.apiKey?.trim();
-        const inputModel = body?.model?.trim();
+        const inputProvider = body?.provider?.trim();
+        const inputKey = body?.apiKey !== undefined ? body.apiKey.trim() : undefined;
+        const inputBaseUrl = body?.baseUrl !== undefined ? body.baseUrl.trim() : undefined;
+        const inputModel = body?.model !== undefined ? body.model.trim() : undefined;
 
         // Settings fallback
         const settings = await getGlobalSettings();
-        const settingsKey = settings.geminiApiKey?.trim();
-        const envKey = process.env.GEMINI_API_KEY?.trim();
+        const config = getResolvedAIConfig(settings);
 
-        let resolvedKey = "";
-        let source: "custom" | "settings" | "env" = "env";
+        const provider = inputProvider || config.provider || "gemini";
+        const preset = AI_PROVIDERS[provider] || AI_PROVIDERS.gemini;
 
-        if (inputKey) {
-            resolvedKey = inputKey;
-            source = "custom";
-        } else if (settingsKey) {
-            resolvedKey = settingsKey;
-            source = "settings";
-        } else if (envKey) {
-            resolvedKey = envKey;
-            source = "env";
-        }
+        const apiKey = inputKey !== undefined ? inputKey : config.apiKey;
+        const baseUrl = inputBaseUrl !== undefined && inputBaseUrl !== "" ? inputBaseUrl : (config.baseUrl || preset.defaultBaseUrl);
+        const model = inputModel || config.model || preset.defaultModel;
 
-        if (!resolvedKey) {
+        if (!apiKey && provider !== "ollama") {
             return NextResponse.json(
                 {
                     success: false,
-                    error: "Tidak ada API Key yang ditemukan. Silakan masukkan Gemini API Key terlebih dahulu atau isi di file .env.local."
+                    error: `API Key untuk provider '${preset.name}' diperlukan untuk pengujian.`
                 },
                 { status: 400 }
             );
         }
 
-        const resolvedModel = inputModel || settings.geminiModel?.trim() || "gemini-1.5-flash";
+        const completion = await generateAICompletion({
+            provider,
+            apiKey,
+            baseUrl,
+            model,
+            prompt: "Test ping. Balas hanya dengan: 'AI Gateway Operational' singkat tanpa tanda kutip."
+        });
 
-        const startTime = Date.now();
-        const genAI = new GoogleGenerativeAI(resolvedKey);
-        const aiModel = genAI.getGenerativeModel({ model: resolvedModel });
+        if (!completion.success) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    provider,
+                    model,
+                    error: completion.error || "Gagal menghubungi endpoint AI."
+                },
+                { status: 400 }
+            );
+        }
 
-        const result = await aiModel.generateContent("Balas dengan 'Operational' jika sistem AI berfungsi normal.");
-        const reply = result.response.text().trim();
-        const latencyMs = Date.now() - startTime;
-
-        // Masked key display (e.g. AIzaSy...9xyz)
-        const maskedKey = resolvedKey.length > 8
-            ? `${resolvedKey.slice(0, 6)}...${resolvedKey.slice(-4)}`
-            : "******";
+        // Masked key display (e.g. sk-...9xyz)
+        const maskedKey = apiKey.length > 8
+            ? `${apiKey.slice(0, 5)}...${apiKey.slice(-4)}`
+            : (provider === "ollama" ? "No Key Required" : "******");
 
         return NextResponse.json({
             success: true,
-            model: resolvedModel,
-            latencyMs,
-            reply,
-            source,
+            provider,
+            providerName: preset.name,
+            model,
+            baseUrl,
+            latencyMs: completion.latencyMs,
+            reply: completion.text,
             maskedKey,
-            message: `Koneksi Google Gemini (${resolvedModel}) sukses! Latency: ${latencyMs}ms. Status: Operational.`
+            message: `Koneksi ${preset.name} (${model}) sukses! Latency: ${completion.latencyMs}ms. Status: Operational.`
         });
     } catch (error: unknown) {
-        console.error("Gemini AI test connection error:", error);
-        const message = error instanceof Error ? error.message : "Gagal menguji koneksi Gemini AI";
+        console.error("Universal AI test connection error:", error);
+        const message = error instanceof Error ? error.message : "Gagal menguji koneksi AI";
         return NextResponse.json(
             {
                 success: false,
