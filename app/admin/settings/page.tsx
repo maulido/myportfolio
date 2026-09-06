@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { 
     Save, 
     Globe, 
@@ -32,12 +32,32 @@ import {
     Eye,
     EyeOff,
     CheckCircle2,
-    HelpCircle
+    HelpCircle,
+    FileText,
+    Upload,
+    FolderOpen,
+    Copy,
+    Check,
+    Trash2,
+    X,
+    Search,
+    Link2
 } from "lucide-react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { mutateSettingsCache } from "@/lib/useSettings";
+import { UploadDropzone } from "@/lib/uploadthing";
+
+interface MediaFile {
+    _id: string;
+    fileName: string;
+    fileUrl: string;
+    fileSize: number;
+    fileType: string;
+    tags?: string[];
+    createdAt: string;
+}
 
 type TabKey = "global" | "home" | "about" | "projects" | "certifications" | "blog" | "gallery_uses" | "contact" | "footer";
 
@@ -48,6 +68,15 @@ export default function AdminSettingsPage() {
     const [testingTelegram, setTestingTelegram] = useState(false);
     const [showBotToken, setShowBotToken] = useState(false);
     const [showTelegramGuide, setShowTelegramGuide] = useState(false);
+
+    // CV & Media Library State
+    const [cvUploadMode, setCvUploadMode] = useState<"upload" | "media" | "url">("upload");
+    const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+    const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
+    const [loadingMedia, setLoadingMedia] = useState(false);
+    const [mediaSearch, setMediaSearch] = useState("");
+    const [mediaFilter, setMediaFilter] = useState<"all" | "pdf">("pdf");
+    const [copiedCvUrl, setCopiedCvUrl] = useState(false);
 
     // Comprehensive Settings State
     const [settings, setSettings] = useState<Record<string, string>>({
@@ -218,6 +247,60 @@ export default function AdminSettingsPage() {
 
         fetchSettings();
     }, []);
+
+    const fetchMediaLibrary = useCallback(async () => {
+        setLoadingMedia(true);
+        try {
+            const response = await fetch("/api/media?limit=100");
+            const data = await response.json();
+            if (data.success && Array.isArray(data.data)) {
+                setMediaFiles(data.data);
+            }
+        } catch {
+            console.error("Failed to load media library");
+        } finally {
+            setLoadingMedia(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchMediaLibrary();
+    }, [fetchMediaLibrary]);
+
+    const handleOpenMediaModal = () => {
+        setIsMediaModalOpen(true);
+        fetchMediaLibrary();
+    };
+
+    const handleSelectMediaCv = (url: string) => {
+        setSettings(prev => ({ ...prev, resumeUrl: url }));
+        setIsMediaModalOpen(false);
+        toast.success("CV berhasil dipilih dari Media Library!");
+    };
+
+    const handleCopyCvUrl = (url: string) => {
+        if (!url) return;
+        navigator.clipboard.writeText(url);
+        setCopiedCvUrl(true);
+        toast.success("Tautan CV disalin ke clipboard!");
+        setTimeout(() => setCopiedCvUrl(false), 2000);
+    };
+
+    const formatCvFileSize = (bytes: number) => {
+        if (!bytes || bytes === 0) return "0 B";
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+        return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+    };
+
+    const filteredCvMedia = useMemo(() => {
+        return mediaFiles.filter(file => {
+            const matchesSearch = file.fileName.toLowerCase().includes(mediaSearch.toLowerCase());
+            const isPdf = file.fileType === "pdf" || file.fileUrl?.toLowerCase().endsWith(".pdf");
+            const matchesType = mediaFilter === "all" ? true : isPdf;
+            return matchesSearch && matchesType;
+        });
+    }, [mediaFiles, mediaSearch, mediaFilter]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -924,15 +1007,261 @@ export default function AdminSettingsPage() {
                                             className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                                         />
                                     </div>
-                                    <div className="space-y-2 sm:col-span-2">
-                                        <label className="text-xs font-semibold text-foreground">Resume / CV Download URL</label>
-                                        <input
-                                            name="resumeUrl"
-                                            value={settings.resumeUrl || ""}
-                                            onChange={handleChange}
-                                            placeholder="Tautan URL file PDF resume atau dokumen Google Drive"
-                                            className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                                        />
+                                    {/* Resume / CV Section */}
+                                    <div className="space-y-3 sm:col-span-2 pt-4 border-t border-border/60">
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                                            <div>
+                                                <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                                                    <FileText className="h-4 w-4 text-primary" />
+                                                    <span>Resume / Curriculum Vitae (CV)</span>
+                                                </label>
+                                                <p className="text-[11px] text-muted-foreground mt-0.5">
+                                                    Upload langsung file PDF, pilih dari Media Library, atau gunakan URL eksternal (Google Drive / CDN).
+                                                </p>
+                                            </div>
+
+                                            {/* Mode Switcher Buttons */}
+                                            <div className="inline-flex p-1 rounded-xl bg-muted/70 border border-border/70 text-xs self-start sm:self-auto shrink-0">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setCvUploadMode("upload")}
+                                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
+                                                        cvUploadMode === "upload"
+                                                            ? "bg-background text-primary shadow-xs font-semibold"
+                                                            : "text-muted-foreground hover:text-foreground"
+                                                    }`}
+                                                >
+                                                    <Upload className="h-3.5 w-3.5" />
+                                                    <span>Upload PDF</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setCvUploadMode("media");
+                                                        handleOpenMediaModal();
+                                                    }}
+                                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
+                                                        cvUploadMode === "media"
+                                                            ? "bg-background text-primary shadow-xs font-semibold"
+                                                            : "text-muted-foreground hover:text-foreground"
+                                                    }`}
+                                                >
+                                                    <FolderOpen className="h-3.5 w-3.5" />
+                                                    <span>Pilih Media</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setCvUploadMode("url")}
+                                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
+                                                        cvUploadMode === "url"
+                                                            ? "bg-background text-primary shadow-xs font-semibold"
+                                                            : "text-muted-foreground hover:text-foreground"
+                                                    }`}
+                                                >
+                                                    <Link2 className="h-3.5 w-3.5" />
+                                                    <span>URL Manual</span>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        {/* Current Active CV Status Card */}
+                                        {settings.resumeUrl ? (
+                                            <div className="p-3.5 rounded-2xl bg-primary/5 border border-primary/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <div className="h-10 w-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
+                                                        <FileText className="h-5 w-5" />
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xs font-bold text-foreground truncate">
+                                                                {decodeURIComponent(settings.resumeUrl.split("/").pop() || "Resume-CV.pdf")}
+                                                            </span>
+                                                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-primary/20 text-primary uppercase shrink-0">
+                                                                Aktif
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-[11px] text-muted-foreground font-mono truncate mt-0.5">
+                                                            {settings.resumeUrl}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                                                    <a
+                                                        href={settings.resumeUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-background border border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors"
+                                                    >
+                                                        <ExternalLink className="h-3.5 w-3.5" />
+                                                        <span>Lihat CV</span>
+                                                    </a>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleCopyCvUrl(settings.resumeUrl)}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-background border border-border text-xs font-semibold hover:bg-muted text-foreground transition-colors cursor-pointer"
+                                                        title="Salin Tautan"
+                                                    >
+                                                        {copiedCvUrl ? (
+                                                            <>
+                                                                <Check className="h-3.5 w-3.5 text-emerald-500" />
+                                                                <span className="text-emerald-500">Tersalin</span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Copy className="h-3.5 w-3.5" />
+                                                                <span>Salin</span>
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setSettings(prev => ({ ...prev, resumeUrl: "" }));
+                                                            toast.success("CV dinonaktifkan (URL dikosongkan)");
+                                                        }}
+                                                        className="p-2 rounded-xl text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                                                        title="Hapus / Lepas CV"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs flex items-center gap-2.5">
+                                                <HelpCircle className="h-4 w-4 shrink-0 text-amber-500" />
+                                                <span>Belum ada file CV yang aktif. Pengunjung tidak dapat mengunduh CV sampai Anda mengupload file atau memasukkan URL.</span>
+                                            </div>
+                                        )}
+
+                                        {/* Pane 1: Upload PDF */}
+                                        {cvUploadMode === "upload" && (
+                                            <div className="space-y-2 pt-1">
+                                                <UploadDropzone
+                                                    endpoint="resumeUploader"
+                                                    onClientUploadComplete={async (res) => {
+                                                        if (res && res[0]) {
+                                                            const uploaded = res[0];
+                                                            const uploadedUrl = uploaded.url;
+                                                            const originalName = uploaded.serverData?.fileName || uploaded.name || "Resume-CV.pdf";
+                                                            const fileSize = uploaded.serverData?.fileSize || uploaded.size || 1024 * 500;
+
+                                                            setSettings(prev => ({ ...prev, resumeUrl: uploadedUrl }));
+
+                                                            // Register automatically to Media Library
+                                                            try {
+                                                                await fetch("/api/media", {
+                                                                    method: "POST",
+                                                                    headers: { "Content-Type": "application/json" },
+                                                                    body: JSON.stringify({
+                                                                        fileName: originalName,
+                                                                        fileUrl: uploadedUrl,
+                                                                        fileSize,
+                                                                        fileType: "pdf",
+                                                                        tags: ["cv", "resume", "uploadthing"]
+                                                                    })
+                                                                });
+                                                                fetchMediaLibrary();
+                                                            } catch (err) {
+                                                                console.error("Error registering CV to media:", err);
+                                                            }
+
+                                                            toast.success("File CV berhasil di-upload dan tersimpan di Media Library!");
+                                                        }
+                                                    }}
+                                                    onUploadError={(error: Error) => {
+                                                        toast.error(`Gagal upload CV: ${error.message}`);
+                                                    }}
+                                                    appearance={{
+                                                        container: "border-2 border-dashed border-border/80 hover:border-primary/50 bg-background/50 rounded-2xl p-6 transition-colors",
+                                                        label: "text-xs font-semibold text-primary hover:underline",
+                                                        button: "bg-primary text-white text-xs font-bold px-4 py-2 rounded-xl shadow-md shadow-primary/20 cursor-pointer",
+                                                        allowedContent: "text-[11px] text-muted-foreground"
+                                                    }}
+                                                />
+                                                <p className="text-[11px] text-muted-foreground text-center">
+                                                    Ukuran maksimal file 16MB dalam format PDF. File akan otomatis tersimpan di CDN & Media Library.
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {/* Pane 2: Media Library */}
+                                        {cvUploadMode === "media" && (
+                                            <div className="p-4 rounded-2xl border border-border/80 bg-background/50 space-y-3">
+                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                                    <div>
+                                                        <p className="text-xs font-bold text-foreground">Media Library Dokumen</p>
+                                                        <p className="text-[11px] text-muted-foreground">Pilih file PDF atau dokumen yang sudah tersimpan di Media Library.</p>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleOpenMediaModal}
+                                                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-xs hover:bg-primary/90 transition-all cursor-pointer whitespace-nowrap self-start sm:self-auto"
+                                                    >
+                                                        <FolderOpen className="h-4 w-4" />
+                                                        <span>Buka Pustaka Media</span>
+                                                    </button>
+                                                </div>
+
+                                                {/* Quick recent PDF files */}
+                                                {mediaFiles.filter(f => f.fileType === "pdf" || f.fileUrl?.toLowerCase().endsWith(".pdf")).length > 0 ? (
+                                                    <div className="space-y-2 pt-2 border-t border-border/50">
+                                                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">File PDF Tersedia:</p>
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                            {mediaFiles
+                                                                .filter(f => f.fileType === "pdf" || f.fileUrl?.toLowerCase().endsWith(".pdf"))
+                                                                .slice(0, 4)
+                                                                .map((file) => {
+                                                                    const isSelected = settings.resumeUrl === file.fileUrl;
+                                                                    return (
+                                                                        <div
+                                                                            key={file._id}
+                                                                            onClick={() => handleSelectMediaCv(file.fileUrl)}
+                                                                            className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2.5 text-xs ${
+                                                                                isSelected
+                                                                                    ? "border-primary bg-primary/10 text-primary font-semibold shadow-2xs"
+                                                                                    : "border-border/60 bg-card hover:border-primary/50 text-foreground"
+                                                                            }`}
+                                                                        >
+                                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                                <FileText className="h-4 w-4 shrink-0 text-primary" />
+                                                                                <div className="min-w-0">
+                                                                                    <p className="truncate font-medium">{file.fileName}</p>
+                                                                                    <p className="text-[10px] text-muted-foreground">{formatCvFileSize(file.fileSize)}</p>
+                                                                                </div>
+                                                                            </div>
+                                                                            <span className={`text-[10px] px-2.5 py-1 rounded-lg font-semibold shrink-0 ${
+                                                                                isSelected ? "bg-primary text-white" : "bg-muted text-muted-foreground hover:bg-primary/20 hover:text-primary"
+                                                                            }`}>
+                                                                                {isSelected ? "Aktif" : "Pilih"}
+                                                                            </span>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-center py-4 text-xs text-muted-foreground">
+                                                        Belum ada file PDF di Media Library. Silakan gunakan tab &quot;Upload PDF&quot; untuk mengunggah file CV pertama Anda.
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Pane 3: Manual URL */}
+                                        {cvUploadMode === "url" && (
+                                            <div className="space-y-2 pt-1">
+                                                <input
+                                                    name="resumeUrl"
+                                                    value={settings.resumeUrl || ""}
+                                                    onChange={handleChange}
+                                                    placeholder="https://drive.google.com/file/d/... atau https://cdn.../cv.pdf"
+                                                    className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-xs sm:text-sm font-mono"
+                                                />
+                                                <p className="text-[11px] text-muted-foreground">
+                                                    Gunakan URL manual jika Anda menyimpan CV di Google Drive, Dropbox, atau hosting pihak ketiga. Pastikan hak akses publik (&quot;Anyone with the link can view&quot;) sudah aktif.
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -2405,6 +2734,159 @@ export default function AdminSettingsPage() {
                     )}
                 </motion.div>
             </div>
+
+            {/* Media Library Picker Modal for CV */}
+            <AnimatePresence>
+                {isMediaModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="w-full max-w-2xl rounded-3xl bg-card border border-border p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col"
+                        >
+                            {/* Modal Header */}
+                            <div className="flex items-center justify-between pb-3 border-b border-border">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="p-2 rounded-xl bg-primary/10 text-primary">
+                                        <FolderOpen className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-base font-bold text-foreground">Pilih File dari Media Library</h3>
+                                        <p className="text-xs text-muted-foreground">Pilih file dokumen PDF untuk dijadikan Resume / CV aktif</p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsMediaModalOpen(false)}
+                                    className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+
+                            {/* Filters & Search */}
+                            <div className="flex flex-col sm:flex-row items-center gap-3">
+                                <div className="relative flex-1 w-full">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <input
+                                        type="text"
+                                        value={mediaSearch}
+                                        onChange={(e) => setMediaSearch(e.target.value)}
+                                        placeholder="Cari nama file..."
+                                        className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-background border border-border text-xs focus:outline-none focus:ring-2 focus:ring-primary"
+                                    />
+                                </div>
+                                <div className="inline-flex p-1 rounded-xl bg-muted/60 border border-border/60 text-xs shrink-0">
+                                    <button
+                                        type="button"
+                                        onClick={() => setMediaFilter("pdf")}
+                                        className={`px-3 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                                            mediaFilter === "pdf" ? "bg-background text-primary shadow-xs font-semibold" : "text-muted-foreground hover:text-foreground"
+                                        }`}
+                                    >
+                                        PDF Only
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setMediaFilter("all")}
+                                        className={`px-3 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                                            mediaFilter === "all" ? "bg-background text-primary shadow-xs font-semibold" : "text-muted-foreground hover:text-foreground"
+                                        }`}
+                                    >
+                                        Semua File
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* File List / Content */}
+                            <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[220px]">
+                                {loadingMedia ? (
+                                    <div className="h-48 flex flex-col items-center justify-center gap-2 text-muted-foreground text-xs">
+                                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                        <span>Memuat media library...</span>
+                                    </div>
+                                ) : filteredCvMedia.length === 0 ? (
+                                    <div className="h-48 flex flex-col items-center justify-center gap-2 text-muted-foreground text-xs text-center p-4">
+                                        <FileText className="h-8 w-8 text-muted-foreground/40" />
+                                        <p className="font-semibold text-foreground">Tidak ada file yang cocok</p>
+                                        <p className="text-[11px]">Coba ubah kata kunci pencarian atau upload file baru melalui tab &quot;Upload PDF&quot;.</p>
+                                    </div>
+                                ) : (
+                                    filteredCvMedia.map((file) => {
+                                        const isSelected = settings.resumeUrl === file.fileUrl;
+                                        const isPdf = file.fileType === "pdf" || file.fileUrl?.toLowerCase().endsWith(".pdf");
+                                        return (
+                                            <div
+                                                key={file._id}
+                                                className={`p-3 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+                                                    isSelected
+                                                        ? "border-primary bg-primary/10 shadow-2xs"
+                                                        : "border-border/70 bg-background hover:border-primary/40 hover:bg-muted/30"
+                                                }`}
+                                            >
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${
+                                                        isPdf ? "bg-red-500/10 text-red-500" : "bg-primary/10 text-primary"
+                                                    }`}>
+                                                        <FileText className="h-5 w-5" />
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="text-xs font-bold text-foreground truncate">{file.fileName}</p>
+                                                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
+                                                            <span className="uppercase font-semibold">{file.fileType}</span>
+                                                            <span>•</span>
+                                                            <span>{formatCvFileSize(file.fileSize)}</span>
+                                                            <span>•</span>
+                                                            <span>{new Date(file.createdAt).toLocaleDateString()}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <a
+                                                        href={file.fileUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-2 rounded-xl border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                                        title="Lihat Pratinjau File"
+                                                    >
+                                                        <ExternalLink className="h-3.5 w-3.5" />
+                                                    </a>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleSelectMediaCv(file.fileUrl)}
+                                                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                                            isSelected
+                                                                ? "bg-primary text-white shadow-xs"
+                                                                : "bg-primary/10 text-primary hover:bg-primary hover:text-white"
+                                                        }`}
+                                                    >
+                                                        {isSelected ? "Terpilih" : "Pilih File"}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className="flex items-center justify-between pt-3 border-t border-border text-xs">
+                                <span className="text-muted-foreground text-[11px]">
+                                    {filteredCvMedia.length} file ditemukan
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsMediaModalOpen(false)}
+                                    className="px-4 py-2 rounded-xl border border-border font-semibold hover:bg-muted transition-colors cursor-pointer"
+                                >
+                                    Tutup
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

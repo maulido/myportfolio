@@ -99,6 +99,27 @@ export const ourFileRouter = {
             }
             return { uploadedBy: metadata.userId, url: file.url, key: file.key, fileName: file.name };
         }),
+
+    // Resume / CV PDF uploader
+    resumeUploader: f({ pdf: { maxFileSize: "16MB", maxFileCount: 1 } })
+        .middleware(async ({ files }) => {
+            const user = await auth();
+            if (!user) throw new UploadThingError("Unauthorized");
+
+            const fileOverrides = files.map((file) => ({
+                name: generateReadableFilename(file.name),
+            }));
+
+            return { userId: user.id, [UTFiles]: fileOverrides };
+        })
+        .onUploadComplete(async ({ metadata, file }) => {
+            if (process.env.NODE_ENV === 'development') {
+                console.log("Resume upload complete for userId:", metadata.userId);
+                console.log("Custom filename:", file.name);
+                console.log("Unique file key:", file.key);
+            }
+            return { uploadedBy: metadata.userId, url: file.url, key: file.key, fileName: file.name, fileSize: file.size };
+        }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof ourFileRouter;
