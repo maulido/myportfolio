@@ -42,7 +42,13 @@ import {
     Search,
     Link2,
     Database,
-    Download
+    Download,
+    Server,
+    Cpu,
+    RefreshCw,
+    AlertTriangle,
+    Radio,
+    Zap
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -60,7 +66,7 @@ interface MediaFile {
     createdAt: string;
 }
 
-type TabKey = "global" | "home" | "about" | "projects" | "certifications" | "blog" | "gallery_uses" | "contact" | "footer";
+type TabKey = "global" | "integrations" | "home" | "about" | "projects" | "certifications" | "blog" | "gallery_uses" | "contact" | "footer";
 
 export default function AdminSettingsPage() {
     const [loading, setLoading] = useState(true);
@@ -69,6 +75,28 @@ export default function AdminSettingsPage() {
     const [testingTelegram, setTestingTelegram] = useState(false);
     const [showBotToken, setShowBotToken] = useState(false);
     const [showTelegramGuide, setShowTelegramGuide] = useState(false);
+
+    // Database & AI Services State
+    const [showGeminiKey, setShowGeminiKey] = useState(false);
+    const [showMongoUri, setShowMongoUri] = useState(false);
+    const [testingAi, setTestingAi] = useState(false);
+    const [aiTestResult, setAiTestResult] = useState<{
+        success: boolean;
+        message: string;
+        latencyMs?: number;
+        model?: string;
+        reply?: string;
+    } | null>(null);
+    const [testingDb, setTestingDb] = useState(false);
+    const [dbTestResult, setDbTestResult] = useState<{
+        success: boolean;
+        message: string;
+        latencyMs?: number;
+        host?: string;
+        databaseName?: string;
+        isCustomUri?: boolean;
+        collectionsCount?: number;
+    } | null>(null);
 
     // CV & Media Library State
     const [cvUploadMode, setCvUploadMode] = useState<"upload" | "media" | "url">("upload");
@@ -106,6 +134,14 @@ export default function AdminSettingsPage() {
         telegramChatId: "",
         telegramNotifyContact: "true",
         telegramNotifyGuestbook: "true",
+
+        // Database & AI Services
+        geminiApiKey: "",
+        geminiModel: "gemini-1.5-flash",
+        geminiEnabled: "true",
+        geminiCustomPrompt: "",
+        mongoDbUri: "",
+        mongoDbName: "",
 
         // Home Page
         heroTitle: "Digital Architect",
@@ -381,8 +417,98 @@ export default function AdminSettingsPage() {
         }
     };
 
+    const handleTestAi = async () => {
+        setTestingAi(true);
+        setAiTestResult(null);
+        try {
+            const res = await fetch("/api/admin/ai/test", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    apiKey: settings.geminiApiKey?.trim() || undefined,
+                    model: settings.geminiModel?.trim() || undefined
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setAiTestResult({
+                    success: true,
+                    message: data.message || "Koneksi Google Gemini AI berhasil!",
+                    latencyMs: data.latencyMs,
+                    model: data.model,
+                    reply: data.reply
+                });
+                toast.success(`Gemini AI (${data.model}) aktif! Latency: ${data.latencyMs}ms`);
+            } else {
+                setAiTestResult({
+                    success: false,
+                    message: data.error || "Gagal menguji koneksi Gemini AI."
+                });
+                toast.error(data.error || "Uji coba Gemini AI gagal", { duration: 6000 });
+            }
+        } catch (error) {
+            console.error("AI test failed", error);
+            setAiTestResult({
+                success: false,
+                message: "Terjadi kesalahan jaringan saat menguji koneksi AI."
+            });
+            toast.error("Kesalahan jaringan saat menguji AI");
+        } finally {
+            setTestingAi(false);
+        }
+    };
+
+    const handleTestDatabase = async (useCustomUri: boolean = false) => {
+        setTestingDb(true);
+        setDbTestResult(null);
+        try {
+            const customUri = useCustomUri ? settings.mongoDbUri?.trim() : undefined;
+            if (useCustomUri && !customUri) {
+                toast.error("Harap masukkan URI MongoDB kustom terlebih dahulu untuk diuji.");
+                setTestingDb(false);
+                return;
+            }
+
+            const res = await fetch("/api/admin/database/test", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ uri: customUri })
+            });
+            const data = await res.json();
+            if (data.success) {
+                setDbTestResult({
+                    success: true,
+                    message: data.message || "Koneksi database MongoDB sukses!",
+                    latencyMs: data.latencyMs,
+                    host: data.host,
+                    databaseName: data.databaseName,
+                    isCustomUri: data.isCustomUri,
+                    collectionsCount: data.collectionsCount
+                });
+                toast.success(`Database '${data.databaseName}' terhubung! Latency: ${data.latencyMs}ms`);
+            } else {
+                setDbTestResult({
+                    success: false,
+                    message: data.error || "Gagal menghubungi database MongoDB.",
+                    isCustomUri: data.isCustomUri
+                });
+                toast.error(data.error || "Koneksi database gagal", { duration: 6000 });
+            }
+        } catch (error) {
+            console.error("Database test failed", error);
+            setDbTestResult({
+                success: false,
+                message: "Terjadi kesalahan jaringan saat menguji database."
+            });
+            toast.error("Kesalahan jaringan saat menguji database");
+        } finally {
+            setTestingDb(false);
+        }
+    };
+
     const tabs: { key: TabKey; label: string; icon: React.ElementType }[] = [
         { key: "global", label: "Global & Branding", icon: Globe },
+        { key: "integrations", label: "Database & AI Services", icon: Server },
         { key: "home", label: "Home Page", icon: Home },
         { key: "about", label: "About Page", icon: BookOpen },
         { key: "projects", label: "Projects Page", icon: Briefcase },
@@ -1372,6 +1498,401 @@ export default function AdminSettingsPage() {
                                             placeholder="https://instagram.com/username"
                                             className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                                         />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* TAB: CLOUD & INTEGRATIONS (DATABASE & AI) */}
+                    {activeTab === "integrations" && (
+                        <div className="grid gap-6">
+                            {/* Header Hub Banner */}
+                            <div className="bg-gradient-to-r from-primary/10 via-card to-card border border-primary/20 rounded-3xl p-6 shadow-sm relative overflow-hidden">
+                                <div className="absolute top-0 right-0 -mt-8 -mr-8 w-44 h-44 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+                                    <div className="flex items-start gap-4">
+                                        <div className="p-3 bg-primary/10 text-primary rounded-2xl border border-primary/20 shrink-0">
+                                            <Server className="h-6 w-6" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2.5 flex-wrap">
+                                                <h2 className="text-xl font-bold tracking-tight text-foreground">
+                                                    Database & AI Services Integration Hub
+                                                </h2>
+                                                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 uppercase tracking-wider">
+                                                    Infrastructure
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground mt-1 max-w-2xl">
+                                                Kelola koneksi basis data MongoDB cluster dan API Key Google Gemini AI secara langsung dari antarmuka Admin dengan pengujian latensi real-time.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleTestDatabase(false)}
+                                            disabled={testingDb}
+                                            className="px-3 py-2 rounded-xl text-xs font-semibold border border-border bg-card hover:bg-muted text-foreground transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                            title="Uji koneksi database server aktif"
+                                        >
+                                            {testingDb ? <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" /> : <Database className="h-3.5 w-3.5 text-primary" />}
+                                            <span>Ping Database</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleTestAi}
+                                            disabled={testingAi}
+                                            className="px-3 py-2 rounded-xl text-xs font-semibold bg-primary/10 text-primary hover:bg-primary hover:text-white border border-primary/30 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                                            title="Uji koneksi Google Gemini AI"
+                                        >
+                                            {testingAi ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                                            <span>Ping Gemini AI</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section 1: Google Gemini AI Configuration */}
+                            <div className="bg-card/40 backdrop-blur-md border border-border rounded-2xl p-6 shadow-sm space-y-6">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2.5 bg-primary/10 text-primary rounded-xl border border-primary/20">
+                                            <Sparkles className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="text-base font-bold text-foreground">Google Gemini AI Engine</h3>
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                                    settings.geminiEnabled !== "false"
+                                                        ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
+                                                        : "bg-rose-500/10 text-rose-500 border border-rose-500/20"
+                                                }`}>
+                                                    {settings.geminiEnabled !== "false" ? "Aktif" : "Nonaktif"}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                Menyediakan kecerdasan buatan untuk Admin Assistant, excerpt writer, translator, dan Public Chatbot
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Enable / Disable Switch */}
+                                    <div className="flex items-center gap-3 bg-muted/40 p-1.5 rounded-2xl border border-border/60 self-start sm:self-auto">
+                                        <button
+                                            type="button"
+                                            onClick={() => setSettings(prev => ({ ...prev, geminiEnabled: "true" }))}
+                                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                                settings.geminiEnabled !== "false"
+                                                    ? "bg-primary text-white shadow-xs"
+                                                    : "text-muted-foreground hover:text-foreground"
+                                            }`}
+                                        >
+                                            Aktifkan AI
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSettings(prev => ({ ...prev, geminiEnabled: "false" }))}
+                                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                                settings.geminiEnabled === "false"
+                                                    ? "bg-rose-500 text-white shadow-xs"
+                                                    : "text-muted-foreground hover:text-foreground"
+                                            }`}
+                                        >
+                                            Nonaktifkan
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="grid gap-5">
+                                    {/* API Key Field */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                                <span>Gemini API Key (Google AI Studio)</span>
+                                                <span className="text-[10px] text-muted-foreground font-normal">(Override .env.local)</span>
+                                            </label>
+                                            <a
+                                                href="https://aistudio.google.com/app/apikey"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-[11px] text-primary hover:underline flex items-center gap-1 font-medium"
+                                            >
+                                                <span>Dapatkan API Key Gratis</span>
+                                                <ExternalLink className="h-3 w-3" />
+                                            </a>
+                                        </div>
+                                        <div className="relative">
+                                            <input
+                                                type={showGeminiKey ? "text" : "password"}
+                                                name="geminiApiKey"
+                                                value={settings.geminiApiKey || ""}
+                                                onChange={handleChange}
+                                                placeholder="AIzaSy... (kosongkan untuk menggunakan process.env.GEMINI_API_KEY)"
+                                                className="w-full pl-3.5 pr-11 py-2.5 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-xs font-mono"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowGeminiKey(!showGeminiKey)}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer p-1"
+                                                title={showGeminiKey ? "Sembunyikan API Key" : "Tampilkan API Key"}
+                                            >
+                                                {showGeminiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            </button>
+                                        </div>
+                                        <p className="text-[11px] text-muted-foreground">
+                                            Kunci API disimpan secara aman di koleksi database. Jika dibiarkan kosong, server akan secara otomatis memakai nilai dari <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[10px]">GEMINI_API_KEY</code> di file <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[10px]">.env.local</code>.
+                                        </p>
+                                    </div>
+
+                                    {/* Model Selector & Custom System Prompt Grid */}
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                                <Cpu className="h-3.5 w-3.5 text-primary" />
+                                                <span>Model AI Default</span>
+                                            </label>
+                                            <select
+                                                name="geminiModel"
+                                                value={settings.geminiModel || "gemini-1.5-flash"}
+                                                onChange={handleChange}
+                                                className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-xs font-medium cursor-pointer"
+                                            >
+                                                <option value="gemini-1.5-flash">gemini-1.5-flash (Direkomendasikan - Sangat Cepat & Efisien)</option>
+                                                <option value="gemini-1.5-pro">gemini-1.5-pro (Penalaran & Logika Arsitektur Tinggi)</option>
+                                                <option value="gemini-2.0-flash">gemini-2.0-flash (Model Generasi Terkini - Kecepatan Maksimum)</option>
+                                            </select>
+                                            <p className="text-[11px] text-muted-foreground">
+                                                Model yang dipakai untuk merespon pertanyaan di asisten admin dan widget chat publik.
+                                            </p>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-semibold text-foreground flex items-center justify-between">
+                                                <span className="flex items-center gap-1.5">
+                                                    <Radio className="h-3.5 w-3.5 text-primary" />
+                                                    <span>Uji Konektivitas API Key</span>
+                                                </span>
+                                            </label>
+                                            <button
+                                                type="button"
+                                                onClick={handleTestAi}
+                                                disabled={testingAi}
+                                                className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-primary text-white hover:bg-primary/90 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-60"
+                                            >
+                                                {testingAi ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <Zap className="h-4 w-4" />
+                                                )}
+                                                <span>{testingAi ? "Menguji API Google..." : "Test Koneksi Gemini AI Sekarang"}</span>
+                                            </button>
+                                            <p className="text-[11px] text-muted-foreground">
+                                                Mengirimkan request pengujian ke endpoint Google Gemini untuk memastikan kuota dan token aktif.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Test Result Callout for AI */}
+                                    {aiTestResult && (
+                                        <div className={`p-4 rounded-2xl border text-xs flex items-start gap-3 transition-all ${
+                                            aiTestResult.success
+                                                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400"
+                                                : "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-400"
+                                        }`}>
+                                            {aiTestResult.success ? (
+                                                <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500 mt-0.5" />
+                                            ) : (
+                                                <AlertTriangle className="h-5 w-5 shrink-0 text-rose-500 mt-0.5" />
+                                            )}
+                                            <div className="space-y-1 flex-1 min-w-0">
+                                                <div className="flex items-center justify-between gap-2 flex-wrap">
+                                                    <p className="font-bold">{aiTestResult.success ? "Uji Koneksi AI Berhasil" : "Uji Koneksi AI Gagal"}</p>
+                                                    {aiTestResult.latencyMs && (
+                                                        <span className="px-2 py-0.5 rounded-md bg-background/80 border border-border text-[10px] font-mono font-bold">
+                                                            Latency: {aiTestResult.latencyMs}ms
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-[11px] leading-relaxed break-words">{aiTestResult.message}</p>
+                                                {aiTestResult.reply && (
+                                                    <div className="mt-2 p-2.5 rounded-xl bg-background/70 border border-border/60 text-[11px] font-mono text-foreground">
+                                                        <span className="text-muted-foreground font-sans text-[10px] block mb-1 uppercase font-semibold">Respon Model:</span>
+                                                        &quot;{aiTestResult.reply}&quot;
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Custom AI Chatbot Persona */}
+                                    <div className="space-y-2 pt-2 border-t border-border/60">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                                <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                                                <span>Custom Persona & System Instructions (Public Chatbot)</span>
+                                            </label>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSettings(prev => ({
+                                                    ...prev,
+                                                    geminiCustomPrompt: "You are an AI assistant for a professional Portfolio Website. Your job is to answer questions about the portfolio owner (Me).\nOur background: Senior Network Engineer & Developer with expertise in Next.js, React, Node.js, Cisco, and Python.\nLocation: Jakarta, Indonesia.\nTone: Professional, helpful, and slightly futuristic.\nAnswer questions based on our skills and experience. If questions are unrelated, politely redirect them."
+                                                }))}
+                                                className="text-[11px] text-primary hover:underline font-medium cursor-pointer"
+                                            >
+                                                Gunakan Template Default
+                                            </button>
+                                        </div>
+                                        <textarea
+                                            name="geminiCustomPrompt"
+                                            value={settings.geminiCustomPrompt || ""}
+                                            onChange={handleChange}
+                                            rows={4}
+                                            placeholder="Tuliskan instruksi sistem persona untuk asisten AI pada widget chat publik..."
+                                            className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-xs leading-relaxed"
+                                        />
+                                        <p className="text-[11px] text-muted-foreground">
+                                            Instruksi ini mengatur bagaimana bot publik menyapa pengunjung, menjelaskan keahlian teknis Anda, dan mengarahkan pesan ke form kontak.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section 2: MongoDB Database Connectivity */}
+                            <div className="bg-card/40 backdrop-blur-md border border-border rounded-2xl p-6 shadow-sm space-y-6">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2.5 bg-emerald-500/10 text-emerald-600 rounded-xl border border-emerald-500/20">
+                                            <Database className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="text-base font-bold text-foreground">MongoDB Cluster Connectivity</h3>
+                                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                                                    Operational
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                Basis data utama untuk menyimpan artikel, projek, sertifikasi, media library, dan setelan sistem
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Action to ping active connection */}
+                                    <button
+                                        type="button"
+                                        onClick={() => handleTestDatabase(false)}
+                                        disabled={testingDb}
+                                        className="px-4 py-2 rounded-xl text-xs font-bold bg-card border border-border hover:bg-muted text-foreground transition-all flex items-center gap-2 cursor-pointer shadow-xs disabled:opacity-50 self-start sm:self-auto"
+                                    >
+                                        {testingDb ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <RefreshCw className="h-4 w-4 text-primary" />}
+                                        <span>Cek Latensi Database Aktif</span>
+                                    </button>
+                                </div>
+
+                                <div className="grid gap-5">
+                                    {/* Custom URI Input */}
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                                <span>MongoDB Connection URI (Override / Cluster Kustom)</span>
+                                                <span className="text-[10px] text-muted-foreground font-normal">(Opsional)</span>
+                                            </label>
+                                            <span className="text-[11px] text-muted-foreground font-mono">
+                                                Driver: Mongoose 8.x
+                                            </span>
+                                        </div>
+                                        <div className="relative">
+                                            <input
+                                                type={showMongoUri ? "text" : "password"}
+                                                name="mongoDbUri"
+                                                value={settings.mongoDbUri || ""}
+                                                onChange={handleChange}
+                                                placeholder="mongodb+srv://<username>:<password>@cluster0.mongodb.net/portfolio_db"
+                                                className="w-full pl-3.5 pr-11 py-2.5 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-xs font-mono"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowMongoUri(!showMongoUri)}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer p-1"
+                                                title={showMongoUri ? "Sembunyikan URI" : "Tampilkan URI"}
+                                            >
+                                                {showMongoUri ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                            </button>
+                                        </div>
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                                            <p>
+                                                Jika diisi, Anda dapat menguji URI cluster baru sebelum melakukan migrasi server. Jika kosong, sistem membaca <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[10px]">MONGODB_URI</code> dari <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[10px]">.env.local</code>.
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleTestDatabase(true)}
+                                                disabled={testingDb || !settings.mongoDbUri}
+                                                className="px-3 py-1 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white border border-primary/20 font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:pointer-events-none self-start sm:self-auto shrink-0"
+                                            >
+                                                Uji URI Kustom
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Test Result Callout for Database */}
+                                    {dbTestResult && (
+                                        <div className={`p-4 rounded-2xl border text-xs flex items-start gap-3 transition-all ${
+                                            dbTestResult.success
+                                                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400"
+                                                : "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-400"
+                                        }`}>
+                                            {dbTestResult.success ? (
+                                                <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500 mt-0.5" />
+                                            ) : (
+                                                <AlertTriangle className="h-5 w-5 shrink-0 text-rose-500 mt-0.5" />
+                                            )}
+                                            <div className="space-y-1.5 flex-1 min-w-0">
+                                                <div className="flex items-center justify-between gap-2 flex-wrap">
+                                                    <p className="font-bold">
+                                                        {dbTestResult.success
+                                                            ? (dbTestResult.isCustomUri ? "Koneksi URI Kustom Berhasil" : "Koneksi Database Aktif Normal")
+                                                            : "Koneksi Database Gagal"}
+                                                    </p>
+                                                    {dbTestResult.latencyMs !== undefined && (
+                                                        <span className="px-2 py-0.5 rounded-md bg-background/80 border border-border text-[10px] font-mono font-bold">
+                                                            Latency: {dbTestResult.latencyMs}ms
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-[11px] leading-relaxed break-words">{dbTestResult.message}</p>
+                                                {dbTestResult.success && dbTestResult.host && (
+                                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
+                                                        <div className="p-2 rounded-lg bg-background/60 border border-border/50 text-[10px]">
+                                                            <span className="text-muted-foreground block">Host:</span>
+                                                            <span className="font-mono font-semibold truncate block">{dbTestResult.host}</span>
+                                                        </div>
+                                                        <div className="p-2 rounded-lg bg-background/60 border border-border/50 text-[10px]">
+                                                            <span className="text-muted-foreground block">Database:</span>
+                                                            <span className="font-mono font-semibold truncate block">{dbTestResult.databaseName}</span>
+                                                        </div>
+                                                        <div className="p-2 rounded-lg bg-background/60 border border-border/50 text-[10px] col-span-2 sm:col-span-1">
+                                                            <span className="text-muted-foreground block">Koleksi:</span>
+                                                            <span className="font-mono font-semibold truncate block">{dbTestResult.collectionsCount ?? 0} Koleksi</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Security & Deployment Best Practices */}
+                                    <div className="p-4 rounded-2xl bg-muted/30 border border-border/60 flex items-start gap-3 text-xs">
+                                        <div className="p-1.5 bg-primary/10 rounded-lg text-primary shrink-0 mt-0.5">
+                                            <Shield className="h-4 w-4" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="font-bold text-foreground">Praktik Keamanan Database & API Key</p>
+                                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                                Pastikan IP server hosting terdaftar pada <strong>Network Access / IP Access List</strong> di MongoDB Atlas. Jangan bagikan string URI atau API Key kepada siapapun. Fitur isolasi uji coba di atas melakukan verifikasi tanpa mengganggu sesi database server yang sedang aktif.
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

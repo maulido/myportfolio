@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
 import { sanitizeText } from "@/lib/sanitize";
+import { getGlobalSettings } from "@/lib/settings";
 
 const chatLimiter = rateLimit({
     interval: 2 * 60 * 1000, // 2 minutes
@@ -30,7 +31,19 @@ export async function POST(req: Request) {
         );
     }
 
-    if (!process.env.GEMINI_API_KEY) {
+    const settings = await getGlobalSettings();
+    const apiKey = settings.geminiApiKey?.trim() || process.env.GEMINI_API_KEY?.trim();
+    const modelName = settings.geminiModel?.trim() || "gemini-1.5-flash";
+    const customPrompt = settings.geminiCustomPrompt?.trim();
+    const isAiDisabled = settings.geminiEnabled === "false";
+
+    if (isAiDisabled) {
+        return NextResponse.json({
+            response: "Asisten AI saat ini dinonaktifkan oleh administrator situs. Silakan gunakan form kontak untuk menghubungi secara langsung."
+        });
+    }
+
+    if (!apiKey) {
         return NextResponse.json({
             response: "I'm currently running in simulation mode because the API Key is not set. However, I can tell you that the owner is a Senior Network Engineer and Developer based in Jakarta!"
         });
@@ -50,10 +63,10 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Message cannot be empty." }, { status: 400 });
         }
 
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash",
-            systemInstruction: SYSTEM_PROMPT
+            model: modelName,
+            systemInstruction: customPrompt || SYSTEM_PROMPT
         });
 
         // Filter and sanitize history: ensure it starts with user and alternates

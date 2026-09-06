@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { requireAuth } from "@/lib/auth-helpers";
+import { getGlobalSettings } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -8,12 +9,15 @@ export async function POST(req: Request) {
     const authResult = await requireAuth();
     if (authResult instanceof NextResponse) return authResult;
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const settings = await getGlobalSettings();
+    const apiKey = settings.geminiApiKey?.trim() || process.env.GEMINI_API_KEY?.trim();
+    const modelName = settings.geminiModel?.trim() || "gemini-1.5-flash";
+
     if (!apiKey) {
         return NextResponse.json(
             {
                 success: false,
-                error: "GEMINI_API_KEY belum dikonfigurasi pada environment server (.env.local). Silakan tambahkan GEMINI_API_KEY untuk mengaktifkan AI Assistant."
+                error: "GEMINI_API_KEY belum dikonfigurasi. Silakan atur di Admin Settings > Integrations atau tambahkan ke .env.local untuk mengaktifkan AI Assistant."
             },
             { status: 400 }
         );
@@ -31,9 +35,8 @@ export async function POST(req: Request) {
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        // Using gemini-1.5-flash which is standard and fast
         const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash"
+            model: modelName
         });
 
         let prompt = "";

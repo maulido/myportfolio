@@ -68,4 +68,35 @@ async function dbConnect() {
     return cached.conn;
 }
 
+export function maskMongoUri(uri?: string): string {
+    if (!uri) return "";
+    try {
+        return uri.replace(/(mongodb(?:\+srv)?:\/\/[^:]+:)([^@]+)(@)/, "$1******$3");
+    } catch {
+        return "mongodb://***:***@...";
+    }
+}
+
+export function getDatabaseInfo() {
+    const readyStateMap: Record<number, string> = {
+        0: "disconnected",
+        1: "connected",
+        2: "connecting",
+        3: "disconnecting",
+        99: "uninitialized"
+    };
+    const state = mongoose.connection.readyState;
+    return {
+        readyState: state,
+        status: readyStateMap[state] || "unknown",
+        host: mongoose.connection.host || "unknown",
+        port: mongoose.connection.port || 27017,
+        name: mongoose.connection.name || "portfolio_db",
+        modelsCount: Object.keys(mongoose.models).length,
+        isConfiguredViaEnv: Boolean(process.env.MONGODB_URI),
+        maskedEnvUri: maskMongoUri(process.env.MONGODB_URI)
+    };
+}
+
 export default dbConnect;
+

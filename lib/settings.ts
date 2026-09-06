@@ -23,6 +23,13 @@ export interface GlobalSettings {
     telegramChatId?: string;
     telegramNotifyContact?: string;
     telegramNotifyGuestbook?: string;
+    // Database & AI Services
+    geminiApiKey?: string;
+    geminiModel?: string;
+    geminiEnabled?: string;
+    geminiCustomPrompt?: string;
+    mongoDbUri?: string;
+    mongoDbName?: string;
     [key: string]: string | undefined;
 }
 
