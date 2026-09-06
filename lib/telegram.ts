@@ -12,13 +12,64 @@ export function escapeTelegramHtml(text: string = ''): string {
 }
 
 /**
+ * Validates if a URL is strictly acceptable for Telegram InlineKeyboardButton
+ * Requirements from Telegram API:
+ * 1. Must be http://, https://, or tg://
+ * 2. Cannot be mailto:
+ * 3. Cannot be localhost or local/private IP addresses
+ * 4. Must have a valid dot in domain
+ */
+export function isValidTelegramButtonUrl(url?: string): boolean {
+    if (!url || typeof url !== 'string') return false;
+    const trimmed = url.trim();
+    if (trimmed.startsWith('mailto:')) return false;
+    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://') && !trimmed.startsWith('tg://')) return false;
+    if (
+        trimmed.includes('localhost') ||
+        trimmed.includes('127.0.0.1') ||
+        trimmed.includes('0.0.0.0') ||
+        trimmed.includes('::1')
+    ) {
+        return false;
+    }
+    try {
+        const parsed = new URL(trimmed);
+        return parsed.hostname.includes('.');
+    } catch {
+        return false;
+    }
+}
+
+interface TelegramInlineButton {
+    text: string;
+    url?: string;
+    callback_data?: string;
+}
+
+/**
+ * Filters rows of inline keyboard buttons so only valid URLs are sent.
+ * Drops buttons and rows that fail Telegram's URL validation.
+ */
+export function filterValidInlineKeyboard(inlineKeyboard?: TelegramInlineButton[][]): TelegramInlineButton[][] | undefined {
+    if (!inlineKeyboard || inlineKeyboard.length === 0) return undefined;
+    const validRows: TelegramInlineButton[][] = [];
+    for (const row of inlineKeyboard) {
+        const validButtons = row.filter(btn => isValidTelegramButtonUrl(btn.url));
+        if (validButtons.length > 0) {
+            validRows.push(validButtons);
+        }
+    }
+    return validRows.length > 0 ? validRows : undefined;
+}
+
+/**
  * Helper to resolve Telegram Bot Token and Chat ID
  * Priority: Admin Settings (Database) -> Environment Variables (.env)
  */
 export async function getTelegramCredentials() {
     let enabled = false;
-    let botToken = process.env.TELEGRAM_BOT_TOKEN || '';
-    let chatId = process.env.TELEGRAM_CHAT_ID || '';
+    let botToken = (process.env.TELEGRAM_BOT_TOKEN || '').trim();
+    let chatId = (process.env.TELEGRAM_CHAT_ID || '').trim();
     let notifyContact = true;
     let notifyGuestbook = true;
 
@@ -30,18 +81,24 @@ export async function getTelegramCredentials() {
         if (settings.telegramChatId) {
             chatId = settings.telegramChatId.trim();
         }
-        // If telegramEnabled is explicitly "false", disable. Defaults to true if token & chatId exist.
-        if (settings.telegramEnabled !== undefined) {
-            enabled = settings.telegramEnabled === 'true';
+
+        // Check enabled state:
+        // If explicitly set to "false", disable.
+        // If set to "true", enable.
+        // If undefined/empty but botToken & chatId are provided, auto-enable!
+        if (settings.telegramEnabled === 'false') {
+            enabled = false;
+        } else if (settings.telegramEnabled === 'true') {
+            enabled = Boolean(botToken && chatId);
         } else {
             enabled = Boolean(botToken && chatId);
         }
 
         if (settings.telegramNotifyContact !== undefined) {
-            notifyContact = settings.telegramNotifyContact === 'true';
+            notifyContact = settings.telegramNotifyContact !== 'false';
         }
         if (settings.telegramNotifyGuestbook !== undefined) {
-            notifyGuestbook = settings.telegramNotifyGuestbook === 'true';
+            notifyGuestbook = settings.telegramNotifyGuestbook !== 'false';
         }
     } catch (err) {
         console.warn('[TELEGRAM] Could not load settings from DB, falling back to env:', err);
@@ -68,12 +125,6 @@ function getSiteBaseUrl(): string {
     ).replace(/\/$/, '');
 }
 
-interface TelegramInlineButton {
-    text: string;
-    url?: string;
-    callback_data?: string;
-}
-
 interface SendTelegramOptions {
     text: string;
     inlineKeyboard?: TelegramInlineButton[][];
@@ -82,21 +133,24 @@ interface SendTelegramOptions {
 }
 
 /**
- * Core function to send message via Telegram Bot API
+ * Core function to send message via Telegram Bot API with automatic retry fallback
  */
 export async function sendTelegramMessage(options: SendTelegramOptions): Promise<{ success: boolean; data?: any; error?: string }> {
     const { text, inlineKeyboard, customToken, customChatId } = options;
 
     const creds = await getTelegramCredentials();
-    const token = customToken || creds.botToken;
-    const targetChatId = customChatId || creds.chatId;
+    const token = (customToken || creds.botToken || '').trim();
+    const rawChatId = (customChatId || creds.chatId || '').trim();
+    const targetChatId = rawChatId.replace(/["'\s]/g, '');
 
     if (!token || !targetChatId) {
         return {
             success: false,
-            error: 'Telegram Bot Token or Chat ID is not configured.'
+            error: 'Telegram Bot Token atau Chat ID belum diisi.'
         };
     }
+
+    const cleanInlineKeyboard = filterValidInlineKeyboard(inlineKeyboard);
 
     const payload: Record<string, any> = {
         chat_id: targetChatId,
@@ -105,15 +159,15 @@ export async function sendTelegramMessage(options: SendTelegramOptions): Promise
         disable_web_page_preview: true
     };
 
-    if (inlineKeyboard && inlineKeyboard.length > 0) {
+    if (cleanInlineKeyboard && cleanInlineKeyboard.length > 0) {
         payload.reply_markup = {
-            inline_keyboard: inlineKeyboard
+            inline_keyboard: cleanInlineKeyboard
         };
     }
 
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
+        const timeoutId = setTimeout(() => controller.abort(), 7000); // 7s timeout
 
         const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
             method: 'POST',
@@ -129,10 +183,40 @@ export async function sendTelegramMessage(options: SendTelegramOptions): Promise
         const data = await response.json();
 
         if (!response.ok || !data.ok) {
-            console.error('[TELEGRAM API ERROR]', data);
+            console.warn('[TELEGRAM API ERROR]', data);
+
+            // Fallback retry: If failed and reply_markup was present, retry without buttons
+            if (payload.reply_markup) {
+                console.warn('[TELEGRAM] Retrying message without reply_markup...');
+                delete payload.reply_markup;
+                try {
+                    const retryRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const retryData = await retryRes.json();
+                    if (retryRes.ok && retryData.ok) {
+                        return { success: true, data: retryData.result };
+                    }
+                } catch (retryErr) {
+                    console.error('[TELEGRAM RETRY ERROR]', retryErr);
+                }
+            }
+
+            // User-friendly error message resolution
+            let errorDesc = data?.description || `HTTP Error ${response.status}`;
+            if (errorDesc.includes('chat not found')) {
+                errorDesc = 'Chat ID tidak ditemukan. Pastikan Anda sudah membuka bot di Telegram dan menekan tombol START (/start), serta menggunakan Chat ID berupa angka (dari @userinfobot).';
+            } else if (errorDesc.includes('bot was blocked')) {
+                errorDesc = 'Bot diblokir oleh akun Telegram Anda. Buka bot di Telegram lalu unblock / kirim pesan /start.';
+            } else if (errorDesc.includes('Unauthorized') || response.status === 401) {
+                errorDesc = 'Bot Token tidak valid. Periksa kembali token yang Anda dapatkan dari @BotFather.';
+            }
+
             return {
                 success: false,
-                error: data?.description || `HTTP Error ${response.status}`
+                error: errorDesc
             };
         }
 
@@ -142,8 +226,8 @@ export async function sendTelegramMessage(options: SendTelegramOptions): Promise
         };
     } catch (err: any) {
         const errorMessage = err?.name === 'AbortError' 
-            ? 'Request to Telegram API timed out after 6 seconds' 
-            : err?.message || 'Unknown network error';
+            ? 'Koneksi ke Telegram API timeout (melebihi 7 detik)' 
+            : err?.message || 'Terjadi gangguan jaringan saat menghubungi Telegram';
         console.error('[TELEGRAM ERROR]', errorMessage);
         return {
             success: false,
@@ -158,19 +242,27 @@ export async function sendTelegramMessage(options: SendTelegramOptions): Promise
 export async function testTelegramConnection(tokenOverride?: string, chatIdOverride?: string) {
     const creds = await getTelegramCredentials();
     const token = (tokenOverride || creds.botToken || '').trim();
-    const chatId = (chatIdOverride || creds.chatId || '').trim();
+    const rawChatId = (chatIdOverride || creds.chatId || '').trim();
+    const chatId = rawChatId.replace(/["'\s]/g, '');
 
     if (!token) {
-        return { success: false, error: 'Telegram Bot Token is missing.' };
+        return { success: false, error: 'Telegram Bot Token belum diisi.' };
     }
     if (!chatId) {
-        return { success: false, error: 'Telegram Chat ID is missing.' };
+        return { success: false, error: 'Telegram Chat ID belum diisi.' };
+    }
+
+    if (chatId.startsWith('@')) {
+        return {
+            success: false,
+            error: 'Chat ID tidak boleh diawali @. Untuk akun pribadi Telegram, gunakan angka ID (contoh: 123456789) yang didapat dari bot @userinfobot.'
+        };
     }
 
     try {
         // Step 1: Verify token with getMe
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
 
         const getMeRes = await fetch(`https://api.telegram.org/bot${token}/getMe`, {
             signal: controller.signal
@@ -181,15 +273,16 @@ export async function testTelegramConnection(tokenOverride?: string, chatIdOverr
         if (!getMeRes.ok || !getMeData.ok) {
             return {
                 success: false,
-                error: `Invalid Bot Token: ${getMeData?.description || 'Unauthorized'}`
+                error: `Bot Token tidak valid (${getMeData?.description || 'Unauthorized'}). Pastikan token dari @BotFather sudah benar.`
             };
         }
 
         const botInfo = getMeData.result;
         const siteUrl = getSiteBaseUrl();
         const nowStr = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+        const isPublicDomain = isValidTelegramButtonUrl(siteUrl);
 
-        // Step 2: Send test message to Chat ID
+        // Step 2: Prepare test message text
         const testText = [
             `🚀 <b>Uji Coba Notifikasi Telegram Berhasil!</b>`,
             ``,
@@ -198,24 +291,28 @@ export async function testTelegramConnection(tokenOverride?: string, chatIdOverr
             `🎯 <b>Target Chat ID:</b> <code>${chatId}</code>`,
             `🕒 <b>Waktu:</b> ${nowStr} WIB`,
             ``,
-            `✅ Bot telah berhasil terhubung dengan sistem website portfolio Anda. Notifikasi Contact Form dan Guestbook akan dikirimkan ke obrolan ini.`
+            `✅ Bot telah berhasil terhubung dengan sistem portfolio Anda. Setiap ada pesan kontak atau entri buku tamu baru, notifikasi akan langsung masuk ke obrolan ini.`
         ].join('\n');
+
+        // Step 3: Add button only if siteUrl is public domain, otherwise send clean message
+        const inlineKeyboard: TelegramInlineButton[][] = [];
+        if (isPublicDomain) {
+            inlineKeyboard.push([
+                { text: '🖥️ Buka Panel Admin', url: `${siteUrl}/admin` }
+            ]);
+        }
 
         const sendResult = await sendTelegramMessage({
             text: testText,
             customToken: token,
             customChatId: chatId,
-            inlineKeyboard: [
-                [
-                    { text: '🖥️ Buka Panel Admin', url: `${siteUrl}/admin` }
-                ]
-            ]
+            inlineKeyboard: inlineKeyboard.length > 0 ? inlineKeyboard : undefined
         });
 
         if (!sendResult.success) {
             return {
                 success: false,
-                error: `Bot token valid, tapi gagal mengirim ke Chat ID: ${sendResult.error}. Pastikan Anda telah menekan /start pada bot ini.`
+                error: sendResult.error || 'Gagal mengirim pesan uji coba ke Chat ID. Pastikan Anda sudah membuka bot dan menekan START (/start).'
             };
         }
 
@@ -226,7 +323,7 @@ export async function testTelegramConnection(tokenOverride?: string, chatIdOverr
     } catch (err: any) {
         return {
             success: false,
-            error: err?.message || 'Failed to connect to Telegram API'
+            error: err?.message || 'Gagal menghubungi Telegram API.'
         };
     }
 }
@@ -257,12 +354,13 @@ export async function notifyContactSubmission({
         const cleanEmail = escapeTelegramHtml(email);
         const cleanMessage = escapeTelegramHtml(message);
         const cleanIp = escapeTelegramHtml(ip || '-');
+        const isPublicDomain = isValidTelegramButtonUrl(siteUrl);
 
         const text = [
             `📬 <b>Pesan Kontak Baru Diterima!</b>`,
             ``,
             `👤 <b>Pengirim:</b> ${cleanName}`,
-            `✉️ <b>Email:</b> ${cleanEmail}`,
+            `✉️ <b>Email:</b> <a href="mailto:${cleanEmail}">${cleanEmail}</a>`,
             `🌐 <b>IP Address:</b> <code>${cleanIp}</code>`,
             `🕒 <b>Waktu:</b> ${nowStr} WIB`,
             ``,
@@ -270,16 +368,16 @@ export async function notifyContactSubmission({
             `<i>"${cleanMessage}"</i>`
         ].join('\n');
 
-        const inlineKeyboard: TelegramInlineButton[][] = [
-            [
-                { text: '✉️ Balas via Email', url: `mailto:${cleanEmail}?subject=Re:%20Portfolio%20Inquiry` },
-                { text: '🖥️ Buka Admin', url: `${siteUrl}/admin` }
-            ]
-        ];
+        const inlineKeyboard: TelegramInlineButton[][] = [];
+        if (isPublicDomain) {
+            inlineKeyboard.push([
+                { text: '🖥️ Buka Panel Admin', url: `${siteUrl}/admin` }
+            ]);
+        }
 
         await sendTelegramMessage({
             text,
-            inlineKeyboard
+            inlineKeyboard: inlineKeyboard.length > 0 ? inlineKeyboard : undefined
         });
     } catch (err) {
         console.error('[TELEGRAM] Error in notifyContactSubmission:', err);
@@ -315,6 +413,7 @@ export async function notifyGuestbookSubmission({
         const cleanEmail = email ? escapeTelegramHtml(email) : '-';
         const cleanWebsite = website ? escapeTelegramHtml(website) : '-';
         const cleanIp = escapeTelegramHtml(ip || '-');
+        const isPublicDomain = isValidTelegramButtonUrl(siteUrl);
 
         const text = [
             `📖 <b>Tanda Tangan Buku Tamu Baru!</b>`,
@@ -330,16 +429,17 @@ export async function notifyGuestbookSubmission({
             `<i>"${cleanMessage}"</i>`
         ].join('\n');
 
-        const inlineKeyboard: TelegramInlineButton[][] = [
-            [
+        const inlineKeyboard: TelegramInlineButton[][] = [];
+        if (isPublicDomain) {
+            inlineKeyboard.push([
                 { text: '🛡️ Moderasi Buku Tamu', url: `${siteUrl}/admin/guestbook` },
-                { text: '📖 Buka Guestbook Publik', url: `${siteUrl}/guestbook` }
-            ]
-        ];
+                { text: '📖 Buka Guestbook', url: `${siteUrl}/guestbook` }
+            ]);
+        }
 
         await sendTelegramMessage({
             text,
-            inlineKeyboard
+            inlineKeyboard: inlineKeyboard.length > 0 ? inlineKeyboard : undefined
         });
     } catch (err) {
         console.error('[TELEGRAM] Error in notifyGuestbookSubmission:', err);

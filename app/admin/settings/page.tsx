@@ -211,7 +211,15 @@ export default function AdminSettingsPage() {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setSettings(prev => ({ ...prev, [name]: value }));
+        setSettings(prev => {
+            const next = { ...prev, [name]: value };
+            if ((name === "telegramBotToken" || name === "telegramChatId") && value.trim()) {
+                if (prev.telegramEnabled === "false") {
+                    next.telegramEnabled = "true";
+                }
+            }
+            return next;
+        });
     };
 
     const handleSave = async () => {
@@ -240,10 +248,16 @@ export default function AdminSettingsPage() {
 
     const handleTestTelegram = async () => {
         const token = settings.telegramBotToken?.trim();
-        const chatId = settings.telegramChatId?.trim();
+        const rawChatId = settings.telegramChatId?.trim();
+        const chatId = rawChatId?.replace(/["'\s]/g, "");
 
         if (!token || !chatId) {
             toast.error("Harap isi Telegram Bot Token dan Chat ID terlebih dahulu!");
+            return;
+        }
+
+        if (chatId.startsWith("@")) {
+            toast.error("Chat ID tidak boleh diawali @. Gunakan angka ID (misal: 123456789) dari @userinfobot.", { duration: 6000 });
             return;
         }
 
@@ -260,9 +274,10 @@ export default function AdminSettingsPage() {
 
             const data = await res.json();
             if (data.success) {
+                setSettings(prev => ({ ...prev, telegramEnabled: "true" }));
                 toast.success(data.message || "Pesan uji coba berhasil dikirim ke Telegram!");
             } else {
-                toast.error(data.error || "Gagal mengirim pesan uji coba ke Telegram");
+                toast.error(data.error || "Gagal mengirim pesan uji coba ke Telegram", { duration: 7000 });
             }
         } catch (error) {
             console.error("Failed to test Telegram", error);
@@ -669,6 +684,20 @@ export default function AdminSettingsPage() {
                                     </div>
                                 )}
 
+                                {/* Status Inactive Warning Banner if user has entered credentials but toggle is OFF */}
+                                {settings.telegramEnabled !== "true" && (settings.telegramBotToken?.trim() || settings.telegramChatId?.trim()) && (
+                                    <div className="mb-6 p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-900 dark:text-amber-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                        <span>⚠️ Token & Chat ID terisi tetapi status notifikasi masih <strong>NONAKTIF</strong>. Klik tombol di samping untuk mengaktifkan agar notifikasi otomatis terkirim.</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSettings(prev => ({ ...prev, telegramEnabled: "true" }))}
+                                            className="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 cursor-pointer shadow-xs"
+                                        >
+                                            Aktifkan Sekarang
+                                        </button>
+                                    </div>
+                                )}
+
                                 {/* Channel Events Toggles */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6 p-3.5 rounded-xl bg-background/60 border border-border/70">
                                     <label className="flex items-center gap-3 cursor-pointer select-none">
@@ -754,9 +783,15 @@ export default function AdminSettingsPage() {
                                             placeholder="Contoh: 123456789 atau -100123456789"
                                             className="w-full px-3.5 py-2 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-sm font-mono"
                                         />
-                                        <p className="text-[11px] text-muted-foreground">
-                                            Chat ID akun Anda (dari @userinfobot) atau ID grup Telegram target notifikasi.
-                                        </p>
+                                        {settings.telegramChatId?.trim().startsWith("@") ? (
+                                            <p className="text-[11px] text-rose-500 font-semibold">
+                                                ⚠️ Chat ID tidak boleh diawali @. Untuk akun pribadi Telegram, gunakan angka ID numerik (misal: 123456789) dari @userinfobot.
+                                            </p>
+                                        ) : (
+                                            <p className="text-[11px] text-muted-foreground">
+                                                Chat ID akun Anda (angka dari @userinfobot) atau ID grup Telegram target notifikasi.
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
 
