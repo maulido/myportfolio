@@ -92,6 +92,7 @@ ${knowledge}
 
 GUIDELINES:
 - Answer in the same language as the user's message (Indonesian or English).
+- Be concise, direct, helpful, and polite. Keep responses short and focused (typically 2-4 sentences or clear bullet points) so responses generate rapidly.
 - When mentioning a specific project, you can provide its markdown link like \`[Project Name](/projects/slug)\`.
 - When mentioning a specific blog article, provide its markdown link like \`[Article Title](/blog/slug)\`.
 - Maintain a professional, articulate, polite, and confident tone.
@@ -105,7 +106,8 @@ ${config.customPrompt ? `\nADDITIONAL OWNER INSTRUCTIONS:\n${config.customPrompt
             model: config.model,
             systemInstruction: combinedSystemInstruction,
             messages,
-            maxTokens: 750
+            maxTokens: 500,
+            temperature: 0.7
         });
 
         if (!completion.success) {

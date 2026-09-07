@@ -114,8 +114,59 @@ export async function getWebsiteKnowledgeData(forceRefresh = false): Promise<{ t
     try {
         await dbConnect();
 
-        // 1. Fetch public Settings & About data safely
-        const rawSettings = await Settings.find({}).lean();
+        // Fetch all public collections concurrently in a single parallel roundtrip
+        const [
+            rawSettings,
+            projects,
+            posts,
+            skills,
+            careerList,
+            certList,
+            faqs,
+            testimonials,
+            uses
+        ] = await Promise.all([
+            Settings.find({}).lean(),
+            Project.find({})
+                .select("title slug category description problemStatement solutionApproach technologies githubUrl liveUrl featured")
+                .sort({ featured: -1, createdAt: -1 })
+                .limit(20)
+                .lean() as unknown as Promise<IProject[]>,
+            Post.find({ published: true })
+                .select("title slug category excerpt tags views likes createdAt")
+                .sort({ createdAt: -1 })
+                .limit(20)
+                .lean() as unknown as Promise<IPost[]>,
+            Skill.find({})
+                .select("name level category years")
+                .sort({ order: 1, years: -1 })
+                .limit(30)
+                .lean() as unknown as Promise<ISkill[]>,
+            CareerJourney.find({})
+                .select("type title organization location startDate endDate current description achievements skills")
+                .sort({ startDate: -1 })
+                .limit(15)
+                .lean() as unknown as Promise<ICareerJourney[]>,
+            Certification.find({})
+                .select("title issuer category skills issueDate")
+                .sort({ issueDate: -1 })
+                .limit(15)
+                .lean() as unknown as Promise<ICertification[]>,
+            Faq.find({ published: { $ne: false } })
+                .select("question answer category")
+                .sort({ order: 1 })
+                .limit(15)
+                .lean() as unknown as Promise<IFaq[]>,
+            Testimonial.find({})
+                .select("name role company content")
+                .limit(8)
+                .lean() as unknown as Promise<ITestimonial[]>,
+            UsesItem.find({})
+                .select("name category description")
+                .limit(15)
+                .lean() as unknown as Promise<IUsesItem[]>
+        ]);
+
         const safeSettings: Record<string, string> = {};
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let aboutMeData: any = null;
@@ -138,59 +189,6 @@ export async function getWebsiteKnowledgeData(forceRefresh = false): Promise<{ t
         const siteTitle = safeSettings.siteTitle || `${brandName} | Network & Software Engineer Portfolio`;
         const siteDescription = safeSettings.siteDescription || "Professional portfolio and technical publications.";
         const siteKeywords = safeSettings.siteKeywords || "Network Engineer, Software Engineer, Next.js, Cisco, Python, Full Stack Developer";
-
-        // 2. Fetch public projects (lean query, excluding any internal admin fields)
-        const projects = await Project.find({})
-            .select("title slug category description problemStatement solutionApproach technologies githubUrl liveUrl featured")
-            .sort({ featured: -1, createdAt: -1 })
-            .limit(30)
-            .lean() as unknown as IProject[];
-
-        // 3. Fetch published blog posts (lean query)
-        const posts = await Post.find({ published: true })
-            .select("title slug category excerpt tags views likes createdAt")
-            .sort({ createdAt: -1 })
-            .limit(30)
-            .lean() as unknown as IPost[];
-
-        // 4. Fetch skills
-        const skills = await Skill.find({})
-            .select("name level category years")
-            .sort({ order: 1, years: -1 })
-            .limit(50)
-            .lean() as unknown as ISkill[];
-
-        // 5. Fetch career history & achievements
-        const careerList = await CareerJourney.find({})
-            .select("type title organization location startDate endDate current description achievements skills")
-            .sort({ startDate: -1 })
-            .limit(20)
-            .lean() as unknown as ICareerJourney[];
-
-        // 6. Fetch certifications
-        const certList = await Certification.find({})
-            .select("title issuer category skills issueDate")
-            .sort({ issueDate: -1 })
-            .limit(20)
-            .lean() as unknown as ICertification[];
-
-        // 7. Fetch published FAQs
-        const faqs = await Faq.find({ published: { $ne: false } })
-            .select("question answer category")
-            .sort({ order: 1 })
-            .limit(20)
-            .lean() as unknown as IFaq[];
-
-        // 8. Fetch testimonials & uses items
-        const testimonials = await Testimonial.find({})
-            .select("name role company content")
-            .limit(10)
-            .lean() as unknown as ITestimonial[];
-
-        const uses = await UsesItem.find({})
-            .select("name category description")
-            .limit(25)
-            .lean() as unknown as IUsesItem[];
 
         // Build Structured SEO Context
         const seoContext: WebsiteSeoContext = {

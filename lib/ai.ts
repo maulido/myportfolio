@@ -27,19 +27,19 @@ export const AI_PROVIDERS: Record<string, AIProviderPreset> = {
         id: "gemini",
         name: "Google Gemini",
         defaultBaseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",
-        defaultModel: "gemini-flash-latest",
+        defaultModel: "gemini-flash-lite-latest",
         recommendedModels: [
-            { id: "gemini-flash-latest", name: "Gemini Flash Latest", tag: "Paling Stabil & Cepat" },
+            { id: "gemini-flash-lite-latest", name: "Gemini Flash Lite", tag: "⚡ Ultra Cepat (<1 detik)" },
             { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash", tag: "Next-Gen 3.7" },
+            { id: "gemini-flash-latest", name: "Gemini Flash Latest", tag: "Stabil" },
             { id: "gemini-3.6-flash", name: "Gemini 3.6 Flash", tag: "Next-Gen 3.6" },
-            { id: "gemini-flash-lite-latest", name: "Gemini Flash Lite", tag: "Ultra Cepat" },
             { id: "gemini-pro-latest", name: "Gemini Pro Latest", tag: "Penalaran Flagship" },
         ],
         availableModels: [
-            { id: "gemini-flash-latest", name: "Gemini Flash Latest", description: "Model Gemini Flash teranyar yang selalu update otomatis, latensi sangat rendah dan paling stabil", tag: "Paling Stabil", isRecommended: true, contextWindow: 1048576 },
+            { id: "gemini-flash-lite-latest", name: "Gemini Flash Lite Latest", description: "Varian ultra hemat dan ultra cepat untuk respons chat seketika (<1 detik)", tag: "Paling Cepat", isRecommended: true, contextWindow: 1048576 },
             { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash", description: "Model generasi 3.7 terbaru dari Google dengan kecepatan dan penalaran seimbang", tag: "Next-Gen 3.7", isRecommended: true, contextWindow: 1048576 },
+            { id: "gemini-flash-latest", name: "Gemini Flash Latest", description: "Model Gemini Flash teranyar yang selalu update otomatis", tag: "Stabil", isRecommended: true, contextWindow: 1048576 },
             { id: "gemini-3.6-flash", name: "Gemini 3.6 Flash", description: "Model generasi 3.6 Google yang sangat efisien dan stabil", tag: "Next-Gen 3.6", isRecommended: true, contextWindow: 1048576 },
-            { id: "gemini-flash-lite-latest", name: "Gemini Flash Lite Latest", description: "Varian ultra hemat dan ultra cepat untuk pemrosesan teks instan", tag: "Ultra Cepat", isRecommended: true, contextWindow: 1048576 },
             { id: "gemini-pro-latest", name: "Gemini Pro Latest", description: "Model penalaran mendalam dan analisis konteks masif terbaru", tag: "Penalaran Flagship", isRecommended: true, contextWindow: 2097152 },
         ],
         apiKeyHelpUrl: "https://aistudio.google.com/app/apikey",
@@ -369,7 +369,7 @@ export async function generateAICompletion(options: AICompletionOptions): Promis
             console.warn(`[GEMINI] Model ${model} encountered error: ${firstErrMsg}`);
 
             // If the model encounters an error (e.g. 503 high demand or 404), automatically fallback and retry
-            const fallbackModel = "gemini-flash-latest";
+            const fallbackModel = "gemini-flash-lite-latest";
             const secondaryFallback = "gemini-3.7-flash";
             const targetFallback = model !== fallbackModel ? fallbackModel : secondaryFallback;
 
@@ -607,9 +607,9 @@ export async function fetchAvailableAIModels(options: {
                 })
                 .sort((a: AIModelItem, b: AIModelItem) => {
                     const orderPriority = (id: string) => {
-                        if (id === "gemini-flash-latest") return 1;
-                        if (id === "gemini-flash-lite-latest") return 2;
-                        if (id === "gemini-3.7-flash") return 3;
+                        if (id === "gemini-flash-lite-latest") return 1;
+                        if (id === "gemini-3.7-flash") return 2;
+                        if (id === "gemini-flash-latest") return 3;
                         if (id === "gemini-3.6-flash") return 4;
                         if (id === "gemini-pro-latest") return 5;
                         if (id.includes("flash")) return 10;
