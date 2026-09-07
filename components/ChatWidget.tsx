@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Bot, Loader2, RotateCcw } from "lucide-react";
+import { X, Send, Bot, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 function FormattedChatMessage({
@@ -152,14 +152,6 @@ export default function ChatWidget() {
         } catch {}
     };
 
-    const handleClearChat = () => {
-        setMessages([DEFAULT_GREETING]);
-        try {
-            localStorage.setItem("portfolio_chat_messages", JSON.stringify([DEFAULT_GREETING]));
-            sessionStorage.removeItem("portfolio_chat_draft");
-        } catch {}
-        setInput("");
-    };
 
     const handleInputChange = (val: string) => {
         setInput(val);
@@ -255,26 +247,13 @@ export default function ChatWidget() {
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-1">
-                                {messages.length > 1 && (
-                                    <button
-                                        type="button"
-                                        onClick={handleClearChat}
-                                        className="p-1.5 rounded-full hover:bg-white/20 transition-colors text-white/80 hover:text-white"
-                                        title="Reset riwayat percakapan"
-                                        aria-label="Reset chat history"
-                                    >
-                                        <RotateCcw className="h-4 w-4" />
-                                    </button>
-                                )}
-                                <button
-                                    onClick={handleClose}
-                                    className="p-1.5 rounded-full hover:bg-white/20 transition-colors text-white"
-                                    aria-label="Close chat"
-                                >
-                                    <X className="h-5 w-5" />
-                                </button>
-                            </div>
+                            <button
+                                onClick={handleClose}
+                                className="p-1 rounded-full hover:bg-white/20 transition-colors text-white"
+                                aria-label="Close chat"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
                         </div>
 
                         {/* Messages */}
