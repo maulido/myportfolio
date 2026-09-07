@@ -220,8 +220,13 @@ export default function ChatWidget() {
 
     useEffect(() => {
         const handleOpenChat = () => handleOpen();
+        const handleCloseChat = () => handleClose();
         window.addEventListener("open-chat-widget", handleOpenChat);
-        return () => window.removeEventListener("open-chat-widget", handleOpenChat);
+        window.addEventListener("close-chat-widget", handleCloseChat);
+        return () => {
+            window.removeEventListener("open-chat-widget", handleOpenChat);
+            window.removeEventListener("close-chat-widget", handleCloseChat);
+        };
     }, []);
 
     if (!isOpen && !isHydrated) return null;

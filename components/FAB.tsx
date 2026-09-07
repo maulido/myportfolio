@@ -22,7 +22,17 @@ export default function FloatingActionButton() {
             .catch(err => console.error("Failed to fetch WhatsApp number in FAB", err));
     }, []);
 
-    const toggleMenu = () => setIsOpen(!isOpen);
+    useEffect(() => {
+        const handleCloseFab = () => setIsOpen(false);
+        window.addEventListener("open-chat-widget", handleCloseFab);
+        return () => window.removeEventListener("open-chat-widget", handleCloseFab);
+    }, []);
+
+    const toggleMenu = () => {
+        setIsOpen(prev => !prev);
+        // Tutup tampilan chat agar menu FAB tampil jelas dan tidak tertutupi
+        window.dispatchEvent(new Event("close-chat-widget"));
+    };
 
     const menuItems = [
         {
