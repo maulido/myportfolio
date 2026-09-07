@@ -3,7 +3,7 @@ import dbConnect from "@/lib/db";
 import { rateLimit } from "@/lib/rate-limit";
 import { sanitizeText } from "@/lib/sanitize";
 import { getGlobalSettings } from "@/lib/settings";
-import { getResolvedAssistantAIConfig, streamAICompletion, AIMessage } from "@/lib/ai";
+import { getResolvedAssistantAIConfig, getConfiguredProviders, streamAICompletion, AIMessage } from "@/lib/ai";
 import { getRelevantKnowledgeString } from "@/lib/website-knowledge";
 import { getCachedAIResponse, setCachedAIResponse } from "@/lib/ai-cache";
 import { notifyAiRecruitmentLead } from "@/lib/telegram";
@@ -290,7 +290,10 @@ RESPONSE GUIDELINES:
 ${config.customPrompt ? `\nADDITIONAL OWNER INSTRUCTIONS:\n${config.customPrompt}` : ""}
 `.trim();
 
-        // 6. Return Streaming SSE Response
+        // 6. Return Streaming SSE Response with Smart Auto-Failover
+        const configuredProviders = getConfiguredProviders(settings);
+        const enableFailover = settings.aiAutoFailover !== "false";
+
         const stream = new ReadableStream({
             async start(controller) {
                 let fullResponse = "";
@@ -303,7 +306,9 @@ ${config.customPrompt ? `\nADDITIONAL OWNER INSTRUCTIONS:\n${config.customPrompt
                         systemInstruction: combinedSystemInstruction,
                         messages,
                         maxTokens: 500,
-                        temperature: 0.7
+                        temperature: 0.7,
+                        enableFailover,
+                        failoverProviders: configuredProviders
                     })) {
                         fullResponse += chunk;
                         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: chunk, sessionId })}\n\n`));

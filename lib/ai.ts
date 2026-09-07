@@ -180,32 +180,112 @@ export interface ResolvedAIConfig {
     source: "settings" | "env" | "fallback";
 }
 
+export interface ConfiguredProviderInfo {
+    provider: string;
+    name: string;
+    apiKey: string;
+    baseUrl: string;
+    model: string;
+    isPrimary?: boolean;
+}
+
+/**
+ * Returns the resolved API key for a given provider, checking provider-specific settings,
+ * environment variables, and universal fallbacks.
+ */
+export function getApiKeyForProvider(settings: GlobalSettings, provider: string): string {
+    switch (provider) {
+        case "gemini":
+            return settings.geminiApiKey?.trim() || process.env.GEMINI_API_KEY?.trim() || settings.aiApiKey?.trim() || process.env.AI_API_KEY?.trim() || "";
+        case "openai":
+            return settings.openaiApiKey?.trim() || process.env.OPENAI_API_KEY?.trim() || settings.aiApiKey?.trim() || process.env.AI_API_KEY?.trim() || "";
+        case "groq":
+            return settings.groqApiKey?.trim() || process.env.GROQ_API_KEY?.trim() || settings.aiApiKey?.trim() || process.env.AI_API_KEY?.trim() || "";
+        case "deepseek":
+            return settings.deepseekApiKey?.trim() || process.env.DEEPSEEK_API_KEY?.trim() || settings.aiApiKey?.trim() || process.env.AI_API_KEY?.trim() || "";
+        case "openrouter":
+            return settings.openrouterApiKey?.trim() || process.env.OPENROUTER_API_KEY?.trim() || settings.aiApiKey?.trim() || process.env.AI_API_KEY?.trim() || "";
+        case "custom":
+            return settings.customApiKey?.trim() || settings.aiApiKey?.trim() || "";
+        case "ollama":
+            return ""; // No API key required for local Ollama
+        default:
+            return settings.aiApiKey?.trim() || process.env.AI_API_KEY?.trim() || "";
+    }
+}
+
+/**
+ * Returns a list of all currently configured AI providers that have a valid API key
+ * or do not require one (e.g. Ollama).
+ */
+export function getConfiguredProviders(settings: GlobalSettings): ConfiguredProviderInfo[] {
+    const list: ConfiguredProviderInfo[] = [];
+    const supported = ["gemini", "groq", "openai", "deepseek", "openrouter", "ollama", "custom"];
+    const currentPrimary = settings.aiProvider || "gemini";
+
+    for (const p of supported) {
+        const key = getApiKeyForProvider(settings, p);
+        const preset = AI_PROVIDERS[p];
+        if (!preset) continue;
+
+        if (p === "ollama") {
+            if (settings.aiProvider === "ollama" || settings.assistantAiProvider === "ollama") {
+                list.push({
+                    provider: p,
+                    name: preset.name,
+                    apiKey: "",
+                    baseUrl: (settings.aiProvider === "ollama" && settings.aiBaseUrl?.trim()) ? settings.aiBaseUrl.trim() : preset.defaultBaseUrl,
+                    model: (settings.aiProvider === "ollama" && settings.aiModel?.trim()) ? settings.aiModel.trim() : preset.defaultModel,
+                    isPrimary: p === currentPrimary
+                });
+            }
+        } else if (key) {
+            let model = preset.defaultModel;
+            if (p === settings.assistantAiProvider && settings.assistantAiModel?.trim()) {
+                model = settings.assistantAiModel.trim();
+            } else if (p === settings.aiProvider && settings.aiModel?.trim()) {
+                model = settings.aiModel.trim();
+            } else if (p === "gemini" && settings.geminiModel?.trim()) {
+                model = settings.geminiModel.trim();
+            }
+
+            let baseUrl = preset.defaultBaseUrl;
+            if (p === settings.aiProvider && settings.aiBaseUrl?.trim()) {
+                baseUrl = settings.aiBaseUrl.trim();
+            }
+
+            list.push({
+                provider: p,
+                name: preset.name,
+                apiKey: key,
+                baseUrl,
+                model,
+                isPrimary: p === currentPrimary
+            });
+        }
+    }
+
+    return list;
+}
+
 export function getResolvedAIConfig(settings: GlobalSettings): ResolvedAIConfig {
     const provider = settings.aiProvider || (settings.geminiApiKey || process.env.GEMINI_API_KEY ? "gemini" : "gemini");
     const preset = AI_PROVIDERS[provider] || AI_PROVIDERS.gemini;
 
     // Resolve API Key
-    let apiKey = settings.aiApiKey?.trim() || "";
+    const apiKey = getApiKeyForProvider(settings, provider);
     let source: "settings" | "env" | "fallback" = "settings";
 
     if (!apiKey) {
-        if (provider === "gemini" && settings.geminiApiKey?.trim()) {
-            apiKey = settings.geminiApiKey.trim();
-        } else if (process.env.AI_API_KEY) {
-            apiKey = process.env.AI_API_KEY.trim();
-            source = "env";
-        } else if (provider === "gemini" && process.env.GEMINI_API_KEY) {
-            apiKey = process.env.GEMINI_API_KEY.trim();
-            source = "env";
-        } else if (provider === "openai" && process.env.OPENAI_API_KEY) {
-            apiKey = process.env.OPENAI_API_KEY.trim();
-            source = "env";
-        } else if (provider === "groq" && process.env.GROQ_API_KEY) {
-            apiKey = process.env.GROQ_API_KEY.trim();
-            source = "env";
-        } else {
-            source = "fallback";
-        }
+        source = "fallback";
+    } else if (
+        (provider === "gemini" && !settings.geminiApiKey && !settings.aiApiKey && (process.env.GEMINI_API_KEY || process.env.AI_API_KEY)) ||
+        (provider === "openai" && !settings.openaiApiKey && !settings.aiApiKey && process.env.OPENAI_API_KEY) ||
+        (provider === "groq" && !settings.groqApiKey && !settings.aiApiKey && process.env.GROQ_API_KEY) ||
+        (provider === "deepseek" && !settings.deepseekApiKey && !settings.aiApiKey && process.env.DEEPSEEK_API_KEY) ||
+        (provider === "openrouter" && !settings.openrouterApiKey && !settings.aiApiKey && process.env.OPENROUTER_API_KEY)
+    ) {
+        source = "env";
     }
 
     // Resolve Model
@@ -216,12 +296,14 @@ export function getResolvedAIConfig(settings: GlobalSettings): ResolvedAIConfig 
     // Auto-normalize if empty, invalid prefix, or known defunct models (1.5-flash, 2.5-flash return 404 on Google API)
     if (provider === "gemini") {
         if (!model || !model.startsWith("gemini-") || model === "gemini-1.5-flash" || model.includes("2.5-flash")) {
-            model = preset.defaultModel; // "gemini-flash-latest"
+            model = preset.defaultModel; // "gemini-flash-lite-latest"
         }
     }
 
     // Resolve Base URL
-    const baseUrl = settings.aiBaseUrl?.trim() || preset.defaultBaseUrl;
+    const baseUrl = (provider === settings.aiProvider && settings.aiBaseUrl?.trim())
+        ? settings.aiBaseUrl.trim()
+        : preset.defaultBaseUrl;
 
     // Resolve Enabled
     const enabled = settings.aiEnabled !== undefined
@@ -251,6 +333,7 @@ export function getResolvedAssistantAIConfig(settings: GlobalSettings): Resolved
 
     const assistantProvider = settings.assistantAiProvider?.trim() || globalConfig.provider;
     const preset = AI_PROVIDERS[assistantProvider] || AI_PROVIDERS[globalConfig.provider] || AI_PROVIDERS.gemini;
+    const assistantApiKey = getApiKeyForProvider(settings, assistantProvider);
 
     let assistantModel = settings.assistantAiModel?.trim() || (assistantProvider === globalConfig.provider ? globalConfig.model : preset.defaultModel);
 
@@ -266,6 +349,8 @@ export function getResolvedAssistantAIConfig(settings: GlobalSettings): Resolved
     return {
         ...globalConfig,
         provider: assistantProvider,
+        apiKey: assistantApiKey || globalConfig.apiKey,
+        baseUrl: preset.defaultBaseUrl,
         model: assistantModel,
         customPrompt
     };
@@ -286,6 +371,8 @@ export interface AICompletionOptions {
     systemInstruction?: string;
     maxTokens?: number;
     temperature?: number;
+    enableFailover?: boolean;
+    failoverProviders?: ConfiguredProviderInfo[];
 }
 
 export interface AICompletionResult {
@@ -298,10 +385,9 @@ export interface AICompletionResult {
 }
 
 /**
- * Universal AI Completion function supporting Google Gemini native SDK
- * and ANY OpenAI-compatible endpoint (OpenAI, Groq, DeepSeek, OpenRouter, Ollama, Custom).
+ * Executes a single AI completion request without multi-provider failover.
  */
-export async function generateAICompletion(options: AICompletionOptions): Promise<AICompletionResult> {
+async function executeSingleAICompletion(options: AICompletionOptions): Promise<AICompletionResult> {
     const startTime = Date.now();
     const provider = options.provider || "gemini";
     const model = options.model || (AI_PROVIDERS[provider]?.defaultModel || "gemini-1.5-flash");
@@ -528,11 +614,56 @@ export async function generateAICompletion(options: AICompletionOptions): Promis
 }
 
 /**
- * Streams AI completion chunks as an AsyncGenerator<string, void, unknown>.
- * Supports Google Gemini native SDK generateContentStream / sendMessageStream
- * and standard OpenAI-compatible Server-Sent Events (SSE) endpoints.
+ * Universal AI Completion function supporting Google Gemini native SDK
+ * and ANY OpenAI-compatible endpoint, with Smart Auto-Failover redundancy.
  */
-export async function* streamAICompletion(options: AICompletionOptions): AsyncGenerator<string, void, unknown> {
+export async function generateAICompletion(options: AICompletionOptions): Promise<AICompletionResult> {
+    const primaryResult = await executeSingleAICompletion(options);
+    if (primaryResult.success) {
+        return primaryResult;
+    }
+
+    const enableFailover = options.enableFailover !== false;
+    const currentProvider = options.provider || "gemini";
+    const fallbacks = (options.failoverProviders || []).filter(
+        f => f.provider !== currentProvider && (f.apiKey || f.provider === "ollama")
+    );
+
+    if (!enableFailover || fallbacks.length === 0) {
+        return primaryResult;
+    }
+
+    console.warn(`[AI AUTO-FAILOVER] Primary provider '${currentProvider}' failed: ${primaryResult.error}. Initiating smart failover to available backup providers...`);
+
+    for (const fb of fallbacks) {
+        try {
+            console.info(`[AI AUTO-FAILOVER] Attempting failover to provider '${fb.provider}' with model '${fb.model}'...`);
+            const fbResult = await executeSingleAICompletion({
+                ...options,
+                provider: fb.provider,
+                apiKey: fb.apiKey,
+                baseUrl: fb.baseUrl,
+                model: fb.model,
+                enableFailover: false
+            });
+
+            if (fbResult.success) {
+                console.info(`[AI AUTO-FAILOVER] Successfully failed over to '${fb.provider}' (${fb.model})!`);
+                return fbResult;
+            }
+            console.warn(`[AI AUTO-FAILOVER] Fallback provider '${fb.provider}' failed: ${fbResult.error}`);
+        } catch (fbErr) {
+            console.warn(`[AI AUTO-FAILOVER] Exception on fallback provider '${fb.provider}':`, fbErr);
+        }
+    }
+
+    return primaryResult;
+}
+
+/**
+ * Streams AI completion chunks directly from a single provider.
+ */
+async function* streamSingleAICompletion(options: AICompletionOptions): AsyncGenerator<string, void, unknown> {
     const provider = options.provider || "gemini";
     const model = options.model || (AI_PROVIDERS[provider]?.defaultModel || "gemini-flash-lite-latest");
     const baseUrl = (options.baseUrl || AI_PROVIDERS[provider]?.defaultBaseUrl || "").replace(/\/+$/, "");
@@ -554,15 +685,13 @@ export async function* streamAICompletion(options: AICompletionOptions): AsyncGe
     }
 
     if (messages.length === 0) {
-        yield "Prompt atau daftar pesan tidak boleh kosong.";
-        return;
+        throw new Error("Prompt atau daftar pesan tidak boleh kosong.");
     }
 
     // 1. Google Gemini Native Streaming
     if (provider === "gemini" && (!options.baseUrl || options.baseUrl.includes("googleapis.com"))) {
         if (!apiKey) {
-            yield "Google Gemini API Key belum dikonfigurasi.";
-            return;
+            throw new Error("Google Gemini API Key belum dikonfigurasi.");
         }
 
         const runGeminiStream = async function* (targetModel: string) {
@@ -614,7 +743,7 @@ export async function* streamAICompletion(options: AICompletionOptions): AsyncGe
             const firstErrMsg = firstError instanceof Error ? firstError.message : "Error pada streaming Gemini";
             console.warn(`[GEMINI STREAM] Model ${model} encountered error: ${firstErrMsg}`);
 
-            // Automatic fallback retry for streaming
+            // Automatic fallback retry for streaming to lightweight model
             const fallbackModel = "gemini-flash-lite-latest";
             const secondaryFallback = "gemini-3.7-flash";
             const targetFallback = model !== fallbackModel ? fallbackModel : secondaryFallback;
@@ -627,13 +756,10 @@ export async function* streamAICompletion(options: AICompletionOptions): AsyncGe
                     }
                     return;
                 } catch (fallbackError: unknown) {
-                    const fallbackErrMsg = fallbackError instanceof Error ? fallbackError.message : "Fallback stream failed";
-                    yield `Maaf, terjadi gangguan pada model AI: ${fallbackErrMsg}`;
-                    return;
+                    throw fallbackError;
                 }
             }
-            yield `Maaf, terjadi gangguan pada model AI: ${firstErrMsg}`;
-            return;
+            throw firstError;
         }
     }
 
@@ -652,73 +778,120 @@ export async function* streamAICompletion(options: AICompletionOptions): AsyncGe
         headers["X-Title"] = "Portfolio Assistant";
     }
 
-    try {
-        const response = await fetch(endpoint, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({
-                model,
-                messages,
-                temperature,
-                max_tokens: maxTokens,
-                stream: true
-            })
-        });
+    const response = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+            model,
+            messages,
+            temperature,
+            max_tokens: maxTokens,
+            stream: true
+        })
+    });
 
-        if (!response.ok || !response.body) {
-            // If streaming fails or not supported, fall back to non-streaming
-            const nonStreamResult = await generateAICompletion(options);
-            if (nonStreamResult.success) {
-                yield nonStreamResult.text;
-            } else {
-                yield nonStreamResult.error || "Gagal mendapatkan respon dari penyedia AI.";
-            }
-            return;
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder("utf-8");
-        let buffer = "";
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split("\n");
-            buffer = lines.pop() || "";
-
-            for (const line of lines) {
-                const trimmed = line.trim();
-                if (!trimmed || trimmed.startsWith(":") || trimmed === "data: [DONE]") {
-                    continue;
-                }
-
-                if (trimmed.startsWith("data: ")) {
-                    const jsonStr = trimmed.slice(6);
-                    try {
-                        const parsed = JSON.parse(jsonStr);
-                        const deltaText = parsed.choices?.[0]?.delta?.content || parsed.choices?.[0]?.text || "";
-                        if (deltaText) {
-                            yield deltaText;
-                        }
-                    } catch {
-                        // Skip malformed chunk
-                    }
-                }
-            }
-        }
-    } catch (error: unknown) {
-        const errMsg = error instanceof Error ? error.message : "Gagal streaming respons AI";
-        // Final fallback to non-streaming execution
+    if (!response.ok || !response.body) {
+        let errorDetail = `HTTP ${response.status} ${response.statusText}`;
         try {
-            const fallback = await generateAICompletion(options);
-            if (fallback.success) {
-                yield fallback.text;
-                return;
+            const errData = await response.json();
+            errorDetail = errData?.error?.message || errData?.message || JSON.stringify(errData);
+        } catch {
+            const rawText = await response.text().catch(() => "");
+            if (rawText) errorDetail = rawText.slice(0, 250);
+        }
+        throw new Error(`Provider ${AI_PROVIDERS[provider]?.name || provider} error (${response.status}): ${errorDetail}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let buffer = "";
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed || trimmed.startsWith(":") || trimmed === "data: [DONE]") {
+                continue;
             }
-        } catch {}
-        yield `Maaf, terjadi gangguan jaringan: ${errMsg}`;
+
+            if (trimmed.startsWith("data: ")) {
+                const jsonStr = trimmed.slice(6);
+                try {
+                    const parsed = JSON.parse(jsonStr);
+                    const deltaText = parsed.choices?.[0]?.delta?.content || parsed.choices?.[0]?.text || "";
+                    if (deltaText) {
+                        yield deltaText;
+                    }
+                } catch {
+                    // Skip malformed chunk
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Streams AI completion chunks as an AsyncGenerator<string, void, unknown>,
+ * equipped with Smart Auto-Failover to backup providers if the primary provider fails.
+ */
+export async function* streamAICompletion(options: AICompletionOptions): AsyncGenerator<string, void, unknown> {
+    const currentProvider = options.provider || "gemini";
+    const enableFailover = options.enableFailover !== false;
+    const fallbacks = (options.failoverProviders || []).filter(
+        f => f.provider !== currentProvider && (f.apiKey || f.provider === "ollama")
+    );
+
+    let emittedChunks = 0;
+    try {
+        for await (const chunk of streamSingleAICompletion(options)) {
+            emittedChunks++;
+            yield chunk;
+        }
+        return;
+    } catch (primaryErr: unknown) {
+        const errMsg = primaryErr instanceof Error ? primaryErr.message : String(primaryErr);
+        console.warn(`[AI STREAM] Provider '${currentProvider}' encountered error: ${errMsg}`);
+
+        // If no chunks were emitted yet, we can cleanly failover to a backup provider
+        if (emittedChunks === 0 && enableFailover && fallbacks.length > 0) {
+            console.warn(`[AI STREAM FAILOVER] Primary provider '${currentProvider}' failed before streaming. Failing over to ${fallbacks.length} backup provider(s)...`);
+
+            for (const fb of fallbacks) {
+                try {
+                    console.info(`[AI STREAM FAILOVER] Streaming fallback to provider '${fb.provider}' (${fb.model})...`);
+                    let fbEmitted = 0;
+                    for await (const fbChunk of streamSingleAICompletion({
+                        ...options,
+                        provider: fb.provider,
+                        apiKey: fb.apiKey,
+                        baseUrl: fb.baseUrl,
+                        model: fb.model,
+                        enableFailover: false
+                    })) {
+                        fbEmitted++;
+                        yield fbChunk;
+                    }
+
+                    if (fbEmitted > 0) {
+                        return; // Successfully streamed from fallback!
+                    }
+                } catch (fbErr) {
+                    const fbErrMsg = fbErr instanceof Error ? fbErr.message : String(fbErr);
+                    console.warn(`[AI STREAM FAILOVER] Fallback provider '${fb.provider}' failed: ${fbErrMsg}`);
+                }
+            }
+        }
+
+        // If streaming failed and no fallback succeeded or chunks were partially emitted
+        if (emittedChunks === 0) {
+            yield `Maaf, terjadi gangguan pada model AI: ${errMsg}`;
+        }
     }
 }
 

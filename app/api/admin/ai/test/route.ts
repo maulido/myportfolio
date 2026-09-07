@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-helpers";
 import { getGlobalSettings } from "@/lib/settings";
-import { getResolvedAIConfig, generateAICompletion, AI_PROVIDERS } from "@/lib/ai";
+import { getResolvedAIConfig, getApiKeyForProvider, generateAICompletion, AI_PROVIDERS } from "@/lib/ai";
 
 export const dynamic = "force-dynamic";
 
@@ -23,15 +23,16 @@ export async function POST(req: Request) {
         const provider = inputProvider || config.provider || "gemini";
         const preset = AI_PROVIDERS[provider] || AI_PROVIDERS.gemini;
 
-        const apiKey = inputKey !== undefined ? inputKey : config.apiKey;
+        const resolvedSavedKey = getApiKeyForProvider(settings, provider);
+        const apiKey = (inputKey !== undefined && inputKey !== "") ? inputKey : resolvedSavedKey;
         const baseUrl = inputBaseUrl !== undefined && inputBaseUrl !== "" ? inputBaseUrl : (config.baseUrl || preset.defaultBaseUrl);
-        const model = inputModel || config.model || preset.defaultModel;
+        const model = inputModel || (provider === config.provider ? config.model : preset.defaultModel);
 
         if (!apiKey && provider !== "ollama") {
             return NextResponse.json(
                 {
                     success: false,
-                    error: `API Key untuk provider '${preset.name}' diperlukan untuk pengujian.`
+                    error: `API Key untuk provider '${preset.name}' belum diisi. Masukkan API Key terlebih dahulu untuk pengujian.`
                 },
                 { status: 400 }
             );
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
             apiKey,
             baseUrl,
             model,
+            enableFailover: false, // Ensure we test the exact target provider without auto-failover
             prompt: "Test ping. Balas hanya dengan: 'AI Gateway Operational' singkat tanpa tanda kutip."
         });
 

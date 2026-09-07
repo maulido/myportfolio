@@ -50,7 +50,9 @@ import {
     AlertTriangle,
     Zap,
     Bot,
-    Boxes
+    Boxes,
+    Key,
+    ShieldCheck
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -80,9 +82,10 @@ export default function AdminSettingsPage() {
     const [showTelegramGuide, setShowTelegramGuide] = useState(false);
 
     // Database & AI Services State
-    const [showGeminiKey, setShowGeminiKey] = useState(false);
+    const [showKeyMap, setShowKeyMap] = useState<Record<string, boolean>>({});
     const [showMongoUri, setShowMongoUri] = useState(false);
     const [testingAi, setTestingAi] = useState(false);
+    const [testingProvider, setTestingProvider] = useState<string | null>(null);
     const [fetchedModels, setFetchedModels] = useState<Record<string, AIModelItem[]>>({});
     const [fetchingModels, setFetchingModels] = useState(false);
     const [customModelMode, setCustomModelMode] = useState(false);
@@ -93,6 +96,13 @@ export default function AdminSettingsPage() {
         model?: string;
         reply?: string;
     } | null>(null);
+    const [providerTestResults, setProviderTestResults] = useState<Record<string, {
+        success: boolean;
+        message: string;
+        latencyMs?: number;
+        model?: string;
+        reply?: string;
+    }>>({});
     const [testingDb, setTestingDb] = useState(false);
     const [dbTestResult, setDbTestResult] = useState<{
         success: boolean;
@@ -155,6 +165,12 @@ export default function AdminSettingsPage() {
         geminiModel: "gemini-flash-lite-latest",
         geminiEnabled: "true",
         geminiCustomPrompt: "",
+        openaiApiKey: "",
+        groqApiKey: "",
+        deepseekApiKey: "",
+        openrouterApiKey: "",
+        customApiKey: "",
+        aiAutoFailover: "true",
         mongoDbUri: "",
         mongoDbName: "",
 
@@ -451,11 +467,17 @@ export default function AdminSettingsPage() {
     const handleFetchModels = useCallback(async (options?: { provider?: string; apiKey?: string; baseUrl?: string; silent?: boolean }) => {
         const provider = options?.provider || settings.aiProvider || "gemini";
         const preset = AI_PROVIDERS[provider] || AI_PROVIDERS.gemini;
-        const apiKey = options?.apiKey !== undefined
-            ? options.apiKey
-            : (settings.aiApiKey !== undefined && settings.aiApiKey !== ""
-                ? settings.aiApiKey.trim()
-                : (settings.geminiApiKey?.trim() || undefined));
+        let apiKey = options?.apiKey;
+        if (apiKey === undefined) {
+            if (provider === "gemini") apiKey = settings.geminiApiKey?.trim() || settings.aiApiKey?.trim() || undefined;
+            else if (provider === "openai") apiKey = settings.openaiApiKey?.trim() || settings.aiApiKey?.trim() || undefined;
+            else if (provider === "groq") apiKey = settings.groqApiKey?.trim() || settings.aiApiKey?.trim() || undefined;
+            else if (provider === "deepseek") apiKey = settings.deepseekApiKey?.trim() || settings.aiApiKey?.trim() || undefined;
+            else if (provider === "openrouter") apiKey = settings.openrouterApiKey?.trim() || settings.aiApiKey?.trim() || undefined;
+            else if (provider === "custom") apiKey = settings.customApiKey?.trim() || settings.aiApiKey?.trim() || undefined;
+            else apiKey = settings.aiApiKey?.trim() || undefined;
+        }
+
         const baseUrl = options?.baseUrl !== undefined
             ? options.baseUrl
             : (settings.aiBaseUrl?.trim() || undefined);
@@ -496,7 +518,7 @@ export default function AdminSettingsPage() {
         } finally {
             setFetchingModels(false);
         }
-    }, [settings.aiProvider, settings.aiApiKey, settings.geminiApiKey, settings.aiBaseUrl]);
+    }, [settings.aiProvider, settings.aiApiKey, settings.geminiApiKey, settings.openaiApiKey, settings.groqApiKey, settings.deepseekApiKey, settings.openrouterApiKey, settings.customApiKey, settings.aiBaseUrl]);
 
     // Auto-fetch models from API when opening Integrations tab if not yet loaded
     useEffect(() => {
@@ -508,16 +530,28 @@ export default function AdminSettingsPage() {
         }
     }, [activeTab, loading, settings.aiProvider, fetchedModels, fetchingModels, handleFetchModels]);
 
-    const handleTestAi = async () => {
-        setTestingAi(true);
-        setAiTestResult(null);
+    const handleTestAi = async (targetProvider?: string | React.MouseEvent) => {
+        const provider = (typeof targetProvider === "string" && targetProvider.trim()) ? targetProvider.trim() : (settings.aiProvider || "gemini");
+        const isTargeted = typeof targetProvider === "string" && Boolean(targetProvider.trim());
+        if (isTargeted) {
+            setTestingProvider(provider);
+        } else {
+            setTestingAi(true);
+            setAiTestResult(null);
+        }
+
         try {
-            const provider = settings.aiProvider || "gemini";
-            const apiKey = settings.aiApiKey !== undefined && settings.aiApiKey !== ""
-                ? settings.aiApiKey.trim()
-                : (settings.geminiApiKey?.trim() || undefined);
-            const baseUrl = settings.aiBaseUrl?.trim() || undefined;
-            const model = settings.aiModel?.trim() || settings.geminiModel?.trim() || undefined;
+            let apiKey: string | undefined = undefined;
+            if (provider === "gemini") apiKey = settings.geminiApiKey?.trim() || settings.aiApiKey?.trim() || undefined;
+            else if (provider === "openai") apiKey = settings.openaiApiKey?.trim() || settings.aiApiKey?.trim() || undefined;
+            else if (provider === "groq") apiKey = settings.groqApiKey?.trim() || settings.aiApiKey?.trim() || undefined;
+            else if (provider === "deepseek") apiKey = settings.deepseekApiKey?.trim() || settings.aiApiKey?.trim() || undefined;
+            else if (provider === "openrouter") apiKey = settings.openrouterApiKey?.trim() || settings.aiApiKey?.trim() || undefined;
+            else if (provider === "custom") apiKey = settings.customApiKey?.trim() || settings.aiApiKey?.trim() || undefined;
+            else apiKey = settings.aiApiKey?.trim() || undefined;
+
+            const baseUrl = (provider === settings.aiProvider && settings.aiBaseUrl?.trim()) ? settings.aiBaseUrl.trim() : undefined;
+            const model = (provider === settings.aiProvider ? settings.aiModel?.trim() : undefined) || (provider === "gemini" ? settings.geminiModel?.trim() : undefined);
 
             const res = await fetch("/api/admin/ai/test", {
                 method: "POST",
@@ -530,31 +564,48 @@ export default function AdminSettingsPage() {
                 })
             });
             const data = await res.json();
+            const resultObj = {
+                success: Boolean(data.success),
+                message: data.message || data.error || (data.success ? "Koneksi berhasil!" : "Koneksi gagal."),
+                latencyMs: data.latencyMs,
+                model: data.model,
+                reply: data.reply
+            };
+
+            setProviderTestResults(prev => ({
+                ...prev,
+                [provider]: resultObj
+            }));
+
+            if (!isTargeted) {
+                setAiTestResult(resultObj);
+            }
+
             if (data.success) {
-                setAiTestResult({
-                    success: true,
-                    message: data.message || "Koneksi AI berhasil!",
-                    latencyMs: data.latencyMs,
-                    model: data.model,
-                    reply: data.reply
-                });
                 toast.success(`${data.providerName || provider} (${data.model}) aktif! Latency: ${data.latencyMs}ms`);
             } else {
-                setAiTestResult({
-                    success: false,
-                    message: data.error || "Gagal menguji koneksi AI."
-                });
-                toast.error(data.error || "Uji coba AI gagal", { duration: 6000 });
+                toast.error(data.error || `Uji coba ${provider} gagal`, { duration: 6000 });
             }
         } catch (error) {
             console.error("AI test failed", error);
-            setAiTestResult({
+            const errObj = {
                 success: false,
                 message: "Terjadi kesalahan jaringan saat menguji koneksi AI."
-            });
+            };
+            setProviderTestResults(prev => ({
+                ...prev,
+                [provider]: errObj
+            }));
+            if (!isTargeted) {
+                setAiTestResult(errObj);
+            }
             toast.error("Kesalahan jaringan saat menguji AI");
         } finally {
-            setTestingAi(false);
+            if (isTargeted) {
+                setTestingProvider(null);
+            } else {
+                setTestingAi(false);
+            }
         }
     };
 
@@ -1642,7 +1693,7 @@ export default function AdminSettingsPage() {
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={handleTestAi}
+                                            onClick={() => handleTestAi()}
                                             disabled={testingAi}
                                             className="px-3 py-2 rounded-xl text-xs font-semibold bg-primary/10 text-primary hover:bg-primary hover:text-white border border-primary/30 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                                             title={`Uji koneksi ${AI_PROVIDERS[settings.aiProvider || "gemini"]?.name || "AI"}`}
@@ -1775,88 +1826,600 @@ export default function AdminSettingsPage() {
                                     </div>
 
                                     {/* API Key & Base URL Inputs */}
-                                    <div className="grid gap-4 sm:grid-cols-2">
-                                        {/* API Key Input */}
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                                                    <span>API Key ({AI_PROVIDERS[settings.aiProvider || "gemini"]?.name || "AI"})</span>
-                                                    {settings.aiProvider === "ollama" ? (
-                                                        <span className="text-[10px] text-emerald-600 font-normal">(Tidak wajib untuk Ollama)</span>
-                                                    ) : (
-                                                        <span className="text-[10px] text-muted-foreground font-normal">(Disimpan terenkripsi)</span>
-                                                    )}
-                                                </label>
+                                    {/* Multi-Provider Key Vault (Gudang Kunci Multi-Provider) */}
+                                    <div className="space-y-4 pt-1">
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-border/60">
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <Key className="h-4 w-4 text-primary" />
+                                                    <h4 className="text-xs font-bold text-foreground">Gudang Kunci API Multi-Provider (Multi-Key Vault)</h4>
+                                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">
+                                                        Bisa Pasang Semua Provider
+                                                    </span>
+                                                </div>
+                                                <p className="text-[11px] text-muted-foreground mt-0.5">
+                                                    Simpan API Key dari berbagai penyedia sekaligus. Sistem dapat membagi beban kerja secara cerdas dan mengaktifkan failover otomatis.
+                                                </p>
                                             </div>
-                                            <div className="relative">
-                                                <input
-                                                    type={showGeminiKey ? "text" : "password"}
-                                                    name="aiApiKey"
-                                                    value={settings.aiApiKey !== undefined && settings.aiApiKey !== "" ? settings.aiApiKey : (settings.aiProvider === "gemini" ? (settings.geminiApiKey || "") : "")}
-                                                    onChange={(e) => {
-                                                        const val = e.target.value;
-                                                        setSettings(prev => ({
-                                                            ...prev,
-                                                            aiApiKey: val,
-                                                            ...(prev.aiProvider === "gemini" ? { geminiApiKey: val } : {})
-                                                        }));
-                                                    }}
-                                                    placeholder={
-                                                        settings.aiProvider === "ollama"
-                                                            ? "Opsional (kosongkan jika tanpa auth)"
-                                                            : settings.aiProvider === "openai"
-                                                                ? "sk-proj-..."
-                                                                : settings.aiProvider === "groq"
-                                                                    ? "gsk_..."
-                                                                    : settings.aiProvider === "deepseek"
-                                                                        ? "sk-..."
-                                                                        : "Masukkan API Key provider..."
-                                                    }
-                                                    className="w-full pl-3.5 pr-11 py-2.5 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-xs font-mono"
-                                                />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowGeminiKey(!showGeminiKey)}
-                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer p-1"
-                                                    title={showGeminiKey ? "Sembunyikan API Key" : "Tampilkan API Key"}
-                                                >
-                                                    {showGeminiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                                </button>
-                                            </div>
-                                            <p className="text-[11px] text-muted-foreground">
-                                                Jika dikosongkan, server otomatis memeriksa variabel env server (<code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[10px]">AI_API_KEY</code> atau <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-[10px]">GEMINI_API_KEY</code>).
-                                            </p>
                                         </div>
 
-                                        {/* API Base URL Input */}
-                                        <div className="space-y-2">
-                                            <div className="flex items-center justify-between">
-                                                <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                                                    <span>API Base URL (OpenAI Spec)</span>
-                                                    <span className="text-[10px] text-muted-foreground font-normal">(Opsional)</span>
-                                                </label>
-                                                {settings.aiBaseUrl && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setSettings(prev => ({ ...prev, aiBaseUrl: "" }))}
-                                                        className="text-[10px] text-primary hover:underline"
-                                                    >
-                                                        Reset Default
-                                                    </button>
-                                                )}
-                                            </div>
-                                            <input
-                                                type="text"
-                                                name="aiBaseUrl"
-                                                value={settings.aiBaseUrl || ""}
-                                                onChange={handleChange}
-                                                placeholder={AI_PROVIDERS[settings.aiProvider || "gemini"]?.defaultBaseUrl || "https://api.openai.com/v1"}
-                                                className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-xs font-mono"
-                                            />
-                                            <p className="text-[11px] text-muted-foreground">
-                                                Default: <code className="bg-muted px-1 py-0.5 rounded font-mono text-[10px]">{AI_PROVIDERS[settings.aiProvider || "gemini"]?.defaultBaseUrl}</code>. Kosongkan untuk memakai endpoint default.
-                                            </p>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                                            {/* 1. Google Gemini Key Card */}
+                                            {(() => {
+                                                const hasKey = Boolean(settings.geminiApiKey?.trim() || (settings.aiProvider === "gemini" && settings.aiApiKey?.trim()));
+                                                const testRes = providerTestResults["gemini"];
+                                                const isPinging = testingProvider === "gemini";
+                                                return (
+                                                    <div className={`p-4 rounded-xl border transition-all space-y-2.5 ${hasKey ? "bg-card/70 border-border" : "bg-muted/20 border-border/60"}`}>
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xs font-bold text-foreground">Google Gemini</span>
+                                                                <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                                                                    Gratis & Stabil
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5">
+                                                                {hasKey ? (
+                                                                    <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-semibold flex items-center gap-1">
+                                                                        <Check className="h-3 w-3" /> Tersimpan
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border text-[10px]">
+                                                                        Belum Diisi
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="relative">
+                                                            <input
+                                                                type={showKeyMap["gemini"] ? "text" : "password"}
+                                                                name="geminiApiKey"
+                                                                value={settings.geminiApiKey || (settings.aiProvider === "gemini" ? settings.aiApiKey : "") || ""}
+                                                                onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    setSettings(prev => ({
+                                                                        ...prev,
+                                                                        geminiApiKey: val,
+                                                                        ...(prev.aiProvider === "gemini" ? { aiApiKey: val } : {})
+                                                                    }));
+                                                                }}
+                                                                placeholder="AIzaSy..."
+                                                                className="w-full pl-3 pr-9 py-2 rounded-lg bg-background border border-border focus:outline-none focus:ring-1 focus:ring-primary text-xs font-mono"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setShowKeyMap(prev => ({ ...prev, gemini: !prev.gemini }))}
+                                                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer p-0.5"
+                                                            >
+                                                                {showKeyMap["gemini"] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                                            </button>
+                                                        </div>
+
+                                                        <div className="flex items-center justify-between pt-1 text-[10px]">
+                                                            <a
+                                                                href="https://aistudio.google.com/app/apikey"
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-primary hover:underline flex items-center gap-1 font-medium"
+                                                            >
+                                                                <span>Dapatkan Key di Google AI Studio</span>
+                                                                <ExternalLink className="h-2.5 w-2.5" />
+                                                            </a>
+
+                                                            <div className="flex items-center gap-1.5">
+                                                                {testRes && (
+                                                                    <span className={`px-1.5 py-0.5 rounded font-mono text-[9px] font-bold ${testRes.success ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : "bg-rose-500/10 text-rose-500 border border-rose-500/20"}`} title={testRes.message}>
+                                                                        {testRes.success ? `✓ ${testRes.latencyMs}ms` : "✕ Gagal"}
+                                                                    </span>
+                                                                )}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleTestAi("gemini")}
+                                                                    disabled={isPinging}
+                                                                    className="px-2 py-0.5 rounded-md bg-muted hover:bg-muted/80 text-foreground border border-border flex items-center gap-1 cursor-pointer disabled:opacity-50 font-medium"
+                                                                >
+                                                                    {isPinging ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Zap className="h-2.5 w-2.5 text-amber-500" />}
+                                                                    <span>Ping Test</span>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* 2. Groq (LPU) Key Card */}
+                                            {(() => {
+                                                const hasKey = Boolean(settings.groqApiKey?.trim() || (settings.aiProvider === "groq" && settings.aiApiKey?.trim()));
+                                                const testRes = providerTestResults["groq"];
+                                                const isPinging = testingProvider === "groq";
+                                                return (
+                                                    <div className={`p-4 rounded-xl border transition-all space-y-2.5 ${hasKey ? "bg-card/70 border-border" : "bg-muted/20 border-border/60"}`}>
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xs font-bold text-foreground">Groq (LPU Ultra-Fast)</span>
+                                                                <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                                                                    ⚡ 300+ token/s
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5">
+                                                                {hasKey ? (
+                                                                    <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-semibold flex items-center gap-1">
+                                                                        <Check className="h-3 w-3" /> Tersimpan
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border text-[10px]">
+                                                                        Belum Diisi
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="relative">
+                                                            <input
+                                                                type={showKeyMap["groq"] ? "text" : "password"}
+                                                                name="groqApiKey"
+                                                                value={settings.groqApiKey || (settings.aiProvider === "groq" ? settings.aiApiKey : "") || ""}
+                                                                onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    setSettings(prev => ({
+                                                                        ...prev,
+                                                                        groqApiKey: val,
+                                                                        ...(prev.aiProvider === "groq" ? { aiApiKey: val } : {})
+                                                                    }));
+                                                                }}
+                                                                placeholder="gsk_..."
+                                                                className="w-full pl-3 pr-9 py-2 rounded-lg bg-background border border-border focus:outline-none focus:ring-1 focus:ring-primary text-xs font-mono"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setShowKeyMap(prev => ({ ...prev, groq: !prev.groq }))}
+                                                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer p-0.5"
+                                                            >
+                                                                {showKeyMap["groq"] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                                            </button>
+                                                        </div>
+
+                                                        <div className="flex items-center justify-between pt-1 text-[10px]">
+                                                            <a
+                                                                href="https://console.groq.com/keys"
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-primary hover:underline flex items-center gap-1 font-medium"
+                                                            >
+                                                                <span>Dapatkan Key di Groq Console (Gratis)</span>
+                                                                <ExternalLink className="h-2.5 w-2.5" />
+                                                            </a>
+
+                                                            <div className="flex items-center gap-1.5">
+                                                                {testRes && (
+                                                                    <span className={`px-1.5 py-0.5 rounded font-mono text-[9px] font-bold ${testRes.success ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : "bg-rose-500/10 text-rose-500 border border-rose-500/20"}`} title={testRes.message}>
+                                                                        {testRes.success ? `✓ ${testRes.latencyMs}ms` : "✕ Gagal"}
+                                                                    </span>
+                                                                )}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleTestAi("groq")}
+                                                                    disabled={isPinging}
+                                                                    className="px-2 py-0.5 rounded-md bg-muted hover:bg-muted/80 text-foreground border border-border flex items-center gap-1 cursor-pointer disabled:opacity-50 font-medium"
+                                                                >
+                                                                    {isPinging ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Zap className="h-2.5 w-2.5 text-amber-500" />}
+                                                                    <span>Ping Test</span>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* 3. OpenAI (ChatGPT) Key Card */}
+                                            {(() => {
+                                                const hasKey = Boolean(settings.openaiApiKey?.trim() || (settings.aiProvider === "openai" && settings.aiApiKey?.trim()));
+                                                const testRes = providerTestResults["openai"];
+                                                const isPinging = testingProvider === "openai";
+                                                return (
+                                                    <div className={`p-4 rounded-xl border transition-all space-y-2.5 ${hasKey ? "bg-card/70 border-border" : "bg-muted/20 border-border/60"}`}>
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xs font-bold text-foreground">OpenAI (ChatGPT)</span>
+                                                                <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+                                                                    GPT-4o / o3-mini
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5">
+                                                                {hasKey ? (
+                                                                    <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-semibold flex items-center gap-1">
+                                                                        <Check className="h-3 w-3" /> Tersimpan
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border text-[10px]">
+                                                                        Belum Diisi
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="relative">
+                                                            <input
+                                                                type={showKeyMap["openai"] ? "text" : "password"}
+                                                                name="openaiApiKey"
+                                                                value={settings.openaiApiKey || (settings.aiProvider === "openai" ? settings.aiApiKey : "") || ""}
+                                                                onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    setSettings(prev => ({
+                                                                        ...prev,
+                                                                        openaiApiKey: val,
+                                                                        ...(prev.aiProvider === "openai" ? { aiApiKey: val } : {})
+                                                                    }));
+                                                                }}
+                                                                placeholder="sk-proj-..."
+                                                                className="w-full pl-3 pr-9 py-2 rounded-lg bg-background border border-border focus:outline-none focus:ring-1 focus:ring-primary text-xs font-mono"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setShowKeyMap(prev => ({ ...prev, openai: !prev.openai }))}
+                                                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer p-0.5"
+                                                            >
+                                                                {showKeyMap["openai"] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                                            </button>
+                                                        </div>
+
+                                                        <div className="flex items-center justify-between pt-1 text-[10px]">
+                                                            <a
+                                                                href="https://platform.openai.com/api-keys"
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-primary hover:underline flex items-center gap-1 font-medium"
+                                                            >
+                                                                <span>Dapatkan Key di OpenAI Platform</span>
+                                                                <ExternalLink className="h-2.5 w-2.5" />
+                                                            </a>
+
+                                                            <div className="flex items-center gap-1.5">
+                                                                {testRes && (
+                                                                    <span className={`px-1.5 py-0.5 rounded font-mono text-[9px] font-bold ${testRes.success ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : "bg-rose-500/10 text-rose-500 border border-rose-500/20"}`} title={testRes.message}>
+                                                                        {testRes.success ? `✓ ${testRes.latencyMs}ms` : "✕ Gagal"}
+                                                                    </span>
+                                                                )}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleTestAi("openai")}
+                                                                    disabled={isPinging}
+                                                                    className="px-2 py-0.5 rounded-md bg-muted hover:bg-muted/80 text-foreground border border-border flex items-center gap-1 cursor-pointer disabled:opacity-50 font-medium"
+                                                                >
+                                                                    {isPinging ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Zap className="h-2.5 w-2.5 text-amber-500" />}
+                                                                    <span>Ping Test</span>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* 4. DeepSeek Key Card */}
+                                            {(() => {
+                                                const hasKey = Boolean(settings.deepseekApiKey?.trim() || (settings.aiProvider === "deepseek" && settings.aiApiKey?.trim()));
+                                                const testRes = providerTestResults["deepseek"];
+                                                const isPinging = testingProvider === "deepseek";
+                                                return (
+                                                    <div className={`p-4 rounded-xl border transition-all space-y-2.5 ${hasKey ? "bg-card/70 border-border" : "bg-muted/20 border-border/60"}`}>
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xs font-bold text-foreground">DeepSeek</span>
+                                                                <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-purple-500/10 text-purple-500 border border-purple-500/20">
+                                                                    V3 & R1 Reasoner
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5">
+                                                                {hasKey ? (
+                                                                    <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-semibold flex items-center gap-1">
+                                                                        <Check className="h-3 w-3" /> Tersimpan
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border text-[10px]">
+                                                                        Belum Diisi
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="relative">
+                                                            <input
+                                                                type={showKeyMap["deepseek"] ? "text" : "password"}
+                                                                name="deepseekApiKey"
+                                                                value={settings.deepseekApiKey || (settings.aiProvider === "deepseek" ? settings.aiApiKey : "") || ""}
+                                                                onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    setSettings(prev => ({
+                                                                        ...prev,
+                                                                        deepseekApiKey: val,
+                                                                        ...(prev.aiProvider === "deepseek" ? { aiApiKey: val } : {})
+                                                                    }));
+                                                                }}
+                                                                placeholder="sk-..."
+                                                                className="w-full pl-3 pr-9 py-2 rounded-lg bg-background border border-border focus:outline-none focus:ring-1 focus:ring-primary text-xs font-mono"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setShowKeyMap(prev => ({ ...prev, deepseek: !prev.deepseek }))}
+                                                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer p-0.5"
+                                                            >
+                                                                {showKeyMap["deepseek"] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                                            </button>
+                                                        </div>
+
+                                                        <div className="flex items-center justify-between pt-1 text-[10px]">
+                                                            <a
+                                                                href="https://platform.deepseek.com/api_keys"
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-primary hover:underline flex items-center gap-1 font-medium"
+                                                            >
+                                                                <span>Dapatkan Key di DeepSeek Platform</span>
+                                                                <ExternalLink className="h-2.5 w-2.5" />
+                                                            </a>
+
+                                                            <div className="flex items-center gap-1.5">
+                                                                {testRes && (
+                                                                    <span className={`px-1.5 py-0.5 rounded font-mono text-[9px] font-bold ${testRes.success ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : "bg-rose-500/10 text-rose-500 border border-rose-500/20"}`} title={testRes.message}>
+                                                                        {testRes.success ? `✓ ${testRes.latencyMs}ms` : "✕ Gagal"}
+                                                                    </span>
+                                                                )}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleTestAi("deepseek")}
+                                                                    disabled={isPinging}
+                                                                    className="px-2 py-0.5 rounded-md bg-muted hover:bg-muted/80 text-foreground border border-border flex items-center gap-1 cursor-pointer disabled:opacity-50 font-medium"
+                                                                >
+                                                                    {isPinging ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Zap className="h-2.5 w-2.5 text-amber-500" />}
+                                                                    <span>Ping Test</span>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* 5. OpenRouter (All-in-One) Key Card */}
+                                            {(() => {
+                                                const hasKey = Boolean(settings.openrouterApiKey?.trim() || (settings.aiProvider === "openrouter" && settings.aiApiKey?.trim()));
+                                                const testRes = providerTestResults["openrouter"];
+                                                const isPinging = testingProvider === "openrouter";
+                                                return (
+                                                    <div className={`p-4 rounded-xl border transition-all space-y-2.5 ${hasKey ? "bg-card/70 border-border" : "bg-muted/20 border-border/60"}`}>
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xs font-bold text-foreground">OpenRouter</span>
+                                                                <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-indigo-500/10 text-indigo-500 border border-indigo-500/20">
+                                                                    Claude, Llama, 100+ Model
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5">
+                                                                {hasKey ? (
+                                                                    <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-semibold flex items-center gap-1">
+                                                                        <Check className="h-3 w-3" /> Tersimpan
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border text-[10px]">
+                                                                        Belum Diisi
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="relative">
+                                                            <input
+                                                                type={showKeyMap["openrouter"] ? "text" : "password"}
+                                                                name="openrouterApiKey"
+                                                                value={settings.openrouterApiKey || (settings.aiProvider === "openrouter" ? settings.aiApiKey : "") || ""}
+                                                                onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    setSettings(prev => ({
+                                                                        ...prev,
+                                                                        openrouterApiKey: val,
+                                                                        ...(prev.aiProvider === "openrouter" ? { aiApiKey: val } : {})
+                                                                    }));
+                                                                }}
+                                                                placeholder="sk-or-v1-..."
+                                                                className="w-full pl-3 pr-9 py-2 rounded-lg bg-background border border-border focus:outline-none focus:ring-1 focus:ring-primary text-xs font-mono"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setShowKeyMap(prev => ({ ...prev, openrouter: !prev.openrouter }))}
+                                                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer p-0.5"
+                                                            >
+                                                                {showKeyMap["openrouter"] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                                            </button>
+                                                        </div>
+
+                                                        <div className="flex items-center justify-between pt-1 text-[10px]">
+                                                            <a
+                                                                href="https://openrouter.ai/keys"
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-primary hover:underline flex items-center gap-1 font-medium"
+                                                            >
+                                                                <span>Dapatkan Key di OpenRouter</span>
+                                                                <ExternalLink className="h-2.5 w-2.5" />
+                                                            </a>
+
+                                                            <div className="flex items-center gap-1.5">
+                                                                {testRes && (
+                                                                    <span className={`px-1.5 py-0.5 rounded font-mono text-[9px] font-bold ${testRes.success ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : "bg-rose-500/10 text-rose-500 border border-rose-500/20"}`} title={testRes.message}>
+                                                                        {testRes.success ? `✓ ${testRes.latencyMs}ms` : "✕ Gagal"}
+                                                                    </span>
+                                                                )}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleTestAi("openrouter")}
+                                                                    disabled={isPinging}
+                                                                    className="px-2 py-0.5 rounded-md bg-muted hover:bg-muted/80 text-foreground border border-border flex items-center gap-1 cursor-pointer disabled:opacity-50 font-medium"
+                                                                >
+                                                                    {isPinging ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Zap className="h-2.5 w-2.5 text-amber-500" />}
+                                                                    <span>Ping Test</span>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* 6. Custom / OpenAI-Compatible Card */}
+                                            {(() => {
+                                                const hasKey = Boolean(settings.customApiKey?.trim() || settings.aiBaseUrl?.trim());
+                                                const testRes = providerTestResults["custom"];
+                                                const isPinging = testingProvider === "custom";
+                                                return (
+                                                    <div className={`p-4 rounded-xl border transition-all space-y-2.5 ${hasKey ? "bg-card/70 border-border" : "bg-muted/20 border-border/60"}`}>
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xs font-bold text-foreground">Custom / Compatible</span>
+                                                                <span className="px-1.5 py-0.2 rounded text-[9px] font-medium bg-muted text-muted-foreground border border-border">
+                                                                    vLLM / LiteLLM / Self-hosted
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5">
+                                                                {hasKey ? (
+                                                                    <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-semibold flex items-center gap-1">
+                                                                        <Check className="h-3 w-3" /> Siap
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="px-2 py-0.5 rounded-md bg-muted text-muted-foreground border border-border text-[10px]">
+                                                                        Opsional
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="space-y-1.5">
+                                                            <div className="relative">
+                                                                <input
+                                                                    type={showKeyMap["custom"] ? "text" : "password"}
+                                                                    name="customApiKey"
+                                                                    value={settings.customApiKey || ""}
+                                                                    onChange={handleChange}
+                                                                    placeholder="API Key kustom (opsional)..."
+                                                                    className="w-full pl-3 pr-9 py-2 rounded-lg bg-background border border-border focus:outline-none focus:ring-1 focus:ring-primary text-xs font-mono"
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setShowKeyMap(prev => ({ ...prev, custom: !prev.custom }))}
+                                                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer p-0.5"
+                                                                >
+                                                                    {showKeyMap["custom"] ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                                                                </button>
+                                                            </div>
+                                                            <input
+                                                                type="text"
+                                                                name="aiBaseUrl"
+                                                                value={settings.aiBaseUrl || ""}
+                                                                onChange={handleChange}
+                                                                placeholder="Base URL: https://api.openai.com/v1"
+                                                                className="w-full px-3 py-1.5 rounded-lg bg-background border border-border focus:outline-none focus:ring-1 focus:ring-primary text-[11px] font-mono"
+                                                            />
+                                                        </div>
+
+                                                        <div className="flex items-center justify-between pt-1 text-[10px]">
+                                                            <span className="text-muted-foreground text-[10px]">OpenAI Endpoint Standard</span>
+                                                            <div className="flex items-center gap-1.5">
+                                                                {testRes && (
+                                                                    <span className={`px-1.5 py-0.5 rounded font-mono text-[9px] font-bold ${testRes.success ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" : "bg-rose-500/10 text-rose-500 border border-rose-500/20"}`} title={testRes.message}>
+                                                                        {testRes.success ? `✓ ${testRes.latencyMs}ms` : "✕ Gagal"}
+                                                                    </span>
+                                                                )}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleTestAi("custom")}
+                                                                    disabled={isPinging}
+                                                                    className="px-2 py-0.5 rounded-md bg-muted hover:bg-muted/80 text-foreground border border-border flex items-center gap-1 cursor-pointer disabled:opacity-50 font-medium"
+                                                                >
+                                                                    {isPinging ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Zap className="h-2.5 w-2.5 text-amber-500" />}
+                                                                    <span>Ping Test</span>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
+                                    </div>
+
+                                    {/* Smart Auto-Failover (Anti-Downtime & Redundancy) Card */}
+                                    <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/5 via-background to-primary/10 border border-primary/20 space-y-3">
+                                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                            <div className="flex items-start gap-3">
+                                                <div className="p-2 bg-primary/10 text-primary rounded-xl border border-primary/20 shrink-0 mt-0.5">
+                                                    <ShieldCheck className="h-5 w-5" />
+                                                </div>
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <h4 className="text-xs font-bold text-foreground">Smart Auto-Failover (Anti-Downtime & Redundancy)</h4>
+                                                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                                            Zero Visitor Error
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-[11px] text-muted-foreground leading-relaxed mt-0.5">
+                                                        Bila provider utama kehabisan kuota (429 Rate Limit), server sibuk (503 High Demand), atau timeout, AI otomatis mengalihkan request ke provider cadangan yang aktif secara transparan. Pengunjung website tidak akan pernah mengalami error.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {/* Toggle Switch */}
+                                            <button
+                                                type="button"
+                                                onClick={() => setSettings(prev => ({
+                                                    ...prev,
+                                                    aiAutoFailover: prev.aiAutoFailover === "false" ? "true" : "false"
+                                                }))}
+                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer shrink-0 ${
+                                                    settings.aiAutoFailover !== "false" ? "bg-primary" : "bg-muted border border-border"
+                                                }`}
+                                                title={settings.aiAutoFailover !== "false" ? "Auto-Failover Aktif" : "Auto-Failover Nonaktif"}
+                                            >
+                                                <span
+                                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                                        settings.aiAutoFailover !== "false" ? "translate-x-6" : "translate-x-1"
+                                                    }`}
+                                                />
+                                            </button>
+                                        </div>
+
+                                        {/* Active backup chain preview */}
+                                        {(() => {
+                                            const configuredList = [
+                                                { id: "gemini", name: "Google Gemini", hasKey: Boolean(settings.geminiApiKey?.trim() || settings.aiApiKey?.trim()) },
+                                                { id: "groq", name: "Groq (LPU)", hasKey: Boolean(settings.groqApiKey?.trim()) },
+                                                { id: "openai", name: "OpenAI", hasKey: Boolean(settings.openaiApiKey?.trim()) },
+                                                { id: "deepseek", name: "DeepSeek", hasKey: Boolean(settings.deepseekApiKey?.trim()) },
+                                                { id: "openrouter", name: "OpenRouter", hasKey: Boolean(settings.openrouterApiKey?.trim()) },
+                                                { id: "custom", name: "Custom", hasKey: Boolean(settings.customApiKey?.trim()) },
+                                            ].filter(p => p.hasKey);
+
+                                            return (
+                                                <div className="pt-2 border-t border-border/50 flex flex-wrap items-center gap-2 text-[11px]">
+                                                    <span className="text-muted-foreground font-medium">Rantai Redundansi Otomatis:</span>
+                                                    {configuredList.length === 0 ? (
+                                                        <span className="text-amber-500 text-[10px]">Belum ada API key terisi. Masukkan minimal 1 API key di atas.</span>
+                                                    ) : (
+                                                        configuredList.map((item, idx) => {
+                                                            const isPrimary = item.id === (settings.aiProvider || "gemini");
+                                                            return (
+                                                                <span
+                                                                    key={item.id}
+                                                                    className={`px-2 py-0.5 rounded-lg font-mono text-[10px] flex items-center gap-1 border ${
+                                                                        isPrimary
+                                                                            ? "bg-primary text-white border-primary font-bold shadow-xs"
+                                                                            : "bg-background/80 text-foreground border-border"
+                                                                    }`}
+                                                                >
+                                                                    {isPrimary ? `★ Utama: ${item.name}` : `${idx + 1}. Cadangan: ${item.name}`}
+                                                                </span>
+                                                            );
+                                                        })
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
 
                                     {/* Model Name & Smart Selector */}
@@ -2040,7 +2603,7 @@ export default function AdminSettingsPage() {
                                             </div>
                                             <button
                                                 type="button"
-                                                onClick={handleTestAi}
+                                                onClick={() => handleTestAi()}
                                                 disabled={testingAi}
                                                 className="py-2.5 px-5 rounded-xl text-xs font-bold bg-primary text-white hover:bg-primary/90 transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-60 shrink-0 self-start sm:self-auto"
                                             >
@@ -2215,6 +2778,9 @@ export default function AdminSettingsPage() {
                                                         </option>
                                                     ))}
                                                 </select>
+                                                <p className="text-[11px] text-muted-foreground">
+                                                    Kunci API: Menggunakan kunci <strong className="text-foreground">{AI_PROVIDERS[settings.assistantAiProvider || settings.aiProvider || "gemini"]?.name}</strong> dari Gudang Kunci di atas.
+                                                </p>
                                             </div>
 
                                             {/* Assistant Model Name */}

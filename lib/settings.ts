@@ -23,9 +23,16 @@ export interface GlobalSettings {
     telegramChatId?: string;
     telegramNotifyContact?: string;
     telegramNotifyGuestbook?: string;
-    // Database & AI Services (Universal Provider)
+    // Multi-Provider AI Keys Vault
     aiProvider?: string;
     aiApiKey?: string;
+    geminiApiKey?: string;
+    openaiApiKey?: string;
+    groqApiKey?: string;
+    deepseekApiKey?: string;
+    openrouterApiKey?: string;
+    customApiKey?: string;
+    aiAutoFailover?: string; // "true" | "false"
     aiBaseUrl?: string;
     aiModel?: string;
     aiEnabled?: string;
@@ -35,7 +42,6 @@ export interface GlobalSettings {
     assistantAiModel?: string;
     assistantAiCustomPrompt?: string;
     // Legacy Gemini keys for backward compatibility
-    geminiApiKey?: string;
     geminiModel?: string;
     geminiEnabled?: string;
     geminiCustomPrompt?: string;
