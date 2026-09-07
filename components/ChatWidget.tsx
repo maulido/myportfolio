@@ -120,13 +120,16 @@ export default function ChatWidget() {
             if (data.response) {
                 setMessages((prev) => [...prev, { role: "bot", content: data.response }]);
             } else {
-                throw new Error(data.error || "Something went wrong");
+                const userMsg = (data.error?.includes("high demand") || data.error?.includes("503"))
+                    ? "Model AI saat ini sedang mengalami lonjakan antrean server (high demand). Silakan coba kirim kembali pesan Anda dalam beberapa saat."
+                    : (data.error || "Maaf, asisten AI sedang mengalami gangguan koneksi. Silakan coba sesaat lagi.");
+                setMessages((prev) => [...prev, { role: "bot", content: userMsg }]);
             }
         } catch (error) {
-            console.error("Chat Error:", error);
+            console.warn("Chat connection warning:", error);
             setMessages((prev) => [
                 ...prev,
-                { role: "bot", content: "Sorry, I'm having trouble connecting right now. Please try again later." }
+                { role: "bot", content: "Maaf, terjadi gangguan jaringan. Silakan coba kirim kembali pesan Anda dalam beberapa saat." }
             ]);
         } finally {
             setIsLoading(false);

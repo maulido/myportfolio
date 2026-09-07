@@ -208,9 +208,16 @@ export function getResolvedAIConfig(settings: GlobalSettings): ResolvedAIConfig 
     }
 
     // Resolve Model
-    const model = settings.aiModel?.trim()
+    let model = settings.aiModel?.trim()
         || (provider === "gemini" ? settings.geminiModel?.trim() : "")
         || preset.defaultModel;
+
+    // Auto-normalize obsolete/invalid model names (e.g. gemini-3.8-flash)
+    if (provider === "gemini") {
+        if (model.includes("3.8") || model.includes("3.") || !model.startsWith("gemini-")) {
+            model = preset.defaultModel; // "gemini-1.5-flash"
+        }
+    }
 
     // Resolve Base URL
     const baseUrl = settings.aiBaseUrl?.trim() || preset.defaultBaseUrl;
@@ -310,10 +317,10 @@ export async function generateAICompletion(options: AICompletionOptions): Promis
             };
         }
 
-        try {
+        const executeGemini = async (targetModel: string) => {
             const genAI = new GoogleGenerativeAI(apiKey);
             const geminiModel = genAI.getGenerativeModel({
-                model,
+                model: targetModel,
                 systemInstruction: options.systemInstruction || undefined
             });
 
@@ -321,14 +328,7 @@ export async function generateAICompletion(options: AICompletionOptions): Promis
             if (messages.length === 1 || (messages.length === 2 && messages[0].role === "system")) {
                 const userText = messages.find(m => m.role === "user")?.content || options.prompt || "";
                 const result = await geminiModel.generateContent(userText);
-                const text = result.response.text().trim();
-                return {
-                    success: true,
-                    text,
-                    provider,
-                    model,
-                    latencyMs: Date.now() - startTime
-                };
+                return result.response.text().trim();
             }
 
             // Multi-turn conversation
@@ -351,8 +351,11 @@ export async function generateAICompletion(options: AICompletionOptions): Promis
             });
 
             const result = await chat.sendMessage(lastUserMessage);
-            const text = result.response.text().trim();
+            return result.response.text().trim();
+        };
 
+        try {
+            const text = await executeGemini(model);
             return {
                 success: true,
                 text,
@@ -360,15 +363,43 @@ export async function generateAICompletion(options: AICompletionOptions): Promis
                 model,
                 latencyMs: Date.now() - startTime
             };
-        } catch (error: unknown) {
-            const errMsg = error instanceof Error ? error.message : "Gagal memproses via Google Gemini";
+        } catch (firstError: unknown) {
+            const firstErrMsg = firstError instanceof Error ? firstError.message : "Gagal memproses via Google Gemini";
+            console.warn(`[GEMINI] Model ${model} encountered error: ${firstErrMsg}`);
+
+            // If the model was not gemini-1.5-flash, automatically fallback and retry
+            const fallbackModel = "gemini-1.5-flash";
+            if (model !== fallbackModel) {
+                try {
+                    console.info(`[GEMINI FALLBACK] Automatically retrying with ${fallbackModel}...`);
+                    const text = await executeGemini(fallbackModel);
+                    return {
+                        success: true,
+                        text,
+                        provider,
+                        model: fallbackModel,
+                        latencyMs: Date.now() - startTime
+                    };
+                } catch (fallbackError: unknown) {
+                    const fallbackErrMsg = fallbackError instanceof Error ? fallbackError.message : "Error pada model fallback";
+                    return {
+                        success: false,
+                        text: "",
+                        provider,
+                        model: fallbackModel,
+                        latencyMs: Date.now() - startTime,
+                        error: fallbackErrMsg
+                    };
+                }
+            }
+
             return {
                 success: false,
                 text: "",
                 provider,
                 model,
                 latencyMs: Date.now() - startTime,
-                error: errMsg
+                error: firstErrMsg
             };
         }
     }
