@@ -3,22 +3,85 @@ import dbConnect from "@/lib/db";
 import { rateLimit } from "@/lib/rate-limit";
 import { sanitizeText } from "@/lib/sanitize";
 import { getGlobalSettings } from "@/lib/settings";
-import { getResolvedAIConfig, streamAICompletion, AIMessage } from "@/lib/ai";
+import { getResolvedAssistantAIConfig, streamAICompletion, AIMessage } from "@/lib/ai";
 import { getRelevantKnowledgeString } from "@/lib/website-knowledge";
 import { getCachedAIResponse, setCachedAIResponse } from "@/lib/ai-cache";
 import { notifyAiRecruitmentLead } from "@/lib/telegram";
 import AiChatLog from "@/models/AiChatLog";
+import AiConversation from "@/models/AiConversation";
 
 const chatLimiter = rateLimit({
     interval: 2 * 60 * 1000, // 2 minutes
     uniqueTokenPerInterval: 500,
 });
 
+async function logToConversation(
+    sessionKey: string,
+    role: "visitor" | "bot" | "admin",
+    text: string,
+    meta?: {
+        isLead?: boolean;
+        contact?: string;
+        category?: string;
+        ip?: string;
+        userAgent?: string;
+    }
+) {
+    try {
+        await dbConnect();
+        const senderName = role === "visitor" ? "Pengunjung" : (role === "bot" ? "AI Assistant" : "Maulido (Admin)");
+        const updateFields: Record<string, unknown> = {
+            $push: {
+                messages: {
+                    sender: role,
+                    senderName,
+                    content: text,
+                    timestamp: new Date()
+                }
+            },
+            $set: {
+                lastMessage: text.slice(0, 180),
+                lastMessageAt: new Date()
+            }
+        };
+
+        if (role === "visitor") {
+            (updateFields.$set as Record<string, unknown>).unreadByAdmin = true;
+            (updateFields.$set as Record<string, unknown>).status = "active";
+            if (meta?.isLead) {
+                (updateFields.$set as Record<string, unknown>).isLead = true;
+            }
+            if (meta?.contact) {
+                (updateFields.$set as Record<string, unknown>).visitorContact = meta.contact;
+            }
+            if (meta?.category) {
+                (updateFields.$set as Record<string, unknown>).category = meta.category;
+            }
+            if (meta?.ip) {
+                (updateFields.$set as Record<string, unknown>).ip = meta.ip;
+            }
+            if (meta?.userAgent) {
+                (updateFields.$set as Record<string, unknown>).userAgent = meta.userAgent;
+            }
+        }
+
+        await AiConversation.findOneAndUpdate(
+            { sessionId: sessionKey },
+            updateFields,
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+    } catch (convoErr) {
+        console.warn("Failed to update AiConversation:", convoErr);
+    }
+}
+
 export async function POST(req: Request) {
     const startTime = Date.now();
 
     // 1. IP-based Rate Limiting to prevent AI quota exhaustion
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "127.0.0.1";
+    const userAgent = req.headers.get("user-agent") || "";
+
     try {
         await chatLimiter.check(10, ip); // Max 10 messages per 2 minutes
     } catch {
@@ -29,7 +92,8 @@ export async function POST(req: Request) {
     }
 
     const settings = await getGlobalSettings();
-    const config = getResolvedAIConfig(settings);
+    // Use dedicated assistant configuration (with fallbacks to global AI settings)
+    const config = getResolvedAssistantAIConfig(settings);
 
     const encoder = new TextEncoder();
 
@@ -72,6 +136,9 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
         const rawMessage = body?.message;
+        const sessionId = (body?.sessionId && typeof body.sessionId === "string" && body.sessionId.trim())
+            ? body.sessionId.trim()
+            : ("sess_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9));
 
         if (!rawMessage || typeof rawMessage !== "string") {
             return NextResponse.json({ error: "Message is required" }, { status: 400 });
@@ -111,13 +178,23 @@ export async function POST(req: Request) {
             category = "contact";
         }
 
+        // Save visitor's message to conversation thread
+        void logToConversation(sessionId, "visitor", message, {
+            isLead,
+            contact: extractedContact,
+            category,
+            ip,
+            userAgent
+        });
+
         // Dispatch asynchronous Telegram notification if a lead is detected
         if (isLead) {
             void notifyAiRecruitmentLead({
                 visitorQuery: message,
                 leadContact: extractedContact,
                 category,
-                ip
+                ip,
+                sessionId
             });
         }
 
@@ -126,13 +203,16 @@ export async function POST(req: Request) {
         if (cachedAnswer) {
             const stream = new ReadableStream({
                 start(controller) {
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: cachedAnswer })}\n\n`));
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: cachedAnswer, sessionId })}\n\n`));
                     controller.enqueue(encoder.encode("data: [DONE]\n\n"));
                     controller.close();
                 }
             });
 
-            // Asynchronously log to database
+            // Save bot cached response to conversation thread
+            void logToConversation(sessionId, "bot", cachedAnswer);
+
+            // Asynchronously log to analytics collection
             void (async () => {
                 try {
                     await dbConnect();
@@ -226,7 +306,7 @@ ${config.customPrompt ? `\nADDITIONAL OWNER INSTRUCTIONS:\n${config.customPrompt
                         temperature: 0.7
                     })) {
                         fullResponse += chunk;
-                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: chunk })}\n\n`));
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: chunk, sessionId })}\n\n`));
                     }
 
                     // Cache response in-memory for future queries
@@ -234,10 +314,13 @@ ${config.customPrompt ? `\nADDITIONAL OWNER INSTRUCTIONS:\n${config.customPrompt
                         setCachedAIResponse(message, fullResponse);
                     }
 
+                    // Save bot response to conversation thread
+                    void logToConversation(sessionId, "bot", fullResponse);
+
                     controller.enqueue(encoder.encode("data: [DONE]\n\n"));
                     controller.close();
 
-                    // Asynchronously log to database
+                    // Asynchronously log to analytics database
                     void (async () => {
                         try {
                             await dbConnect();

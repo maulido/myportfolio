@@ -30,6 +30,10 @@ export interface GlobalSettings {
     aiModel?: string;
     aiEnabled?: string;
     aiCustomPrompt?: string;
+    // Dedicated AI Portfolio Assistant Model Overrides
+    assistantAiProvider?: string;
+    assistantAiModel?: string;
+    assistantAiCustomPrompt?: string;
     // Legacy Gemini keys for backward compatibility
     geminiApiKey?: string;
     geminiModel?: string;

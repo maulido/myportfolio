@@ -242,6 +242,35 @@ export function getResolvedAIConfig(settings: GlobalSettings): ResolvedAIConfig 
     };
 }
 
+/**
+ * Resolves dedicated AI configuration for the visitor AI Portfolio Assistant.
+ * Falls back to global AI settings if specific assistant overrides are not configured.
+ */
+export function getResolvedAssistantAIConfig(settings: GlobalSettings): ResolvedAIConfig {
+    const globalConfig = getResolvedAIConfig(settings);
+
+    const assistantProvider = settings.assistantAiProvider?.trim() || globalConfig.provider;
+    const preset = AI_PROVIDERS[assistantProvider] || AI_PROVIDERS[globalConfig.provider] || AI_PROVIDERS.gemini;
+
+    let assistantModel = settings.assistantAiModel?.trim() || (assistantProvider === globalConfig.provider ? globalConfig.model : preset.defaultModel);
+
+    // Auto-normalize Gemini models if needed
+    if (assistantProvider === "gemini") {
+        if (!assistantModel || !assistantModel.startsWith("gemini-") || assistantModel === "gemini-1.5-flash" || assistantModel.includes("2.5-flash")) {
+            assistantModel = preset.defaultModel;
+        }
+    }
+
+    const customPrompt = settings.assistantAiCustomPrompt?.trim() || globalConfig.customPrompt || "";
+
+    return {
+        ...globalConfig,
+        provider: assistantProvider,
+        model: assistantModel,
+        customPrompt
+    };
+}
+
 export interface AIMessage {
     role: "system" | "user" | "assistant";
     content: string;

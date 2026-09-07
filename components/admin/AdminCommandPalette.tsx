@@ -28,6 +28,7 @@ import {
     Activity,
     Sparkles,
     Database,
+    Bot,
     X
 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -286,6 +287,15 @@ export default function AdminCommandPalette() {
             icon: MessageSquare,
             href: "/admin/guestbook",
             keywords: ["buku tamu", "guestbook", "tanda tangan", "pesan"]
+        },
+        {
+            id: "nav-assistant-chats",
+            title: "AI Live Chats & Inquiries",
+            subtitle: "Baca dan balas percakapan pengunjung via AI Portfolio Assistant",
+            category: "Navigation",
+            icon: Bot,
+            href: "/admin/assistant-chats",
+            keywords: ["ai", "chat", "live chat", "obrolan", "percakapan", "pesan", "pengunjung", "leads", "reply"]
         },
         {
             id: "nav-messages",

@@ -148,6 +148,9 @@ export default function AdminSettingsPage() {
         aiModel: "gemini-flash-lite-latest",
         aiEnabled: "true",
         aiCustomPrompt: "",
+        assistantAiProvider: "",
+        assistantAiModel: "",
+        assistantAiCustomPrompt: "",
         geminiApiKey: "",
         geminiModel: "gemini-flash-lite-latest",
         geminiEnabled: "true",
@@ -2124,6 +2127,150 @@ export default function AdminSettingsPage() {
                                             Instruksi sistem ini berlaku untuk provider apapun yang dipilih (Google, OpenAI, Groq, DeepSeek, dsb).
                                         </p>
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* Dedicated Portfolio Assistant AI Model Card */}
+                            <div className="bg-card/40 backdrop-blur-md border border-primary/20 rounded-2xl p-6 shadow-sm space-y-5">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-border/60">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2.5 bg-primary/10 text-primary rounded-xl border border-primary/20">
+                                            <Bot className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="text-base font-bold text-foreground">Model Khusus AI Portfolio Assistant</h3>
+                                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">
+                                                    Chatbot Publik
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                Konfigurasi model AI terpisah khusus untuk widget chat pengunjung di sisi publik (ultra-cepat, responsif, dan hemat biaya)
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Mode Toggle: Global vs Dedicated */}
+                                <div className="space-y-4">
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                                        <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold">
+                                            <input
+                                                type="radio"
+                                                name="assistantAiMode"
+                                                checked={!settings.assistantAiModel}
+                                                onChange={() => {
+                                                    setSettings(prev => ({
+                                                        ...prev,
+                                                        assistantAiModel: "",
+                                                        assistantAiProvider: ""
+                                                    }));
+                                                }}
+                                                className="text-primary focus:ring-primary h-4 w-4"
+                                            />
+                                            <span>Gunakan Model Global AI ({settings.aiModel || "gemini-flash-lite-latest"})</span>
+                                        </label>
+                                        <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold">
+                                            <input
+                                                type="radio"
+                                                name="assistantAiMode"
+                                                checked={Boolean(settings.assistantAiModel)}
+                                                onChange={() => {
+                                                    setSettings(prev => ({
+                                                        ...prev,
+                                                        assistantAiModel: prev.assistantAiModel || "gemini-flash-lite-latest",
+                                                        assistantAiProvider: prev.assistantAiProvider || prev.aiProvider || "gemini"
+                                                    }));
+                                                }}
+                                                className="text-primary focus:ring-primary h-4 w-4"
+                                            />
+                                            <span>Tentukan Model Khusus Portfolio Assistant</span>
+                                        </label>
+                                    </div>
+
+                                    {Boolean(settings.assistantAiModel) && (
+                                        <div className="p-4 rounded-xl bg-background/60 border border-border space-y-4">
+                                            {/* Assistant Provider */}
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-semibold text-foreground">
+                                                    Provider AI untuk Assistant
+                                                </label>
+                                                <select
+                                                    name="assistantAiProvider"
+                                                    value={settings.assistantAiProvider || settings.aiProvider || "gemini"}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        const provPreset = AI_PROVIDERS[val] || AI_PROVIDERS.gemini;
+                                                        setSettings(prev => ({
+                                                            ...prev,
+                                                            assistantAiProvider: val,
+                                                            assistantAiModel: provPreset.defaultModel
+                                                        }));
+                                                    }}
+                                                    className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-xs font-semibold"
+                                                >
+                                                    {Object.values(AI_PROVIDERS).map(prov => (
+                                                        <option key={prov.id} value={prov.id}>
+                                                            {prov.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            {/* Assistant Model Name */}
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-semibold text-foreground">
+                                                    Nama Model AI Assistant
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    name="assistantAiModel"
+                                                    value={settings.assistantAiModel || ""}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        setSettings(prev => ({ ...prev, assistantAiModel: val }));
+                                                    }}
+                                                    placeholder="e.g. gemini-flash-lite-latest, llama-3.3-70b-versatile"
+                                                    className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-xs font-mono"
+                                                />
+                                                <div className="flex flex-wrap gap-1.5 pt-1">
+                                                    <span className="text-[11px] text-muted-foreground">Pilihan Cepat:</span>
+                                                    {["gemini-flash-lite-latest", "gemini-3.7-flash", "gemini-flash-latest", "llama-3.3-70b-versatile", "gpt-4o-mini"].map(rec => (
+                                                        <button
+                                                            key={rec}
+                                                            type="button"
+                                                            onClick={() => setSettings(prev => ({ ...prev, assistantAiModel: rec }))}
+                                                            className={`text-[10px] px-2 py-0.5 rounded-md font-mono transition-all border ${
+                                                                settings.assistantAiModel === rec
+                                                                    ? "bg-primary text-white border-primary"
+                                                                    : "bg-muted text-muted-foreground hover:text-foreground border-border"
+                                                            }`}
+                                                        >
+                                                            {rec}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {/* Custom Instructions for Assistant */}
+                                            <div className="space-y-1.5">
+                                                <label className="text-xs font-semibold text-foreground">
+                                                    Instruksi Khusus Persona Portfolio Assistant
+                                                </label>
+                                                <textarea
+                                                    name="assistantAiCustomPrompt"
+                                                    value={settings.assistantAiCustomPrompt || ""}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        setSettings(prev => ({ ...prev, assistantAiCustomPrompt: val }));
+                                                    }}
+                                                    rows={3}
+                                                    placeholder="Petunjuk khusus bagaimana AI harus menyapa pengunjung, nada bicara, atau prioritas topik..."
+                                                    className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-xs"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

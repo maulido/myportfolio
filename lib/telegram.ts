@@ -454,12 +454,14 @@ export async function notifyAiRecruitmentLead({
     visitorQuery,
     leadContact,
     category,
-    ip
+    ip,
+    sessionId
 }: {
     visitorQuery: string;
     leadContact?: string;
     category?: string;
     ip?: string;
+    sessionId?: string;
 }) {
     try {
         const creds = await getTelegramCredentials();
@@ -491,10 +493,14 @@ export async function notifyAiRecruitmentLead({
 
         const inlineKeyboard: TelegramInlineButton[][] = [];
         if (isPublicDomain) {
-            inlineKeyboard.push([
-                { text: '📊 Analitik AI & Prospek', url: `${siteUrl}/admin/analytics` },
-                { text: '📬 Cek Pesan Masuk', url: `${siteUrl}/admin/messages` }
-            ]);
+            const buttons: TelegramInlineButton[] = [];
+            if (sessionId) {
+                buttons.push({ text: '💬 Balas di Admin Live Chat', url: `${siteUrl}/admin/assistant-chats?session=${sessionId}` });
+            } else {
+                buttons.push({ text: '💬 Obrolan AI Admin', url: `${siteUrl}/admin/assistant-chats` });
+            }
+            buttons.push({ text: '📊 Analitik AI', url: `${siteUrl}/admin/analytics` });
+            inlineKeyboard.push(buttons);
         }
 
         await sendTelegramMessage({

@@ -18,7 +18,8 @@ import {
     Inbox,
     MailCheck,
     Globe,
-    HelpCircle
+    HelpCircle,
+    Bot
 } from "lucide-react";
 
 export default function AdminSidebar() {
@@ -54,6 +55,7 @@ export default function AdminSidebar() {
         {
             title: "Interactive",
             items: [
+                { name: "AI Live Chats", href: "/admin/assistant-chats", icon: Bot },
                 { name: "Uses Page", href: "/admin/uses", icon: Package },
                 { name: "Guestbook", href: "/admin/guestbook", icon: MessageSquare },
                 { name: "Inquiries", href: "/admin/messages", icon: Inbox },

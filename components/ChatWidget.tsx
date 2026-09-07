@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Send, Bot, Loader2, Copy, Check, Sparkles, MessageCircle, FileText, ArrowRight, RotateCcw } from "lucide-react";
+import { X, Send, Bot, Loader2, Copy, Check, Sparkles, MessageCircle, FileText, ArrowRight, RotateCcw, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
 interface ChatMessage {
-    role: "user" | "bot";
+    id?: string;
+    role: "user" | "bot" | "admin";
+    senderName?: string;
     content: string;
     timestamp?: string;
 }
@@ -192,15 +194,23 @@ const PROMPT_CHIPS = [
 
 export default function ChatWidget() {
     const [isOpen, setIsOpen] = useState(false);
+    const [sessionId, setSessionId] = useState<string>("");
     const [messages, setMessages] = useState<ChatMessage[]>([DEFAULT_GREETING]);
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [isHydrated, setIsHydrated] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    // Restore state from localStorage & sessionStorage on initial mount
+    // Initialize or restore session ID and chat history
     useEffect(() => {
         try {
+            let currentSession = localStorage.getItem("portfolio_chat_session_id");
+            if (!currentSession) {
+                currentSession = "sess_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
+                localStorage.setItem("portfolio_chat_session_id", currentSession);
+            }
+            setSessionId(currentSession);
+
             const savedOpen = localStorage.getItem("portfolio_chat_open");
             if (savedOpen === "true") {
                 setIsOpen(true);
@@ -225,7 +235,7 @@ export default function ChatWidget() {
         }
     }, []);
 
-    // Persist messages to localStorage whenever they change
+    // Persist messages to localStorage
     useEffect(() => {
         if (!isHydrated) return;
         try {
@@ -236,12 +246,59 @@ export default function ChatWidget() {
         }
     }, [messages, isHydrated]);
 
-    // Auto-scroll to bottom on message or loading change
+    // Auto-scroll on new message or loading change
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
     }, [messages, isLoading]);
+
+    // Real-Time Smart Sync Polling (Fetch Admin Replies while chat is open)
+    const syncWithServer = useCallback(async () => {
+        if (!sessionId || !isOpen || isLoading) return;
+        try {
+            const res = await fetch(`/api/chat/sync?sessionId=${encodeURIComponent(sessionId)}`);
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data.success && Array.isArray(data.messages)) {
+                // Check if there are any admin messages from server not yet in local state
+                const adminMsgs = data.messages.filter((m: { sender: string }) => m.sender === "admin");
+                if (adminMsgs.length > 0) {
+                    setMessages((prev) => {
+                        const existingAdminContents = new Set(
+                            prev.filter(p => p.role === "admin").map(p => p.content)
+                        );
+                        const newAdminItems: ChatMessage[] = [];
+                        for (const am of adminMsgs) {
+                            if (!existingAdminContents.has(am.content)) {
+                                const timeStr = am.timestamp ? new Date(am.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Baru saja";
+                                newAdminItems.push({
+                                    role: "admin",
+                                    senderName: am.senderName || "Maulido (Admin)",
+                                    content: am.content,
+                                    timestamp: timeStr
+                                });
+                            }
+                        }
+                        if (newAdminItems.length > 0) {
+                            return [...prev, ...newAdminItems];
+                        }
+                        return prev;
+                    });
+                }
+            }
+        } catch {
+            // Silently ignore network sync errors
+        }
+    }, [sessionId, isOpen, isLoading]);
+
+    // Trigger sync on open and every 5 seconds while open
+    useEffect(() => {
+        if (!isOpen) return;
+        syncWithServer();
+        const interval = setInterval(syncWithServer, 5000);
+        return () => clearInterval(interval);
+    }, [isOpen, syncWithServer]);
 
     const handleOpen = () => {
         setIsOpen(true);
@@ -258,8 +315,11 @@ export default function ChatWidget() {
     };
 
     const handleResetChat = () => {
+        const newSession = "sess_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
+        setSessionId(newSession);
         setMessages([DEFAULT_GREETING]);
         try {
+            localStorage.setItem("portfolio_chat_session_id", newSession);
             localStorage.removeItem("portfolio_chat_messages");
         } catch {}
     };
@@ -306,7 +366,11 @@ export default function ChatWidget() {
             const res = await fetch("/api/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: currentInput, history })
+                body: JSON.stringify({
+                    message: currentInput,
+                    history,
+                    sessionId: sessionId || undefined
+                })
             });
 
             if (!res.ok || !res.body) {
@@ -347,6 +411,10 @@ export default function ChatWidget() {
                         try {
                             const jsonStr = trimmed.slice(6);
                             const parsed = JSON.parse(jsonStr);
+                            if (parsed.sessionId && !sessionId) {
+                                setSessionId(parsed.sessionId);
+                                localStorage.setItem("portfolio_chat_session_id", parsed.sessionId);
+                            }
                             if (parsed.text) {
                                 setMessages((prev) => {
                                     const updated = [...prev];
@@ -420,7 +488,7 @@ export default function ChatWidget() {
                                     <div className="flex items-center gap-1.5">
                                         <h3 className="font-bold text-sm leading-tight">Portfolio Assistant</h3>
                                         <span className="inline-flex items-center px-1.5 py-0.2 text-[9px] rounded-full bg-white/20 font-semibold uppercase tracking-wider">
-                                            AI
+                                            AI + Live
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-1.5 mt-0.5">
@@ -454,13 +522,30 @@ export default function ChatWidget() {
                         <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-muted/30">
                             {messages.map((msg, idx) => {
                                 const isUser = msg.role === "user";
+                                const isAdmin = msg.role === "admin";
+
                                 return (
                                     <div key={idx} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
                                         <div className={`max-w-[88%] p-3 rounded-2xl text-sm ${
                                             isUser
                                                 ? "bg-primary text-white rounded-tr-none shadow-sm"
-                                                : "bg-card border border-border rounded-tl-none shadow-sm text-foreground"
+                                                : isAdmin
+                                                    ? "bg-primary/10 border-2 border-primary/40 text-foreground rounded-tl-none shadow-md"
+                                                    : "bg-card border border-border rounded-tl-none shadow-sm text-foreground"
                                         }`}>
+                                            {/* Special Header for Live Admin Reply */}
+                                            {isAdmin && (
+                                                <div className="flex items-center justify-between gap-1.5 mb-2 pb-1.5 border-b border-primary/20">
+                                                    <div className="flex items-center gap-1.5 font-bold text-xs text-primary">
+                                                        <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                                                        <span>{msg.senderName || "Maulido (Admin)"}</span>
+                                                    </div>
+                                                    <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold border border-emerald-500/20">
+                                                        ✓ Verified
+                                                    </span>
+                                                </div>
+                                            )}
+
                                             {/* Live typing indicator when message is empty */}
                                             {!isUser && !msg.content ? (
                                                 <div className="flex items-center gap-2 py-0.5 text-xs text-muted-foreground">
@@ -475,8 +560,8 @@ export default function ChatWidget() {
                                                 />
                                             )}
 
-                                            {/* Contextual Interactive Action Buttons */}
-                                            {!isUser && msg.content && (
+                                            {/* Contextual Interactive Action Buttons for Bot */}
+                                            {!isUser && !isAdmin && msg.content && (
                                                 <ContextualActions content={msg.content} onCloseChat={handleClose} />
                                             )}
 
