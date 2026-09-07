@@ -386,6 +386,149 @@ export async function getWebsiteKnowledgeString(forceRefresh = false): Promise<s
     return data.text;
 }
 
+const STOP_WORDS = new Set([
+    "dan", "yang", "di", "ke", "dari", "ini", "itu", "untuk", "pada", "adalah", "sebagai", "dengan", "saya", "kamu", "anda", "dia", "apa", "siapa", "bagaimana", "mengapa", "kapan", "dimana", "apakah", "bisa", "tolong", "bantu", "halo", "hai", "mau", "tahu", "tentang", "ada",
+    "the", "a", "an", "and", "or", "in", "on", "at", "to", "for", "with", "is", "are", "was", "were", "of", "about", "what", "who", "how", "tell", "me", "can", "you", "hello", "hi"
+]);
+
+/**
+ * Dynamically prioritizes and ranks website knowledge based on query relevance (Mini-RAG).
+ * Highly relevant projects, articles, and skills appear at the top with richer detail,
+ * ensuring high precision and optimal context token usage.
+ */
+export async function getRelevantKnowledgeString(query?: string, forceRefresh = false): Promise<string> {
+    const rawData = await getWebsiteKnowledgeData(forceRefresh);
+    if (!query || typeof query !== "string" || query.trim().length < 3) {
+        return rawData.text;
+    }
+
+    const tokens = query
+        .toLowerCase()
+        .replace(/[^\w\s]/g, " ")
+        .split(/\s+/)
+        .filter(t => t.length > 2 && !STOP_WORDS.has(t));
+
+    if (tokens.length === 0) {
+        return rawData.text;
+    }
+
+    const scoreText = (text: string): number => {
+        if (!text) return 0;
+        const lower = text.toLowerCase();
+        let score = 0;
+        for (const token of tokens) {
+            if (lower.includes(token)) {
+                score += 1;
+            }
+        }
+        return score;
+    };
+
+    const { seoContext } = rawData;
+    const { siteMeta } = seoContext;
+
+    // Rank Projects
+    const rankedProjects = [...seoContext.projects].map(p => {
+        const titleScore = scoreText(p.title) * 3;
+        const techScore = scoreText(p.technologies.join(" ")) * 3;
+        const descScore = scoreText(p.description);
+        const catScore = scoreText(p.category) * 2;
+        return { item: p, score: titleScore + techScore + descScore + catScore };
+    }).sort((a, b) => b.score - a.score);
+
+    // Rank Posts
+    const rankedPosts = [...seoContext.posts].map(p => {
+        const titleScore = scoreText(p.title) * 3;
+        const tagScore = scoreText(p.tags.join(" ")) * 2;
+        const excerptScore = scoreText(p.excerpt);
+        return { item: p, score: titleScore + tagScore + excerptScore };
+    }).sort((a, b) => b.score - a.score);
+
+    // Rank Skills
+    const rankedSkills = [...seoContext.skills].map(s => {
+        const nameScore = scoreText(s.name) * 3;
+        const catScore = scoreText(s.category);
+        return { item: s, score: nameScore + catScore };
+    }).sort((a, b) => b.score - a.score);
+
+    // If query didn't match specific entities noticeably, fall back to default
+    const maxScore = Math.max(
+        rankedProjects[0]?.score || 0,
+        rankedPosts[0]?.score || 0,
+        rankedSkills[0]?.score || 0
+    );
+
+    if (maxScore === 0) {
+        return rawData.text;
+    }
+
+    const lines: string[] = [];
+    lines.push(`# KNOWLEDGE BASE (RELEVANCE OPTIMIZED FOR: "${query.slice(0, 50)}")`);
+    lines.push(`- **Situs**: ${siteMeta.siteTitle}`);
+    lines.push(`- **Profil Singkat**: ${siteMeta.authorBio}`);
+    lines.push("");
+
+    // Top Projects
+    lines.push("## DAFTAR PROYEK (DIPRIORITASKAN BERDASARKAN RELEVANSI):");
+    rankedProjects.slice(0, 10).forEach((rp, idx) => {
+        const p = rp.item;
+        const tagBadge = rp.score > 0 ? " [Relevansi Tinggi]" : "";
+        lines.push(`${idx + 1}. **${p.title}**${tagBadge} (Rute: \`${p.path}\`, Kategori: ${p.category})`);
+        lines.push(`   - Teknologi: ${p.technologies.join(", ") || "-"}`);
+        lines.push(`   - Ringkasan: ${p.description}`);
+    });
+    lines.push("");
+
+    // Top Posts
+    if (rankedPosts.length > 0) {
+        lines.push("## ARTIKEL & PUBLIKASI TEKNIS:");
+        rankedPosts.slice(0, 8).forEach((rp, idx) => {
+            const post = rp.item;
+            lines.push(`${idx + 1}. **${post.title}** (Rute: \`${post.path}\`, Kategori: ${post.category})`);
+            lines.push(`   - Tags: ${post.tags.join(", ") || "-"}`);
+            lines.push(`   - Ringkasan: ${post.excerpt}`);
+        });
+        lines.push("");
+    }
+
+    // Skills
+    lines.push("## KEAHLIAN TEKNOLOGI:");
+    const matchedSkills = rankedSkills.filter(s => s.score > 0).map(s => `${s.item.name} (${s.item.level})`);
+    if (matchedSkills.length > 0) {
+        lines.push(`- **Keahlian Terkait Pertanyaan**: ${matchedSkills.join(", ")}`);
+    }
+    // Group general skills
+    const grouped: Record<string, string[]> = {};
+    seoContext.skills.forEach(s => {
+        const cat = s.category || "General";
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push(`${s.name} (${s.level})`);
+    });
+    for (const [cat, list] of Object.entries(grouped)) {
+        lines.push(`- **${cat}**: ${list.join(", ")}`);
+    }
+    lines.push("");
+
+    // Career & Certifications
+    if (seoContext.career.length > 0) {
+        lines.push("## RIWAYAT KARIR & PENGALAMAN:");
+        seoContext.career.forEach(c => {
+            lines.push(`- **${c.title}** di **${c.organization}** (${c.period})`);
+        });
+        lines.push("");
+    }
+
+    if (seoContext.certifications.length > 0) {
+        lines.push("## SERTIFIKASI:");
+        seoContext.certifications.forEach(cert => {
+            lines.push(`- **${cert.title}** (${cert.issuer})`);
+        });
+        lines.push("");
+    }
+
+    return lines.join("\n");
+}
+
 /**
  * Get structured SEO context data for targeted SEO audits and cross-linking.
  */

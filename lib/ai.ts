@@ -499,6 +499,201 @@ export async function generateAICompletion(options: AICompletionOptions): Promis
 }
 
 /**
+ * Streams AI completion chunks as an AsyncGenerator<string, void, unknown>.
+ * Supports Google Gemini native SDK generateContentStream / sendMessageStream
+ * and standard OpenAI-compatible Server-Sent Events (SSE) endpoints.
+ */
+export async function* streamAICompletion(options: AICompletionOptions): AsyncGenerator<string, void, unknown> {
+    const provider = options.provider || "gemini";
+    const model = options.model || (AI_PROVIDERS[provider]?.defaultModel || "gemini-flash-lite-latest");
+    const baseUrl = (options.baseUrl || AI_PROVIDERS[provider]?.defaultBaseUrl || "").replace(/\/+$/, "");
+    const apiKey = options.apiKey?.trim() || "";
+    const temperature = options.temperature ?? 0.7;
+    const maxTokens = options.maxTokens ?? 1000;
+
+    // Build standard messages array
+    const messages: AIMessage[] = [];
+
+    if (options.systemInstruction) {
+        messages.push({ role: "system", content: options.systemInstruction });
+    }
+
+    if (Array.isArray(options.messages) && options.messages.length > 0) {
+        messages.push(...options.messages);
+    } else if (options.prompt) {
+        messages.push({ role: "user", content: options.prompt });
+    }
+
+    if (messages.length === 0) {
+        yield "Prompt atau daftar pesan tidak boleh kosong.";
+        return;
+    }
+
+    // 1. Google Gemini Native Streaming
+    if (provider === "gemini" && (!options.baseUrl || options.baseUrl.includes("googleapis.com"))) {
+        if (!apiKey) {
+            yield "Google Gemini API Key belum dikonfigurasi.";
+            return;
+        }
+
+        const runGeminiStream = async function* (targetModel: string) {
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const geminiModel = genAI.getGenerativeModel({
+                model: targetModel,
+                systemInstruction: options.systemInstruction || undefined
+            });
+
+            if (messages.length === 1 || (messages.length === 2 && messages[0].role === "system")) {
+                const userText = messages.find(m => m.role === "user")?.content || options.prompt || "";
+                const result = await geminiModel.generateContentStream(userText);
+                for await (const chunk of result.stream) {
+                    const text = chunk.text();
+                    if (text) yield text;
+                }
+            } else {
+                const history = messages
+                    .filter(m => m.role !== "system")
+                    .slice(0, -1)
+                    .map(m => ({
+                        role: m.role === "assistant" ? "model" : "user",
+                        parts: [{ text: m.content }]
+                    }));
+
+                const lastUserMessage = messages[messages.length - 1]?.content || "";
+                const chat = geminiModel.startChat({
+                    history,
+                    generationConfig: {
+                        maxOutputTokens: maxTokens,
+                        temperature
+                    }
+                });
+
+                const result = await chat.sendMessageStream(lastUserMessage);
+                for await (const chunk of result.stream) {
+                    const text = chunk.text();
+                    if (text) yield text;
+                }
+            }
+        };
+
+        try {
+            for await (const chunk of runGeminiStream(model)) {
+                yield chunk;
+            }
+            return;
+        } catch (firstError: unknown) {
+            const firstErrMsg = firstError instanceof Error ? firstError.message : "Error pada streaming Gemini";
+            console.warn(`[GEMINI STREAM] Model ${model} encountered error: ${firstErrMsg}`);
+
+            // Automatic fallback retry for streaming
+            const fallbackModel = "gemini-flash-lite-latest";
+            const secondaryFallback = "gemini-3.7-flash";
+            const targetFallback = model !== fallbackModel ? fallbackModel : secondaryFallback;
+
+            if (model !== targetFallback) {
+                try {
+                    console.info(`[GEMINI STREAM FALLBACK] Retrying with ${targetFallback}...`);
+                    for await (const chunk of runGeminiStream(targetFallback)) {
+                        yield chunk;
+                    }
+                    return;
+                } catch (fallbackError: unknown) {
+                    const fallbackErrMsg = fallbackError instanceof Error ? fallbackError.message : "Fallback stream failed";
+                    yield `Maaf, terjadi gangguan pada model AI: ${fallbackErrMsg}`;
+                    return;
+                }
+            }
+            yield `Maaf, terjadi gangguan pada model AI: ${firstErrMsg}`;
+            return;
+        }
+    }
+
+    // 2. Universal OpenAI-compatible Streaming (OpenAI, Groq, DeepSeek, OpenRouter, Ollama, Custom)
+    const endpoint = `${baseUrl}/chat/completions`;
+    const headers: Record<string, string> = {
+        "Content-Type": "application/json"
+    };
+
+    if (apiKey) {
+        headers["Authorization"] = `Bearer ${apiKey}`;
+    }
+
+    if (provider === "openrouter") {
+        headers["HTTP-Referer"] = "https://portfolio-website.local";
+        headers["X-Title"] = "Portfolio Assistant";
+    }
+
+    try {
+        const response = await fetch(endpoint, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+                model,
+                messages,
+                temperature,
+                max_tokens: maxTokens,
+                stream: true
+            })
+        });
+
+        if (!response.ok || !response.body) {
+            // If streaming fails or not supported, fall back to non-streaming
+            const nonStreamResult = await generateAICompletion(options);
+            if (nonStreamResult.success) {
+                yield nonStreamResult.text;
+            } else {
+                yield nonStreamResult.error || "Gagal mendapatkan respon dari penyedia AI.";
+            }
+            return;
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let buffer = "";
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop() || "";
+
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed || trimmed.startsWith(":") || trimmed === "data: [DONE]") {
+                    continue;
+                }
+
+                if (trimmed.startsWith("data: ")) {
+                    const jsonStr = trimmed.slice(6);
+                    try {
+                        const parsed = JSON.parse(jsonStr);
+                        const deltaText = parsed.choices?.[0]?.delta?.content || parsed.choices?.[0]?.text || "";
+                        if (deltaText) {
+                            yield deltaText;
+                        }
+                    } catch {
+                        // Skip malformed chunk
+                    }
+                }
+            }
+        }
+    } catch (error: unknown) {
+        const errMsg = error instanceof Error ? error.message : "Gagal streaming respons AI";
+        // Final fallback to non-streaming execution
+        try {
+            const fallback = await generateAICompletion(options);
+            if (fallback.success) {
+                yield fallback.text;
+                return;
+            }
+        } catch {}
+        yield `Maaf, terjadi gangguan jaringan: ${errMsg}`;
+    }
+}
+
+/**
  * Fetches available models from the provider's remote API,
  * with automatic fallback to verified preset models if offline or no key.
  */

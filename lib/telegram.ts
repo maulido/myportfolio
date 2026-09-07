@@ -446,3 +446,62 @@ export async function notifyGuestbookSubmission({
         console.error('[TELEGRAM] Error in notifyGuestbookSubmission:', err);
     }
 }
+
+/**
+ * Dispatch notification when AI Assistant detects a recruitment lead or hiring inquiry
+ */
+export async function notifyAiRecruitmentLead({
+    visitorQuery,
+    leadContact,
+    category,
+    ip
+}: {
+    visitorQuery: string;
+    leadContact?: string;
+    category?: string;
+    ip?: string;
+}) {
+    try {
+        const creds = await getTelegramCredentials();
+        if (!creds.enabled) {
+            return;
+        }
+
+        const siteUrl = getSiteBaseUrl();
+        const nowStr = new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+        const cleanQuery = escapeTelegramHtml(visitorQuery);
+        const cleanContact = leadContact ? escapeTelegramHtml(leadContact) : 'Belum tercantum';
+        const cleanCategory = escapeTelegramHtml(category || 'Peluang Rekrutmen / Proyek');
+        const cleanIp = escapeTelegramHtml(ip || '-');
+        const isPublicDomain = isValidTelegramButtonUrl(siteUrl);
+
+        const text = [
+            `💼 <b>Prospek Rekrutmen Terdeteksi oleh AI Assistant!</b>`,
+            ``,
+            `🏷️ <b>Topik:</b> ${cleanCategory}`,
+            `📞 <b>Kontak Pengunjung:</b> <code>${cleanContact}</code>`,
+            `🌐 <b>IP Address:</b> <code>${cleanIp}</code>`,
+            `🕒 <b>Waktu:</b> ${nowStr} WIB`,
+            ``,
+            `💬 <b>Pesan Pengunjung:</b>`,
+            `<i>"${cleanQuery}"</i>`,
+            ``,
+            `💡 <i>Pengunjung ini terdeteksi tertarik menawarkan proyek, pekerjaan, atau kolaborasi via AI Assistant.</i>`
+        ].join('\n');
+
+        const inlineKeyboard: TelegramInlineButton[][] = [];
+        if (isPublicDomain) {
+            inlineKeyboard.push([
+                { text: '📊 Analitik AI & Prospek', url: `${siteUrl}/admin/analytics` },
+                { text: '📬 Cek Pesan Masuk', url: `${siteUrl}/admin/messages` }
+            ]);
+        }
+
+        await sendTelegramMessage({
+            text,
+            inlineKeyboard: inlineKeyboard.length > 0 ? inlineKeyboard : undefined
+        });
+    } catch (err) {
+        console.error('[TELEGRAM] Error in notifyAiRecruitmentLead:', err);
+    }
+}

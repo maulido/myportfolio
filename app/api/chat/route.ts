@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
+import dbConnect from "@/lib/db";
 import { rateLimit } from "@/lib/rate-limit";
 import { sanitizeText } from "@/lib/sanitize";
 import { getGlobalSettings } from "@/lib/settings";
-import { getResolvedAIConfig, generateAICompletion, AIMessage } from "@/lib/ai";
-import { getWebsiteKnowledgeString } from "@/lib/website-knowledge";
+import { getResolvedAIConfig, streamAICompletion, AIMessage } from "@/lib/ai";
+import { getRelevantKnowledgeString } from "@/lib/website-knowledge";
+import { getCachedAIResponse, setCachedAIResponse } from "@/lib/ai-cache";
+import { notifyAiRecruitmentLead } from "@/lib/telegram";
+import AiChatLog from "@/models/AiChatLog";
 
 const chatLimiter = rateLimit({
     interval: 2 * 60 * 1000, // 2 minutes
@@ -11,6 +15,8 @@ const chatLimiter = rateLimit({
 });
 
 export async function POST(req: Request) {
+    const startTime = Date.now();
+
     // 1. IP-based Rate Limiting to prevent AI quota exhaustion
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "127.0.0.1";
     try {
@@ -25,15 +31,41 @@ export async function POST(req: Request) {
     const settings = await getGlobalSettings();
     const config = getResolvedAIConfig(settings);
 
+    const encoder = new TextEncoder();
+
     if (!config.enabled) {
-        return NextResponse.json({
-            response: "Asisten AI saat ini dinonaktifkan oleh administrator situs. Silakan gunakan form kontak untuk menghubungi secara langsung."
+        const stream = new ReadableStream({
+            start(controller) {
+                const text = "Asisten AI saat ini dinonaktifkan oleh administrator situs. Silakan gunakan form kontak untuk menghubungi secara langsung.";
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
+                controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+                controller.close();
+            }
+        });
+        return new Response(stream, {
+            headers: {
+                "Content-Type": "text/event-stream; charset=utf-8",
+                "Cache-Control": "no-cache, no-transform",
+                "Connection": "keep-alive"
+            }
         });
     }
 
     if (!config.apiKey && config.provider !== "ollama") {
-        return NextResponse.json({
-            response: "I'm currently running in simulation mode because the AI provider API Key is not set. However, I can tell you that the owner is a Senior Network Engineer and Developer based in Jakarta!"
+        const stream = new ReadableStream({
+            start(controller) {
+                const text = "I'm currently running in simulation mode because the AI provider API Key is not set. However, I can tell you that the owner is a Senior Network Engineer and Developer based in Jakarta!";
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`));
+                controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+                controller.close();
+            }
+        });
+        return new Response(stream, {
+            headers: {
+                "Content-Type": "text/event-stream; charset=utf-8",
+                "Cache-Control": "no-cache, no-transform",
+                "Connection": "keep-alive"
+            }
         });
     }
 
@@ -51,7 +83,86 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Message cannot be empty." }, { status: 400 });
         }
 
-        // Build standard conversation history messages
+        // 2. Lead & Contact Detection
+        const emailMatches = message.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g);
+        const phoneMatches = message.match(/(?:\+62|62|08)[0-9]{8,12}\b/g);
+        const extractedContact = [
+            ...(emailMatches || []),
+            ...(phoneMatches || [])
+        ].join(", ");
+
+        const RECRUITMENT_PATTERN = /\b(hire|hiring|recruiter|recruitment|rekrut|lowongan|kerja|project|proyek|freelance|kontrak|salary|gaji|fee|rate|budget|interview|wawancara|collaborat|kerjasama|tawaran|job offer|hubungi saya|kontak saya|hubungi kami)\b/i;
+        const isRecruitmentIntent = RECRUITMENT_PATTERN.test(message);
+        const isLead = isRecruitmentIntent || Boolean(extractedContact);
+
+        // Determine inquiry category
+        let category = "general";
+        if (isRecruitmentIntent) {
+            category = "recruitment";
+        } else if (/\b(skill|keahlian|stack|teknologi|bahasa|framework|cisco|python|react|next|mikrotik|docker)\b/i.test(message)) {
+            category = "skills";
+        } else if (/\b(project|proyek|portofolio|karya|aplikasi|github)\b/i.test(message)) {
+            category = "projects";
+        } else if (/\b(sertifikat|sertifikasi|ccna|certification|lisensi)\b/i.test(message)) {
+            category = "certifications";
+        } else if (/\b(karir|pengalaman|experience|perusahaan|kantor)\b/i.test(message)) {
+            category = "experience";
+        } else if (/\b(kontak|contact|email|whatsapp|wa|telepon|phone|hubungi)\b/i.test(message)) {
+            category = "contact";
+        }
+
+        // Dispatch asynchronous Telegram notification if a lead is detected
+        if (isLead) {
+            void notifyAiRecruitmentLead({
+                visitorQuery: message,
+                leadContact: extractedContact,
+                category,
+                ip
+            });
+        }
+
+        // 3. Smart In-Memory Caching Check (Sub-20ms instant response)
+        const cachedAnswer = getCachedAIResponse(message);
+        if (cachedAnswer) {
+            const stream = new ReadableStream({
+                start(controller) {
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: cachedAnswer })}\n\n`));
+                    controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+                    controller.close();
+                }
+            });
+
+            // Asynchronously log to database
+            void (async () => {
+                try {
+                    await dbConnect();
+                    await AiChatLog.create({
+                        query: message,
+                        responseSnippet: cachedAnswer.slice(0, 250),
+                        category,
+                        isLead: Boolean(isLead),
+                        leadContact: extractedContact || "",
+                        latencyMs: Date.now() - startTime,
+                        provider: "cache",
+                        aiModel: "in-memory",
+                        ip,
+                        cached: true
+                    });
+                } catch (logErr) {
+                    console.warn("Failed to log cached AI response:", logErr);
+                }
+            })();
+
+            return new Response(stream, {
+                headers: {
+                    "Content-Type": "text/event-stream; charset=utf-8",
+                    "Cache-Control": "no-cache, no-transform",
+                    "Connection": "keep-alive"
+                }
+            });
+        }
+
+        // 4. Build standard conversation history messages
         const messages: AIMessage[] = [];
         if (Array.isArray(body?.history)) {
             for (const item of body.history) {
@@ -64,7 +175,6 @@ export async function POST(req: Request) {
                 }
 
                 if (content.trim()) {
-                    // Prevent consecutive duplicate roles
                     if (messages.length > 0 && messages[messages.length - 1].role === role) {
                         continue;
                     }
@@ -76,12 +186,12 @@ export async function POST(req: Request) {
         // Ensure user message is at the end
         messages.push({ role: "user", content: message });
 
-        // Retrieve public website knowledge base safely (excluding any sensitive data)
-        const knowledge = await getWebsiteKnowledgeString();
+        // 5. Dynamic Relevance Ranking / Mini-RAG
+        const knowledge = await getRelevantKnowledgeString(message);
 
         const combinedSystemInstruction = `
-You are the AI Assistant for this professional Portfolio Website.
-Your job is to assist visitors, tech recruiters, and engineering collaborators by answering questions about the portfolio owner, their background, projects, published articles, career journey, and technical skills.
+You are the AI Assistant for Maulido's professional Portfolio Website.
+Your job is to assist visitors, tech recruiters, and engineering collaborators by answering questions about Maulido, his background, engineering projects, published articles, career journey, and technical skills.
 
 SECURITY AND PRIVACY DIRECTIVES (STRICT MANDATE):
 1. You do not possess, and must NEVER invent or disclose any private administrator passwords, auth tokens, API keys, database credentials, or private contact submissions.
@@ -90,35 +200,78 @@ SECURITY AND PRIVACY DIRECTIVES (STRICT MANDATE):
 WEBSITE KNOWLEDGE BASE:
 ${knowledge}
 
-GUIDELINES:
+RESPONSE GUIDELINES:
 - Answer in the same language as the user's message (Indonesian or English).
-- Be concise, direct, helpful, and polite. Keep responses short and focused (typically 2-4 sentences or clear bullet points) so responses generate rapidly.
-- When mentioning a specific project, you can provide its markdown link like \`[Project Name](/projects/slug)\`.
-- When mentioning a specific blog article, provide its markdown link like \`[Article Title](/blog/slug)\`.
-- Maintain a professional, articulate, polite, and confident tone.
+- Be concise, direct, helpful, and polite. Keep responses short and focused (typically 2-4 sentences or crisp bullet points) so responses generate rapidly.
+- When mentioning a project, you can provide its markdown link like \`[Project Name](/projects/slug)\`.
+- When mentioning a blog article, provide its markdown link like \`[Article Title](/blog/slug)\`.
+- If the visitor is asking about downloading CV/resume, invite them to click \`[📄 Download CV](#cv)\`.
+- If the visitor is interested in hiring, offering freelance work, or contacting Maulido, warmly invite them to connect via \`[💬 WhatsApp](https://wa.me/6281234567890)\` or \`[✉️ Kontak](/contact)\`, and offer that they can also leave their email/WhatsApp number right here in this chat.
 ${config.customPrompt ? `\nADDITIONAL OWNER INSTRUCTIONS:\n${config.customPrompt}` : ""}
 `.trim();
 
-        const completion = await generateAICompletion({
-            provider: config.provider,
-            apiKey: config.apiKey,
-            baseUrl: config.baseUrl,
-            model: config.model,
-            systemInstruction: combinedSystemInstruction,
-            messages,
-            maxTokens: 500,
-            temperature: 0.7
+        // 6. Return Streaming SSE Response
+        const stream = new ReadableStream({
+            async start(controller) {
+                let fullResponse = "";
+                try {
+                    for await (const chunk of streamAICompletion({
+                        provider: config.provider,
+                        apiKey: config.apiKey,
+                        baseUrl: config.baseUrl,
+                        model: config.model,
+                        systemInstruction: combinedSystemInstruction,
+                        messages,
+                        maxTokens: 500,
+                        temperature: 0.7
+                    })) {
+                        fullResponse += chunk;
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: chunk })}\n\n`));
+                    }
+
+                    // Cache response in-memory for future queries
+                    if (fullResponse.trim().length > 10) {
+                        setCachedAIResponse(message, fullResponse);
+                    }
+
+                    controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+                    controller.close();
+
+                    // Asynchronously log to database
+                    void (async () => {
+                        try {
+                            await dbConnect();
+                            await AiChatLog.create({
+                                query: message,
+                                responseSnippet: fullResponse.slice(0, 250),
+                                category,
+                                isLead: Boolean(isLead),
+                                leadContact: extractedContact || "",
+                                latencyMs: Date.now() - startTime,
+                                provider: config.provider,
+                                aiModel: config.model,
+                                ip,
+                                cached: false
+                            });
+                        } catch (logErr) {
+                            console.warn("Failed to save AiChatLog:", logErr);
+                        }
+                    })();
+                } catch (streamErr: unknown) {
+                    const errMsg = streamErr instanceof Error ? streamErr.message : "Terjadi kesalahan saat streaming respon AI.";
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: errMsg })}\n\n`));
+                    controller.close();
+                }
+            }
         });
 
-        if (!completion.success) {
-            console.error("AI Completion Failed:", completion.error);
-            return NextResponse.json(
-                { error: completion.error || "Gagal mendapatkan respon dari asisten AI." },
-                { status: 500 }
-            );
-        }
-
-        return NextResponse.json({ response: completion.text });
+        return new Response(stream, {
+            headers: {
+                "Content-Type": "text/event-stream; charset=utf-8",
+                "Cache-Control": "no-cache, no-transform",
+                "Connection": "keep-alive"
+            }
+        });
     } catch (error: unknown) {
         console.error("AI Chat API Error:", error);
         return NextResponse.json({ error: "Failed to get response from AI assistant." }, { status: 500 });
