@@ -145,11 +145,11 @@ export default function AdminSettingsPage() {
         aiProvider: "gemini",
         aiApiKey: "",
         aiBaseUrl: "",
-        aiModel: "gemini-1.5-flash",
+        aiModel: "gemini-flash-latest",
         aiEnabled: "true",
         aiCustomPrompt: "",
         geminiApiKey: "",
-        geminiModel: "gemini-1.5-flash",
+        geminiModel: "gemini-flash-latest",
         geminiEnabled: "true",
         geminiCustomPrompt: "",
         mongoDbUri: "",
@@ -440,15 +440,23 @@ export default function AdminSettingsPage() {
             aiBaseUrl: providerId === "custom" || providerId === "ollama" ? (prev.aiBaseUrl || preset.defaultBaseUrl) : "",
             ...(providerId === "gemini" ? { geminiModel: preset.defaultModel } : {})
         }));
+        if (!fetchedModels[providerId]) {
+            handleFetchModels({ provider: providerId, silent: true });
+        }
     };
 
-    const handleFetchModels = async () => {
-        const provider = settings.aiProvider || "gemini";
+    const handleFetchModels = useCallback(async (options?: { provider?: string; apiKey?: string; baseUrl?: string; silent?: boolean }) => {
+        const provider = options?.provider || settings.aiProvider || "gemini";
         const preset = AI_PROVIDERS[provider] || AI_PROVIDERS.gemini;
-        const apiKey = settings.aiApiKey !== undefined && settings.aiApiKey !== ""
-            ? settings.aiApiKey.trim()
-            : (settings.geminiApiKey?.trim() || undefined);
-        const baseUrl = settings.aiBaseUrl?.trim() || undefined;
+        const apiKey = options?.apiKey !== undefined
+            ? options.apiKey
+            : (settings.aiApiKey !== undefined && settings.aiApiKey !== ""
+                ? settings.aiApiKey.trim()
+                : (settings.geminiApiKey?.trim() || undefined));
+        const baseUrl = options?.baseUrl !== undefined
+            ? options.baseUrl
+            : (settings.aiBaseUrl?.trim() || undefined);
+        const silent = options?.silent ?? false;
 
         setFetchingModels(true);
         try {
@@ -469,21 +477,33 @@ export default function AdminSettingsPage() {
                     [provider]: data.models
                 }));
 
-                if (data.source === "api") {
-                    toast.success(data.message || `Berhasil memuat ${data.models.length} model langsung dari API ${preset.name}!`);
-                } else {
-                    toast(data.message || `Memuat ${data.models.length} model dari katalog ${preset.name}.`, { icon: "ℹ️" });
+                if (!silent) {
+                    if (data.source === "api") {
+                        toast.success(data.message || `Berhasil memuat ${data.models.length} model langsung dari API ${preset.name}!`);
+                    } else {
+                        toast(data.message || `Memuat ${data.models.length} model dari katalog ${preset.name}.`, { icon: "ℹ️" });
+                    }
                 }
-            } else {
+            } else if (!silent) {
                 toast.error(data.error || `Gagal mengambil daftar model dari API ${preset.name}`);
             }
         } catch (err) {
             console.error("Failed to fetch AI models:", err);
-            toast.error("Terjadi kesalahan koneksi saat memuat model AI");
+            if (!silent) toast.error("Terjadi kesalahan koneksi saat memuat model AI");
         } finally {
             setFetchingModels(false);
         }
-    };
+    }, [settings.aiProvider, settings.aiApiKey, settings.geminiApiKey, settings.aiBaseUrl]);
+
+    // Auto-fetch models from API when opening Integrations tab if not yet loaded
+    useEffect(() => {
+        if (!loading && activeTab === "integrations") {
+            const provider = settings.aiProvider || "gemini";
+            if (!fetchedModels[provider] && !fetchingModels) {
+                handleFetchModels({ provider, silent: true });
+            }
+        }
+    }, [activeTab, loading, settings.aiProvider, fetchedModels, fetchingModels, handleFetchModels]);
 
     const handleTestAi = async () => {
         setTestingAi(true);
@@ -1864,7 +1884,7 @@ export default function AdminSettingsPage() {
                                                     <div className="flex items-center gap-2">
                                                         <button
                                                             type="button"
-                                                            onClick={handleFetchModels}
+                                                            onClick={() => handleFetchModels({ silent: false })}
                                                             disabled={fetchingModels}
                                                             className="text-[11px] px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 flex items-center gap-1.5 font-medium transition-all cursor-pointer disabled:opacity-50"
                                                             title="Tarik daftar model yang aktif langsung dari API provider"

@@ -27,19 +27,20 @@ export const AI_PROVIDERS: Record<string, AIProviderPreset> = {
         id: "gemini",
         name: "Google Gemini",
         defaultBaseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",
-        defaultModel: "gemini-1.5-flash",
+        defaultModel: "gemini-flash-latest",
         recommendedModels: [
-            { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash", tag: "Cepat & Gratis" },
-            { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", tag: "Next-Gen Cepat" },
-            { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro", tag: "Penalaran Lanjut" },
+            { id: "gemini-flash-latest", name: "Gemini Flash Latest", tag: "Paling Stabil & Cepat" },
+            { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash", tag: "Next-Gen 3.7" },
+            { id: "gemini-3.6-flash", name: "Gemini 3.6 Flash", tag: "Next-Gen 3.6" },
+            { id: "gemini-flash-lite-latest", name: "Gemini Flash Lite", tag: "Ultra Cepat" },
+            { id: "gemini-pro-latest", name: "Gemini Pro Latest", tag: "Penalaran Flagship" },
         ],
         availableModels: [
-            { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", description: "Next-Gen multimodal, latensi sangat rendah, kapabilitas tinggi", tag: "Next-Gen", isRecommended: true, contextWindow: 1048576 },
-            { id: "gemini-2.0-flash-lite", name: "Gemini 2.0 Flash Lite", description: "Varian ultra hemat dan ultra cepat untuk pemrosesan teks instan", tag: "Ultra Cepat", isRecommended: true, contextWindow: 1048576 },
-            { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash", description: "Model serbaguna, cepat, efisien dengan kuota gratis melimpah", tag: "Paling Populer", isRecommended: true, contextWindow: 1048576 },
-            { id: "gemini-1.5-flash-8b", name: "Gemini 1.5 Flash-8B", description: "Model ultra ringan untuk tugas-tugas berfrekuensi tinggi", tag: "Ringan", contextWindow: 1048576 },
-            { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro", description: "Model penalaran mendalam dan analisis konteks masif (hingga 2M token)", tag: "Penalaran Rumit", isRecommended: true, contextWindow: 2097152 },
-            { id: "gemini-exp-1206", name: "Gemini Experimental 1206", description: "Rilis eksperimental dengan penalaran dan coding terdepan", tag: "Eksperimental", contextWindow: 2097152 },
+            { id: "gemini-flash-latest", name: "Gemini Flash Latest", description: "Model Gemini Flash teranyar yang selalu update otomatis, latensi sangat rendah dan paling stabil", tag: "Paling Stabil", isRecommended: true, contextWindow: 1048576 },
+            { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash", description: "Model generasi 3.7 terbaru dari Google dengan kecepatan dan penalaran seimbang", tag: "Next-Gen 3.7", isRecommended: true, contextWindow: 1048576 },
+            { id: "gemini-3.6-flash", name: "Gemini 3.6 Flash", description: "Model generasi 3.6 Google yang sangat efisien dan stabil", tag: "Next-Gen 3.6", isRecommended: true, contextWindow: 1048576 },
+            { id: "gemini-flash-lite-latest", name: "Gemini Flash Lite Latest", description: "Varian ultra hemat dan ultra cepat untuk pemrosesan teks instan", tag: "Ultra Cepat", isRecommended: true, contextWindow: 1048576 },
+            { id: "gemini-pro-latest", name: "Gemini Pro Latest", description: "Model penalaran mendalam dan analisis konteks masif terbaru", tag: "Penalaran Flagship", isRecommended: true, contextWindow: 2097152 },
         ],
         apiKeyHelpUrl: "https://aistudio.google.com/app/apikey",
         isApiKeyRequired: true,
@@ -212,10 +213,10 @@ export function getResolvedAIConfig(settings: GlobalSettings): ResolvedAIConfig 
         || (provider === "gemini" ? settings.geminiModel?.trim() : "")
         || preset.defaultModel;
 
-    // Auto-normalize obsolete/invalid model names (e.g. gemini-3.8-flash)
+    // Auto-normalize if empty, invalid prefix, or known defunct models (1.5-flash, 2.5-flash return 404 on Google API)
     if (provider === "gemini") {
-        if (model.includes("3.8") || model.includes("3.") || !model.startsWith("gemini-")) {
-            model = preset.defaultModel; // "gemini-1.5-flash"
+        if (!model || !model.startsWith("gemini-") || model === "gemini-1.5-flash" || model.includes("2.5-flash")) {
+            model = preset.defaultModel; // "gemini-flash-latest"
         }
     }
 
@@ -367,17 +368,20 @@ export async function generateAICompletion(options: AICompletionOptions): Promis
             const firstErrMsg = firstError instanceof Error ? firstError.message : "Gagal memproses via Google Gemini";
             console.warn(`[GEMINI] Model ${model} encountered error: ${firstErrMsg}`);
 
-            // If the model was not gemini-1.5-flash, automatically fallback and retry
-            const fallbackModel = "gemini-1.5-flash";
-            if (model !== fallbackModel) {
+            // If the model encounters an error (e.g. 503 high demand or 404), automatically fallback and retry
+            const fallbackModel = "gemini-flash-latest";
+            const secondaryFallback = "gemini-3.7-flash";
+            const targetFallback = model !== fallbackModel ? fallbackModel : secondaryFallback;
+
+            if (model !== targetFallback) {
                 try {
-                    console.info(`[GEMINI FALLBACK] Automatically retrying with ${fallbackModel}...`);
-                    const text = await executeGemini(fallbackModel);
+                    console.info(`[GEMINI FALLBACK] Model ${model} failed, automatically retrying with ${targetFallback}...`);
+                    const text = await executeGemini(targetFallback);
                     return {
                         success: true,
                         text,
                         provider,
-                        model: fallbackModel,
+                        model: targetFallback,
                         latencyMs: Date.now() - startTime
                     };
                 } catch (fallbackError: unknown) {
@@ -386,7 +390,7 @@ export async function generateAICompletion(options: AICompletionOptions): Promis
                         success: false,
                         text: "",
                         provider,
-                        model: fallbackModel,
+                        model: targetFallback,
                         latencyMs: Date.now() - startTime,
                         error: fallbackErrMsg
                     };
@@ -564,11 +568,33 @@ export async function fetchAvailableAIModels(options: {
                 })
                 .map((m: { name: string; displayName?: string; description?: string; inputTokenLimit?: number }) => {
                     const id = m.name.replace(/^models\//, "");
-                    const isRec = id.includes("flash") || id.includes("pro");
                     let tag: string | undefined = undefined;
-                    if (id.includes("2.0-flash")) tag = "Next-Gen";
-                    else if (id.includes("1.5-flash")) tag = "Cepat & Gratis";
-                    else if (id.includes("1.5-pro")) tag = "Penalaran";
+                    let isRec = false;
+
+                    if (id === "gemini-flash-latest") {
+                        tag = "Paling Stabil & Cepat";
+                        isRec = true;
+                    } else if (id === "gemini-flash-lite-latest") {
+                        tag = "Ultra Cepat";
+                        isRec = true;
+                    } else if (id === "gemini-3.7-flash") {
+                        tag = "Next-Gen 3.7";
+                        isRec = true;
+                    } else if (id === "gemini-3.6-flash") {
+                        tag = "Next-Gen 3.6";
+                        isRec = true;
+                    } else if (id === "gemini-pro-latest") {
+                        tag = "Penalaran Flagship";
+                        isRec = true;
+                    } else if (id.includes("3.8-flash")) {
+                        tag = "3.8 Flash (High Demand)";
+                    } else if (id.includes("flash")) {
+                        tag = "Flash";
+                        isRec = true;
+                    } else if (id.includes("pro")) {
+                        tag = "Penalaran";
+                        isRec = true;
+                    }
 
                     return {
                         id,
@@ -580,6 +606,21 @@ export async function fetchAvailableAIModels(options: {
                     };
                 })
                 .sort((a: AIModelItem, b: AIModelItem) => {
+                    const orderPriority = (id: string) => {
+                        if (id === "gemini-flash-latest") return 1;
+                        if (id === "gemini-flash-lite-latest") return 2;
+                        if (id === "gemini-3.7-flash") return 3;
+                        if (id === "gemini-3.6-flash") return 4;
+                        if (id === "gemini-pro-latest") return 5;
+                        if (id.includes("flash")) return 10;
+                        if (id.includes("pro")) return 20;
+                        return 50;
+                    };
+
+                    const pA = orderPriority(a.id);
+                    const pB = orderPriority(b.id);
+                    if (pA !== pB) return pA - pB;
+
                     if (a.isRecommended && !b.isRecommended) return -1;
                     if (!a.isRecommended && b.isRecommended) return 1;
                     return a.id.localeCompare(b.id);

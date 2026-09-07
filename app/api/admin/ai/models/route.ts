@@ -22,7 +22,7 @@ export async function POST(req: Request) {
         const provider = inputProvider || config.provider || "gemini";
         const preset = AI_PROVIDERS[provider] || AI_PROVIDERS.gemini;
 
-        const apiKey = inputKey !== undefined ? inputKey : config.apiKey;
+        const apiKey = (inputKey && inputKey.trim()) ? inputKey.trim() : config.apiKey;
         const baseUrl = inputBaseUrl !== undefined && inputBaseUrl !== "" ? inputBaseUrl : (config.baseUrl || preset.defaultBaseUrl);
 
         const result = await fetchAvailableAIModels({
