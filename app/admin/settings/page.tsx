@@ -26,6 +26,7 @@ import {
     Wrench,
     ChevronLeft,
     ChevronRight,
+    ChevronDown,
     Bell,
     Send,
     Eye,
@@ -56,7 +57,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { mutateSettingsCache } from "@/lib/useSettings";
 import { UploadDropzone } from "@/lib/uploadthing";
-import { AI_PROVIDERS } from "@/lib/ai";
+import { AI_PROVIDERS, AIModelItem } from "@/lib/ai";
 
 interface MediaFile {
     _id: string;
@@ -82,6 +83,9 @@ export default function AdminSettingsPage() {
     const [showGeminiKey, setShowGeminiKey] = useState(false);
     const [showMongoUri, setShowMongoUri] = useState(false);
     const [testingAi, setTestingAi] = useState(false);
+    const [fetchedModels, setFetchedModels] = useState<Record<string, AIModelItem[]>>({});
+    const [fetchingModels, setFetchingModels] = useState(false);
+    const [customModelMode, setCustomModelMode] = useState(false);
     const [aiTestResult, setAiTestResult] = useState<{
         success: boolean;
         message: string;
@@ -428,12 +432,57 @@ export default function AdminSettingsPage() {
     const handleSelectAIProvider = (providerId: string) => {
         const preset = AI_PROVIDERS[providerId];
         if (!preset) return;
+        setCustomModelMode(false);
         setSettings(prev => ({
             ...prev,
             aiProvider: providerId,
             aiModel: preset.defaultModel,
             aiBaseUrl: providerId === "custom" || providerId === "ollama" ? (prev.aiBaseUrl || preset.defaultBaseUrl) : "",
+            ...(providerId === "gemini" ? { geminiModel: preset.defaultModel } : {})
         }));
+    };
+
+    const handleFetchModels = async () => {
+        const provider = settings.aiProvider || "gemini";
+        const preset = AI_PROVIDERS[provider] || AI_PROVIDERS.gemini;
+        const apiKey = settings.aiApiKey !== undefined && settings.aiApiKey !== ""
+            ? settings.aiApiKey.trim()
+            : (settings.geminiApiKey?.trim() || undefined);
+        const baseUrl = settings.aiBaseUrl?.trim() || undefined;
+
+        setFetchingModels(true);
+        try {
+            const res = await fetch("/api/admin/ai/models", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    provider,
+                    apiKey,
+                    baseUrl
+                })
+            });
+
+            const data = await res.json();
+            if (data.success && Array.isArray(data.models) && data.models.length > 0) {
+                setFetchedModels(prev => ({
+                    ...prev,
+                    [provider]: data.models
+                }));
+
+                if (data.source === "api") {
+                    toast.success(data.message || `Berhasil memuat ${data.models.length} model langsung dari API ${preset.name}!`);
+                } else {
+                    toast(data.message || `Memuat ${data.models.length} model dari katalog ${preset.name}.`, { icon: "ℹ️" });
+                }
+            } else {
+                toast.error(data.error || `Gagal mengambil daftar model dari API ${preset.name}`);
+            }
+        } catch (err) {
+            console.error("Failed to fetch AI models:", err);
+            toast.error("Terjadi kesalahan koneksi saat memuat model AI");
+        } finally {
+            setFetchingModels(false);
+        }
     };
 
     const handleTestAi = async () => {
@@ -1787,77 +1836,177 @@ export default function AdminSettingsPage() {
                                         </div>
                                     </div>
 
-                                    {/* Model Name & Recommended Preset Chips */}
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                                                <Cpu className="h-3.5 w-3.5 text-primary" />
-                                                <span>Nama Model AI ({AI_PROVIDERS[settings.aiProvider || "gemini"]?.name || "Model"})</span>
-                                            </label>
-                                            <span className="text-[11px] text-muted-foreground">
-                                                Ketik manual atau klik rekomendasi di bawah
-                                            </span>
-                                        </div>
+                                    {/* Model Name & Smart Selector */}
+                                    {(() => {
+                                        const currentProv = AI_PROVIDERS[settings.aiProvider || "gemini"] || AI_PROVIDERS.gemini;
+                                        const currentModel = settings.aiModel || (settings.aiProvider === "gemini" ? (settings.geminiModel || currentProv.defaultModel) : currentProv.defaultModel);
+                                        const activeModelsList: AIModelItem[] = fetchedModels[currentProv.id] || currentProv.availableModels || currentProv.recommendedModels.map(m => ({
+                                            id: m.id,
+                                            name: m.name,
+                                            tag: m.tag,
+                                            isRecommended: true
+                                        }));
+                                        const selectedModelObj = activeModelsList.find(m => m.id === currentModel);
 
-                                        <input
-                                            type="text"
-                                            name="aiModel"
-                                            value={settings.aiModel || (settings.aiProvider === "gemini" ? (settings.geminiModel || "gemini-1.5-flash") : (AI_PROVIDERS[settings.aiProvider || "gemini"]?.defaultModel || ""))}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                setSettings(prev => ({
-                                                    ...prev,
-                                                    aiModel: val,
-                                                    ...(prev.aiProvider === "gemini" ? { geminiModel: val } : {})
-                                                }));
-                                            }}
-                                            placeholder="e.g. gpt-4o, llama-3.3-70b-versatile, deepseek-chat, gemini-1.5-flash..."
-                                            className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-xs font-mono font-semibold text-foreground"
-                                        />
-
-                                        {/* Recommended Model Preset Chips */}
-                                        {(() => {
-                                            const currentProv = AI_PROVIDERS[settings.aiProvider || "gemini"] || AI_PROVIDERS.gemini;
-                                            const currentModel = settings.aiModel || (settings.aiProvider === "gemini" ? (settings.geminiModel || currentProv.defaultModel) : currentProv.defaultModel);
-                                            if (!currentProv.recommendedModels || currentProv.recommendedModels.length === 0) return null;
-
-                                            return (
-                                                <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                                                    <span className="text-[11px] text-muted-foreground mr-1">Rekomendasi:</span>
-                                                    {currentProv.recommendedModels.map((m) => {
-                                                        const isSelected = currentModel === m.id;
-                                                        return (
-                                                            <button
-                                                                key={m.id}
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    setSettings(prev => ({
-                                                                        ...prev,
-                                                                        aiModel: m.id,
-                                                                        ...(prev.aiProvider === "gemini" ? { geminiModel: m.id } : {})
-                                                                    }));
-                                                                }}
-                                                                className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer flex items-center gap-1.5 border ${
-                                                                    isSelected
-                                                                        ? "bg-primary text-white border-primary shadow-2xs font-semibold"
-                                                                        : "bg-card border-border/70 text-foreground hover:bg-muted"
-                                                                }`}
-                                                            >
-                                                                <span>{m.name}</span>
-                                                                {m.tag && (
-                                                                    <span className={`text-[9px] px-1 py-0.2 rounded font-normal ${
-                                                                        isSelected ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
-                                                                    }`}>
-                                                                        {m.tag}
-                                                                    </span>
-                                                                )}
-                                                            </button>
-                                                        );
-                                                    })}
+                                        return (
+                                            <div className="space-y-2.5">
+                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                                    <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                                                        <Cpu className="h-3.5 w-3.5 text-primary" />
+                                                        <span>Nama Model AI ({currentProv.name})</span>
+                                                        {fetchedModels[currentProv.id] && (
+                                                            <span className="text-[10px] font-normal px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center gap-1">
+                                                                <CheckCircle2 className="h-3 w-3" />
+                                                                Live API ({fetchedModels[currentProv.id].length} model)
+                                                            </span>
+                                                        )}
+                                                    </label>
+                                                    <div className="flex items-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleFetchModels}
+                                                            disabled={fetchingModels}
+                                                            className="text-[11px] px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 flex items-center gap-1.5 font-medium transition-all cursor-pointer disabled:opacity-50"
+                                                            title="Tarik daftar model yang aktif langsung dari API provider"
+                                                        >
+                                                            <RefreshCw className={`h-3 w-3 ${fetchingModels ? "animate-spin" : ""}`} />
+                                                            <span>{fetchingModels ? "Mengambil Model..." : "Ambil Model dari API"}</span>
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setCustomModelMode(!customModelMode)}
+                                                            className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors cursor-pointer"
+                                                        >
+                                                            {customModelMode ? "Pilih dari Daftar" : "Ketik Manual"}
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            );
-                                        })()}
-                                    </div>
+
+                                                {!customModelMode ? (
+                                                    <div className="relative">
+                                                        <select
+                                                            name="aiModel"
+                                                            value={currentModel}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                setSettings(prev => ({
+                                                                    ...prev,
+                                                                    aiModel: val,
+                                                                    ...(prev.aiProvider === "gemini" ? { geminiModel: val } : {})
+                                                                }));
+                                                            }}
+                                                            className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-xs font-mono font-semibold text-foreground appearance-none cursor-pointer pr-10"
+                                                        >
+                                                            {!activeModelsList.some(m => m.id === currentModel) && (
+                                                                <option value={currentModel}>
+                                                                    {currentModel} (Model Saat Ini)
+                                                                </option>
+                                                            )}
+
+                                                            {activeModelsList.some(m => m.isRecommended) && (
+                                                                <optgroup label="⚡ Model Rekomendasi Utama">
+                                                                    {activeModelsList
+                                                                        .filter(m => m.isRecommended)
+                                                                        .map(m => (
+                                                                            <option key={m.id} value={m.id}>
+                                                                                {m.name !== m.id ? `${m.name} (${m.id})` : m.id} {m.tag ? `[${m.tag}]` : ""}
+                                                                            </option>
+                                                                        ))}
+                                                                </optgroup>
+                                                            )}
+
+                                                            <optgroup label={`🌐 Semua Model ${fetchedModels[currentProv.id] ? "dari API" : "Tersedia"} (${activeModelsList.length})`}>
+                                                                {activeModelsList
+                                                                    .filter(m => !m.isRecommended)
+                                                                    .map(m => (
+                                                                        <option key={m.id} value={m.id}>
+                                                                            {m.name !== m.id ? `${m.name} (${m.id})` : m.id} {m.tag ? `[${m.tag}]` : ""}
+                                                                        </option>
+                                                                    ))}
+                                                            </optgroup>
+                                                        </select>
+                                                        <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                                                    </div>
+                                                ) : (
+                                                    <input
+                                                        type="text"
+                                                        name="aiModel"
+                                                        value={currentModel}
+                                                        onChange={(e) => {
+                                                            const val = e.target.value;
+                                                            setSettings(prev => ({
+                                                                ...prev,
+                                                                aiModel: val,
+                                                                ...(prev.aiProvider === "gemini" ? { geminiModel: val } : {})
+                                                            }));
+                                                        }}
+                                                        placeholder="e.g. gemini-2.0-flash, gpt-4o, llama-3.3-70b-versatile..."
+                                                        className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border focus:outline-none focus:ring-2 focus:ring-primary text-xs font-mono font-semibold text-foreground"
+                                                    />
+                                                )}
+
+                                                {/* Selected Model Description / Specs Badge */}
+                                                {(selectedModelObj?.description || selectedModelObj?.contextWindow) && (
+                                                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground bg-muted/40 px-3 py-1.5 rounded-lg border border-border/50">
+                                                        <span className="font-mono font-semibold text-foreground shrink-0">{currentModel}</span>
+                                                        {selectedModelObj?.description && (
+                                                            <>
+                                                                <span>•</span>
+                                                                <span className="truncate">{selectedModelObj.description}</span>
+                                                            </>
+                                                        )}
+                                                        {selectedModelObj?.contextWindow && (
+                                                            <>
+                                                                <span>•</span>
+                                                                <span className="shrink-0 font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded">
+                                                                    {selectedModelObj.contextWindow >= 1000000
+                                                                        ? `${(selectedModelObj.contextWindow / 1000000).toFixed(0)}M token`
+                                                                        : `${Math.round(selectedModelObj.contextWindow / 1000)}k token`}
+                                                                </span>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* Recommended Model Preset Chips */}
+                                                {currentProv.recommendedModels && currentProv.recommendedModels.length > 0 && (
+                                                    <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                                                        <span className="text-[11px] text-muted-foreground mr-1">Rekomendasi:</span>
+                                                        {currentProv.recommendedModels.map((m) => {
+                                                            const isSelected = currentModel === m.id;
+                                                            return (
+                                                                <button
+                                                                    key={m.id}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setSettings(prev => ({
+                                                                            ...prev,
+                                                                            aiModel: m.id,
+                                                                            ...(prev.aiProvider === "gemini" ? { geminiModel: m.id } : {})
+                                                                        }));
+                                                                    }}
+                                                                    className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all cursor-pointer flex items-center gap-1.5 border ${
+                                                                        isSelected
+                                                                            ? "bg-primary text-white border-primary shadow-2xs font-semibold"
+                                                                            : "bg-card border-border/70 text-foreground hover:bg-muted"
+                                                                    }`}
+                                                                >
+                                                                    <span>{m.name}</span>
+                                                                    {m.tag && (
+                                                                        <span className={`text-[9px] px-1 py-0.2 rounded font-normal ${
+                                                                            isSelected ? "bg-white/20 text-white" : "bg-muted text-muted-foreground"
+                                                                        }`}>
+                                                                            {m.tag}
+                                                                        </span>
+                                                                    )}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
 
                                     {/* 1-Click AI Test Button & Live Feedback */}
                                     <div className="space-y-3 pt-2 border-t border-border/60">
