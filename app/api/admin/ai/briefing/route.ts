@@ -88,11 +88,24 @@ Buatkan "Executive AI Briefing" yang tajam, percaya diri, dan mudah dibaca cepat
             ? completion.text.trim()
             : `Ringkasan Otomatis:\n- Obrolan Minggu Ini: ${recentConvos.length} sesi\n- Prospek Klien/Rekruter: ${leadConvos.length}\n- Belum Dibaca: ${unreadCount}`;
 
-        // 3. Dispatch to Telegram
-        const telegramHtml = `<b>📊 LAPORAN EKSEKUTIF AI PORTOFOLIO</b>\n<i>Periode 7 Hari Terakhir</i>\n\n${escapeTelegramHtml(briefingText)}\n\n<a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://maulido.dev'}/admin/assistant-chats">👉 Buka Admin Live Chat</a>`;
+        const formattedBriefing = escapeTelegramHtml(briefingText)
+            .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+            .replace(/\*([^*]+)\*/g, '<i>$1</i>')
+            .replace(/`([^`]+)`/g, '<code>$1</code>');
 
+        const telegramHtml = `<b>📊 LAPORAN EKSEKUTIF AI PORTOFOLIO</b>\n<i>Periode 7 Hari Terakhir</i>\n\n${formattedBriefing}`;
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://maulido.dev';
         const tgResult = await sendTelegramMessage({
-            text: telegramHtml
+            text: telegramHtml,
+            inlineKeyboard: [
+                [
+                    {
+                        text: "👉 Buka Admin Live Chat",
+                        url: `${baseUrl}/admin/assistant-chats`
+                    }
+                ]
+            ]
         });
 
         return NextResponse.json({

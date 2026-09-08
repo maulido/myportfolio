@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-helpers";
 import dbConnect from "@/lib/db";
 import { getGlobalSettings } from "@/lib/settings";
-import { getResolvedAIConfig, getConfiguredProviders, generateAICompletion } from "@/lib/ai";
+import { getResolvedAssistantAIConfig, getConfiguredProviders, generateAICompletion } from "@/lib/ai";
 import AiConversation from "@/models/AiConversation";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +24,7 @@ export async function POST(
         }
 
         const settings = await getGlobalSettings();
-        const config = getResolvedAIConfig(settings);
+        const config = getResolvedAssistantAIConfig(settings);
 
         if (!config.enabled) {
             return NextResponse.json({ success: false, error: "Layanan AI sedang dinonaktifkan." }, { status: 400 });
@@ -48,7 +48,7 @@ DATA PENGUNJUNG:
 - Kategori: ${convo.category}
 
 RIWAYAT PERCAKAPAN:
-${transcript}
+${transcript || "(Belum ada pesan tambahan dari pengunjung)"}
 
 PETUNJUK PENULISAN DRAF:
 1. Tulis pesan dari sudut pandang "Saya" (Maulido).

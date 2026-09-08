@@ -51,7 +51,8 @@ export default function MermaidRenderer({ chart }: MermaidRendererProps) {
                             tertiaryColor: "#f8fafc"
                         },
                     securityLevel: "loose",
-                    fontFamily: "inherit"
+                    fontFamily: "inherit",
+                    suppressErrorRendering: true
                 });
 
                 const cleanChart = chart.trim();
@@ -64,6 +65,10 @@ export default function MermaidRenderer({ chart }: MermaidRendererProps) {
                 }
             } catch (err) {
                 console.warn("Mermaid render error:", err);
+                try {
+                    const stray = document.getElementById(`d${elementId}`) || document.querySelector(`[id^="dmermaid-"]`);
+                    if (stray) stray.remove();
+                } catch {}
                 if (isMounted) {
                     setError("Diagram syntax format");
                 }
@@ -76,6 +81,16 @@ export default function MermaidRenderer({ chart }: MermaidRendererProps) {
             isMounted = false;
         };
     }, [chart, elementId]);
+
+    // Close fullscreen modal on Escape key
+    useEffect(() => {
+        if (!isFullscreen) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") setIsFullscreen(false);
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isFullscreen]);
 
     const handleCopy = async () => {
         try {
@@ -145,7 +160,7 @@ export default function MermaidRenderer({ chart }: MermaidRendererProps) {
                 </div>
                 <div
                     ref={containerRef}
-                    className="p-3 overflow-x-auto flex justify-center max-h-[320px] select-none"
+                    className="p-3 overflow-x-auto flex justify-center max-h-[320px] select-none [&>svg]:max-w-full [&>svg]:h-auto"
                     dangerouslySetInnerHTML={{ __html: svgContent }}
                 />
             </div>
@@ -173,7 +188,7 @@ export default function MermaidRenderer({ chart }: MermaidRendererProps) {
                             </button>
                         </div>
                         <div
-                            className="flex-1 overflow-auto p-4 flex items-center justify-center min-h-[300px]"
+                            className="flex-1 overflow-auto p-4 flex items-center justify-center min-h-[300px] [&>svg]:max-w-full [&>svg]:h-auto"
                             dangerouslySetInnerHTML={{ __html: svgContent }}
                         />
                     </div>

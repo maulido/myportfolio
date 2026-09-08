@@ -14,6 +14,7 @@ interface CliTerminalProps {
     onClose: () => void;
     onSwitchToChat: () => void;
     sessionId: string;
+    waNumber?: string;
 }
 
 const BANNER = `
@@ -38,7 +39,7 @@ COMMANDS:
   ai <pertanyaan>       Tanyakan apapun kepada Asisten AI (bisa langsung ketik)
 `;
 
-export default function CliTerminal({ onClose, onSwitchToChat, sessionId }: CliTerminalProps) {
+export default function CliTerminal({ onClose, onSwitchToChat, sessionId, waNumber }: CliTerminalProps) {
     const [lines, setLines] = useState<TerminalLine[]>([
         { id: "1", type: "system", content: BANNER },
         { id: "2", type: "output", content: "Terminal siap. Ketik 'help' untuk melihat daftar perintah." }
@@ -50,10 +51,10 @@ export default function CliTerminal({ onClose, onSwitchToChat, sessionId }: CliT
     const bottomRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Auto-scroll on new line
+    // Auto-scroll on new line (auto during streaming, smooth on static commands)
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [lines]);
+        bottomRef.current?.scrollIntoView({ behavior: isExecuting ? "auto" : "smooth" });
+    }, [lines, isExecuting]);
 
     // Auto-focus input on mount or click
     useEffect(() => {
@@ -241,7 +242,7 @@ VERIFIED CERTIFICATIONS:
                 appendLine("output", `
 CONTACT CHANNELS:
   Email     : contact@maulido.dev
-  WhatsApp  : https://wa.me/6281234567890
+  WhatsApp  : https://wa.me/${waNumber || "6281234567890"}
   LinkedIn  : linkedin.com/in/maulido
   Web Form  : /contact
                 `.trim());

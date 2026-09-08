@@ -190,15 +190,19 @@ function ContextualActions({
 }
 
 function parseSuggestions(content: string): { cleanContent: string; suggestions: string[] } {
-    const sugMatch = content.match(/\[SUGGESTIONS:\s*(.*?)\]/i);
-    if (!sugMatch) return { cleanContent: content, suggestions: [] };
+    const sugMatch = content.match(/\[SUGGESTIONS:\s*([\s\S]*?)\]/i);
+    let suggestions: string[] = [];
+    if (sugMatch) {
+        suggestions = sugMatch[1]
+            .split("|")
+            .map(s => s.trim().replace(/^["'“”«»]|["'“”«»]$/g, ""))
+            .filter(Boolean);
+    }
 
-    const suggestions = sugMatch[1]
-        .split("|")
-        .map(s => s.trim().replace(/^["']|["']$/g, ""))
-        .filter(Boolean);
+    // Strip both complete [SUGGESTIONS: ...] and streaming/unclosed [SUGGESTIONS: ... from cleanContent
+    let cleanContent = content.replace(/\[SUGGESTIONS:\s*[\s\S]*?\]/gi, "");
+    cleanContent = cleanContent.replace(/\[SUGGESTIONS:[\s\S]*$/gi, "").trim();
 
-    const cleanContent = content.replace(/\[SUGGESTIONS:\s*.*?\]/i, "").trim();
     return { cleanContent, suggestions };
 }
 
@@ -214,7 +218,7 @@ function FormattedChatMessage({
     const { cleanContent } = parseSuggestions(content);
 
     const renderFormattedText = (text: string) => {
-        const parts = text.split(/(\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*)/g);
+        const parts = text.split(/(\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*|`[^`]+`)/g);
         return parts.map((part, pIdx) => {
             const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
             if (linkMatch) {
@@ -252,6 +256,14 @@ function FormattedChatMessage({
             const boldMatch = part.match(/^\*\*([^*]+)\*\*$/);
             if (boldMatch) {
                 return <strong key={pIdx} className="font-semibold">{boldMatch[1]}</strong>;
+            }
+
+            if (part.startsWith("`") && part.endsWith("`") && part.length >= 2) {
+                return (
+                    <code key={pIdx} className="px-1 py-0.5 rounded bg-muted font-mono text-[11px] text-primary">
+                        {part.slice(1, -1)}
+                    </code>
+                );
             }
 
             return part;
@@ -321,6 +333,22 @@ export default function ChatWidget() {
     const [isJdModalOpen, setIsJdModalOpen] = useState(false);
     const [jdInput, setJdInput] = useState("");
     const scrollRef = useRef<HTMLDivElement>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const recognitionRef = useRef<any>(null);
+
+    // Clean up speech and voice recognition on unmount
+    useEffect(() => {
+        return () => {
+            if (recognitionRef.current) {
+                try {
+                    recognitionRef.current.abort();
+                } catch {}
+            }
+            if (typeof window !== "undefined" && "speechSynthesis" in window) {
+                window.speechSynthesis.cancel();
+            }
+        };
+    }, []);
 
     // Fetch dynamic WhatsApp number
     useEffect(() => {
@@ -346,19 +374,35 @@ export default function ChatWidget() {
         }
 
         if (isListening) {
+            if (recognitionRef.current) {
+                try {
+                    recognitionRef.current.stop();
+                } catch {}
+            }
             setIsListening(false);
             return;
         }
 
         try {
             const recognition = new SpeechRec();
+            recognitionRef.current = recognition;
             recognition.lang = "id-ID";
             recognition.continuous = false;
             recognition.interimResults = false;
 
             recognition.onstart = () => setIsListening(true);
-            recognition.onend = () => setIsListening(false);
-            recognition.onerror = () => setIsListening(false);
+            recognition.onend = () => {
+                setIsListening(false);
+                recognitionRef.current = null;
+            };
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            recognition.onerror = (event: any) => {
+                setIsListening(false);
+                recognitionRef.current = null;
+                if (event?.error === "not-allowed") {
+                    toast.error("Akses mikrofon ditolak oleh browser.");
+                }
+            };
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             recognition.onresult = (event: any) => {
@@ -371,6 +415,7 @@ export default function ChatWidget() {
             recognition.start();
         } catch {
             setIsListening(false);
+            recognitionRef.current = null;
         }
     };
 
@@ -482,12 +527,25 @@ export default function ChatWidget() {
 
     const handleClose = () => {
         setIsOpen(false);
+        if (recognitionRef.current) {
+            try {
+                recognitionRef.current.abort();
+            } catch {}
+            recognitionRef.current = null;
+        }
+        setIsListening(false);
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
+            window.speechSynthesis.cancel();
+        }
         try {
             localStorage.setItem("portfolio_chat_open", "false");
         } catch {}
     };
 
     const handleResetChat = () => {
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
+            window.speechSynthesis.cancel();
+        }
         const newSession = "sess_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
         setSessionId(newSession);
         setMessages([DEFAULT_GREETING]);
@@ -520,6 +578,11 @@ export default function ChatWidget() {
         }
         const currentInput = (typeof overridePrompt === "string" ? overridePrompt : input).trim();
         if (!currentInput || isLoading) return;
+
+        // Cancel previous speech reading when a new message is sent
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
+            window.speechSynthesis.cancel();
+        }
 
         const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
         const userMessage: ChatMessage = { role: "user", content: currentInput, timestamp: timeStr };
@@ -661,13 +724,14 @@ export default function ChatWidget() {
                         initial={{ opacity: 0, scale: 0.85, y: 20, transformOrigin: "bottom left" }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.85, y: 20 }}
-                        className="bg-card w-[calc(100vw-3rem)] sm:w-84 md:w-96 h-[520px] rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden backdrop-blur-xl pointer-events-auto relative"
+                        className="bg-card w-[calc(100vw-3rem)] sm:w-84 md:w-96 h-[520px] max-h-[calc(100dvh-7rem)] rounded-2xl shadow-2xl border border-border flex flex-col overflow-hidden backdrop-blur-xl pointer-events-auto relative"
                     >
                         {viewMode === "terminal" ? (
                             <CliTerminal
                                 onClose={handleClose}
                                 onSwitchToChat={() => setViewMode("chat")}
                                 sessionId={sessionId}
+                                waNumber={waNumber}
                             />
                         ) : (
                             <>
@@ -779,7 +843,8 @@ export default function ChatWidget() {
                                                                     key={sIdx}
                                                                     type="button"
                                                                     onClick={() => handleSend(sug)}
-                                                                    className="px-2.5 py-1 text-xs rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-medium transition-colors border border-primary/20 cursor-pointer text-left active:scale-95"
+                                                                    disabled={isLoading}
+                                                                    className="px-2.5 py-1 text-xs rounded-lg bg-primary/10 hover:bg-primary/20 text-primary font-medium transition-colors border border-primary/20 cursor-pointer text-left active:scale-95 disabled:opacity-50"
                                                                 >
                                                                     {sug}
                                                                 </button>

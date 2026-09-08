@@ -321,7 +321,7 @@ ${config.customPrompt ? `\nADDITIONAL OWNER INSTRUCTIONS:\n${config.customPrompt
                         model: config.model,
                         systemInstruction: combinedSystemInstruction,
                         messages,
-                        maxTokens: 750,
+                        maxTokens: 1200,
                         temperature: 0.7,
                         enableFailover,
                         failoverProviders: configuredProviders
