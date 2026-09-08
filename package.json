@@ -23,6 +23,7 @@
     "framer-motion": "^12.23.26",
     "lowlight": "^3.3.0",
     "lucide-react": "^0.562.0",
+    "mermaid": "^11.17.2",
     "mongoose": "^9.0.2",
     "next": "16.1.1",
     "next-auth": "^4.24.13",

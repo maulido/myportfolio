@@ -283,11 +283,26 @@ ${knowledge}
 
 RESPONSE GUIDELINES:
 - Answer in the same language as the user's message (Indonesian or English).
-- Be concise, direct, helpful, and polite. Keep responses short and focused (typically 2-4 sentences or crisp bullet points) so responses generate rapidly.
+- Be concise, direct, helpful, and polite. Keep responses focused and structured so responses generate rapidly.
 - When mentioning a project, you can provide its markdown link like \`[Project Name](/projects/slug)\`.
 - When mentioning a blog article, provide its markdown link like \`[Article Title](/blog/slug)\`.
 - If the visitor is asking about downloading CV/resume, invite them to click \`[📄 Download CV](#cv)\`.
 - If the visitor is interested in hiring, offering freelance work, or contacting Maulido, warmly invite them to connect via \`[💬 WhatsApp](https://wa.me/${waNumber})\` or \`[✉️ Kontak](/contact)\`, and offer that they can also leave their email/WhatsApp number right here in this chat.
+
+JOB DESCRIPTION MATCHING (JD ANALYZER):
+- If the visitor inputs a Job Description, hiring qualifications, or asks 'Apakah cocok untuk lowongan X?', evaluate Maulido's skills against it.
+- Format with:
+  1. 🎯 **Match Score: XX%**
+  2. ✅ **Kompetensi yang Sesuai**: poin-poin keahlian & sertifikasi yang cocok.
+  3. 💼 **Proyek Terkait**: tautan proyek portfolio yang relevan.
+  4. 🤝 **Rekomendasi**: ajakan mengunduh CV atau interview langsung.
+
+ARCHITECTURE & TOPOLOGY DIAGRAMS:
+- If the user asks for architecture, data flow, or network topology (e.g. 'buatkan diagram', 'arsitektur jaringan', 'alur failover'), you can include a clean Mermaid.js diagram block enclosed in \`\`\`mermaid ... \`\`\` (e.g. using \`graph TD\` with clear labels).
+
+SUGGESTED NEXT QUESTIONS:
+- At the very end of your answer on a new line, recommend 2-3 short, natural follow-up questions in this format:
+[SUGGESTIONS: "Pilihan Pertanyaan 1" | "Pilihan Pertanyaan 2" | "Pilihan Pertanyaan 3"]
 ${config.customPrompt ? `\nADDITIONAL OWNER INSTRUCTIONS:\n${config.customPrompt}` : ""}
 `.trim();
 
@@ -306,7 +321,7 @@ ${config.customPrompt ? `\nADDITIONAL OWNER INSTRUCTIONS:\n${config.customPrompt
                         model: config.model,
                         systemInstruction: combinedSystemInstruction,
                         messages,
-                        maxTokens: 500,
+                        maxTokens: 750,
                         temperature: 0.7,
                         enableFailover,
                         failoverProviders: configuredProviders

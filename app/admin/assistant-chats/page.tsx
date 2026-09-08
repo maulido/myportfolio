@@ -78,6 +78,49 @@ export default function AdminAssistantChatsPage() {
     const [loadingThread, setLoadingThread] = useState(false);
     const [sendingReply, setSendingReply] = useState(false);
     const [replyText, setReplyText] = useState("");
+    const [generatingDraft, setGeneratingDraft] = useState(false);
+    const [sendingBriefing, setSendingBriefing] = useState(false);
+
+    const handleGenerateAiDraft = async () => {
+        if (!selectedSessionId || generatingDraft) return;
+        setGeneratingDraft(true);
+        try {
+            const res = await fetch(`/api/admin/assistant-chats/${encodeURIComponent(selectedSessionId)}/ai-draft`, {
+                method: "POST"
+            });
+            const data = await res.json();
+            if (data.success && data.draft) {
+                setReplyText(data.draft);
+                toast.success("Draf balasan AI berhasil dibuat!");
+            } else {
+                toast.error(data.error || "Gagal membuat draf AI.");
+            }
+        } catch {
+            toast.error("Terjadi gangguan jaringan saat membuat draf.");
+        } finally {
+            setGeneratingDraft(false);
+        }
+    };
+
+    const handleSendTelegramBriefing = async () => {
+        if (sendingBriefing) return;
+        setSendingBriefing(true);
+        try {
+            const res = await fetch("/api/admin/ai/briefing", {
+                method: "POST"
+            });
+            const data = await res.json();
+            if (data.success) {
+                toast.success(data.message || "Laporan eksekutif berhasil dikirim ke Telegram!");
+            } else {
+                toast.error(data.error || "Gagal mengirim laporan ke Telegram.");
+            }
+        } catch {
+            toast.error("Terjadi gangguan saat memproses laporan.");
+        } finally {
+            setSendingBriefing(false);
+        }
+    };
 
     // Search & Filter
     const [searchQuery, setSearchQuery] = useState("");
@@ -295,6 +338,20 @@ export default function AdminAssistantChatsPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={handleSendTelegramBriefing}
+                        disabled={sendingBriefing}
+                        className="px-3.5 py-2 rounded-xl border border-primary/20 bg-primary/10 hover:bg-primary/20 text-primary text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer disabled:opacity-50"
+                        title="Kirim laporan ringkasan eksekutif AI mingguan ke Telegram"
+                    >
+                        {sendingBriefing ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                            <Sparkles className="h-3.5 w-3.5 text-primary" />
+                        )}
+                        <span>{sendingBriefing ? "Menyusun & Mengirim..." : "📱 Rekap ke Telegram"}</span>
+                    </button>
                     <button
                         type="button"
                         onClick={() => fetchConversations()}
@@ -617,10 +674,25 @@ export default function AdminAssistantChatsPage() {
                                 <div ref={messagesEndRef} />
                             </div>
 
-                            {/* Canned Responses Chips */}
+                            {/* Canned Responses & AI Assist Chips */}
                             <div className="px-4 py-2 border-t border-border/60 bg-card/60 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+                                <button
+                                    type="button"
+                                    onClick={handleGenerateAiDraft}
+                                    disabled={generatingDraft || !activeConversation}
+                                    className="whitespace-nowrap px-3 py-1 rounded-lg text-[11px] font-bold bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 transition-all cursor-pointer flex items-center gap-1.5 shrink-0 shadow-2xs disabled:opacity-50"
+                                    title="AI akan membaca konteks percakapan pengunjung dan membuat usulan draf balasan profesional"
+                                >
+                                    {generatingDraft ? (
+                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                    ) : (
+                                        <Sparkles className="h-3 w-3 text-primary" />
+                                    )}
+                                    <span>{generatingDraft ? "Menyusun Draf..." : "✨ Draf AI Balasan"}</span>
+                                </button>
+                                <div className="h-4 w-[1px] bg-border mx-1 shrink-0" />
                                 <span className="text-[10px] text-muted-foreground font-semibold shrink-0 mr-1">
-                                    Template Cepat:
+                                    Template:
                                 </span>
                                 {CANNED_RESPONSES.map((tmpl, idx) => (
                                     <button
