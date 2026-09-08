@@ -22,7 +22,9 @@ import {
     MessageCircle,
     CornerDownLeft,
     X,
-    Globe
+    Globe,
+    Terminal,
+    Target
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -41,12 +43,26 @@ export default function CommandPalette() {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [projects, setProjects] = useState<{ title: string; slug: string; description?: string }[]>([]);
     const [posts, setPosts] = useState<{ title: string; slug: string; excerpt?: string }[]>([]);
+    const [waNumber, setWaNumber] = useState("6281234567890");
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
     const { theme, setTheme } = useTheme();
     const { t, locale, toggleLocale, dictionary } = useLanguage();
     const cp = dictionary.commandPalette;
     const nav = dictionary.nav;
+
+    // Fetch dynamic WhatsApp number
+    useEffect(() => {
+        fetch("/api/settings?key=whatsappNumber")
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    const cleaned = String(data.data).replace(/[^0-9]/g, "");
+                    if (cleaned) setWaNumber(cleaned);
+                }
+            })
+            .catch(() => {});
+    }, []);
 
     // Fetch projects and blog posts on mount for fast instant searching
     useEffect(() => {
@@ -175,6 +191,28 @@ export default function CommandPalette() {
             }
         },
         {
+            id: "act-terminal",
+            title: "Network CLI Terminal (>_)",
+            subtitle: locale === "id" ? "Buka konsol terminal teknis & simulasi perintah jaringan" : "Open interactive network engineer CLI terminal",
+            category: "Actions",
+            icon: Terminal,
+            action: () => {
+                setIsOpen(false);
+                window.dispatchEvent(new Event("open-chat-terminal"));
+            }
+        },
+        {
+            id: "act-jd-matcher",
+            title: "Match My Job Description (JD Fit)",
+            subtitle: locale === "id" ? "Analisis kecocokan spesifikasi lowongan kerja dengan profil" : "Analyze recruiter job requirements against profile",
+            category: "Actions",
+            icon: Target,
+            action: () => {
+                setIsOpen(false);
+                window.dispatchEvent(new Event("open-chat-jd"));
+            }
+        },
+        {
             id: "act-wa",
             title: cp.whatsapp,
             subtitle: locale === "id" ? "Kirim pesan langsung via WhatsApp" : "Direct messaging with site owner",
@@ -182,7 +220,7 @@ export default function CommandPalette() {
             icon: MessageCircle,
             action: () => {
                 setIsOpen(false);
-                window.open("https://wa.me/6281234567890", "_blank");
+                window.open(`https://wa.me/${waNumber}`, "_blank");
             }
         },
 

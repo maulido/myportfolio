@@ -8,6 +8,7 @@ import Faq, { IFaq } from "@/models/Faq";
 import Testimonial, { ITestimonial } from "@/models/Testimonial";
 import UsesItem, { IUsesItem } from "@/models/UsesItem";
 import Settings from "@/models/Settings";
+import { rankEntitiesSemantically } from "@/lib/semantic-search";
 
 /**
  * STRICT SENSITIVE DATA POLICY (Zero-Leakage Security):
@@ -386,11 +387,6 @@ export async function getWebsiteKnowledgeString(forceRefresh = false): Promise<s
     return data.text;
 }
 
-const STOP_WORDS = new Set([
-    "dan", "yang", "di", "ke", "dari", "ini", "itu", "untuk", "pada", "adalah", "sebagai", "dengan", "saya", "kamu", "anda", "dia", "apa", "siapa", "bagaimana", "mengapa", "kapan", "dimana", "apakah", "bisa", "tolong", "bantu", "halo", "hai", "mau", "tahu", "tentang", "ada",
-    "the", "a", "an", "and", "or", "in", "on", "at", "to", "for", "with", "is", "are", "was", "were", "of", "about", "what", "who", "how", "tell", "me", "can", "you", "hello", "hi"
-]);
-
 /**
  * Dynamically prioritizes and ranks website knowledge based on query relevance (Mini-RAG).
  * Highly relevant projects, articles, and skills appear at the top with richer detail,
@@ -402,54 +398,41 @@ export async function getRelevantKnowledgeString(query?: string, forceRefresh = 
         return rawData.text;
     }
 
-    const tokens = query
-        .toLowerCase()
-        .replace(/[^\w\s]/g, " ")
-        .split(/\s+/)
-        .filter(t => t.length > 2 && !STOP_WORDS.has(t));
-
-    if (tokens.length === 0) {
-        return rawData.text;
-    }
-
-    const scoreText = (text: string): number => {
-        if (!text) return 0;
-        const lower = text.toLowerCase();
-        let score = 0;
-        for (const token of tokens) {
-            if (lower.includes(token)) {
-                score += 1;
-            }
-        }
-        return score;
-    };
-
     const { seoContext } = rawData;
     const { siteMeta } = seoContext;
 
-    // Rank Projects
-    const rankedProjects = [...seoContext.projects].map(p => {
-        const titleScore = scoreText(p.title) * 3;
-        const techScore = scoreText(p.technologies.join(" ")) * 3;
-        const descScore = scoreText(p.description);
-        const catScore = scoreText(p.category) * 2;
-        return { item: p, score: titleScore + techScore + descScore + catScore };
-    }).sort((a, b) => b.score - a.score);
+    // 1. Semantic Vector Ranking for Projects
+    const rankedProjects = rankEntitiesSemantically(
+        seoContext.projects,
+        query,
+        p => ({
+            title: p.title,
+            body: `${p.description} ${p.category}`,
+            keywords: p.technologies
+        })
+    );
 
-    // Rank Posts
-    const rankedPosts = [...seoContext.posts].map(p => {
-        const titleScore = scoreText(p.title) * 3;
-        const tagScore = scoreText(p.tags.join(" ")) * 2;
-        const excerptScore = scoreText(p.excerpt);
-        return { item: p, score: titleScore + tagScore + excerptScore };
-    }).sort((a, b) => b.score - a.score);
+    // 2. Semantic Vector Ranking for Posts
+    const rankedPosts = rankEntitiesSemantically(
+        seoContext.posts,
+        query,
+        p => ({
+            title: p.title,
+            body: `${p.excerpt} ${p.category}`,
+            keywords: p.tags
+        })
+    );
 
-    // Rank Skills
-    const rankedSkills = [...seoContext.skills].map(s => {
-        const nameScore = scoreText(s.name) * 3;
-        const catScore = scoreText(s.category);
-        return { item: s, score: nameScore + catScore };
-    }).sort((a, b) => b.score - a.score);
+    // 3. Semantic Vector Ranking for Skills
+    const rankedSkills = rankEntitiesSemantically(
+        seoContext.skills,
+        query,
+        s => ({
+            title: s.name,
+            body: s.level,
+            keywords: [s.category]
+        })
+    );
 
     // If query didn't match specific entities noticeably, fall back to default
     const maxScore = Math.max(
@@ -458,7 +441,7 @@ export async function getRelevantKnowledgeString(query?: string, forceRefresh = 
         rankedSkills[0]?.score || 0
     );
 
-    if (maxScore === 0) {
+    if (maxScore < 0.05) {
         return rawData.text;
     }
 

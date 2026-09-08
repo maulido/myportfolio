@@ -704,13 +704,31 @@ export default function ChatWidget() {
     };
 
     useEffect(() => {
-        const handleOpenChat = () => handleOpen();
+        const handleOpenChat = () => {
+            handleOpen();
+            setViewMode("chat");
+        };
         const handleCloseChat = () => handleClose();
+        const handleOpenTerminal = () => {
+            handleOpen();
+            setViewMode("terminal");
+        };
+        const handleOpenJd = () => {
+            handleOpen();
+            setViewMode("chat");
+            setIsJdModalOpen(true);
+        };
+
         window.addEventListener("open-chat-widget", handleOpenChat);
         window.addEventListener("close-chat-widget", handleCloseChat);
+        window.addEventListener("open-chat-terminal", handleOpenTerminal);
+        window.addEventListener("open-chat-jd", handleOpenJd);
+
         return () => {
             window.removeEventListener("open-chat-widget", handleOpenChat);
             window.removeEventListener("close-chat-widget", handleCloseChat);
+            window.removeEventListener("open-chat-terminal", handleOpenTerminal);
+            window.removeEventListener("open-chat-jd", handleOpenJd);
         };
     }, []);
 

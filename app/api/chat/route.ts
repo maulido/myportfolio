@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
-import { rateLimit } from "@/lib/rate-limit";
+import { checkAiRateLimit, createRateLimitStreamResponse } from "@/lib/ai-rate-limiter";
 import { sanitizeText } from "@/lib/sanitize";
 import { getGlobalSettings } from "@/lib/settings";
 import { getResolvedAssistantAIConfig, getConfiguredProviders, streamAICompletion, AIMessage } from "@/lib/ai";
@@ -9,11 +9,6 @@ import { getCachedAIResponse, setCachedAIResponse } from "@/lib/ai-cache";
 import { notifyAiRecruitmentLead } from "@/lib/telegram";
 import AiChatLog from "@/models/AiChatLog";
 import AiConversation from "@/models/AiConversation";
-
-const chatLimiter = rateLimit({
-    interval: 2 * 60 * 1000, // 2 minutes
-    uniqueTokenPerInterval: 500,
-});
 
 async function logToConversation(
     sessionKey: string,
@@ -78,20 +73,22 @@ async function logToConversation(
 export async function POST(req: Request) {
     const startTime = Date.now();
 
-    // 1. IP-based Rate Limiting to prevent AI quota exhaustion
+    // 1. IP-based Rate Limiting & Anti-Abuse Protection
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "127.0.0.1";
     const userAgent = req.headers.get("user-agent") || "";
 
-    try {
-        await chatLimiter.check(10, ip); // Max 10 messages per 2 minutes
-    } catch {
-        return NextResponse.json(
-            { error: "Too many messages sent. Please slow down and wait 2 minutes." },
-            { status: 429 }
+    const settings = await getGlobalSettings();
+    const waNumber = (settings.whatsappNumber || "6281234567890").replace(/[^0-9]/g, "") || "6281234567890";
+
+    const rateResult = checkAiRateLimit(ip);
+    if (!rateResult.isAllowed) {
+        return createRateLimitStreamResponse(
+            rateResult.reason || "limit",
+            rateResult.resetSeconds,
+            waNumber
         );
     }
 
-    const settings = await getGlobalSettings();
     // Use dedicated assistant configuration (with fallbacks to global AI settings)
     const config = getResolvedAssistantAIConfig(settings);
 
@@ -268,7 +265,6 @@ export async function POST(req: Request) {
 
         // 5. Dynamic Relevance Ranking / Mini-RAG
         const knowledge = await getRelevantKnowledgeString(message);
-        const waNumber = (settings.whatsappNumber || "6281234567890").replace(/[^0-9]/g, "") || "6281234567890";
 
         const combinedSystemInstruction = `
 You are the AI Assistant for Maulido's professional Portfolio Website.
