@@ -268,6 +268,7 @@ export async function POST(req: Request) {
 
         // 5. Dynamic Relevance Ranking / Mini-RAG
         const knowledge = await getRelevantKnowledgeString(message);
+        const waNumber = (settings.whatsappNumber || "6281234567890").replace(/[^0-9]/g, "") || "6281234567890";
 
         const combinedSystemInstruction = `
 You are the AI Assistant for Maulido's professional Portfolio Website.
@@ -286,7 +287,7 @@ RESPONSE GUIDELINES:
 - When mentioning a project, you can provide its markdown link like \`[Project Name](/projects/slug)\`.
 - When mentioning a blog article, provide its markdown link like \`[Article Title](/blog/slug)\`.
 - If the visitor is asking about downloading CV/resume, invite them to click \`[📄 Download CV](#cv)\`.
-- If the visitor is interested in hiring, offering freelance work, or contacting Maulido, warmly invite them to connect via \`[💬 WhatsApp](https://wa.me/6281234567890)\` or \`[✉️ Kontak](/contact)\`, and offer that they can also leave their email/WhatsApp number right here in this chat.
+- If the visitor is interested in hiring, offering freelance work, or contacting Maulido, warmly invite them to connect via \`[💬 WhatsApp](https://wa.me/${waNumber})\` or \`[✉️ Kontak](/contact)\`, and offer that they can also leave their email/WhatsApp number right here in this chat.
 ${config.customPrompt ? `\nADDITIONAL OWNER INSTRUCTIONS:\n${config.customPrompt}` : ""}
 `.trim();
 

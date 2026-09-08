@@ -59,7 +59,7 @@ const CANNED_RESPONSES = [
     },
     {
         label: "💬 Hubungkan via WhatsApp",
-        text: "Terima kasih atas pesannya! Untuk diskusi yang lebih cepat dan fleksibel, mari kita terhubung via WhatsApp di +62 812-3456-7890."
+        text: "Terima kasih atas pesannya! Untuk diskusi yang lebih cepat dan fleksibel, mari kita terhubung via WhatsApp atau email kontak."
     },
     {
         label: "📄 Penawaran Kirim CV",

@@ -41,10 +41,12 @@ function CopyButton({ text }: { text: string }) {
 
 function ContextualActions({
     content,
-    onCloseChat
+    onCloseChat,
+    waNumber = "6281234567890"
 }: {
     content: string;
     onCloseChat: () => void;
+    waNumber?: string;
 }) {
     const lower = content.toLowerCase();
     const hasCV = lower.includes("cv") || lower.includes("resume") || lower.includes("curriculum vitae");
@@ -71,7 +73,7 @@ function ContextualActions({
             {hasContact && (
                 <>
                     <a
-                        href="https://wa.me/6281234567890"
+                        href={`https://wa.me/${waNumber || "6281234567890"}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-medium transition-colors border border-emerald-500/20"
@@ -199,7 +201,21 @@ export default function ChatWidget() {
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [isHydrated, setIsHydrated] = useState(false);
+    const [waNumber, setWaNumber] = useState("6281234567890");
     const scrollRef = useRef<HTMLDivElement>(null);
+
+    // Fetch dynamic WhatsApp number
+    useEffect(() => {
+        fetch("/api/settings?key=whatsappNumber")
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    const cleaned = String(data.data).replace(/[^0-9]/g, '');
+                    if (cleaned) setWaNumber(cleaned);
+                }
+            })
+            .catch(() => {});
+    }, []);
 
     // Initialize or restore session ID and chat history
     useEffect(() => {
@@ -562,7 +578,7 @@ export default function ChatWidget() {
 
                                             {/* Contextual Interactive Action Buttons for Bot */}
                                             {!isUser && !isAdmin && msg.content && (
-                                                <ContextualActions content={msg.content} onCloseChat={handleClose} />
+                                                <ContextualActions content={msg.content} onCloseChat={handleClose} waNumber={waNumber} />
                                             )}
 
                                             {/* Bubble Footer: Timestamps & Copy */}

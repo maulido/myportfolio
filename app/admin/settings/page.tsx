@@ -2388,11 +2388,11 @@ export default function AdminSettingsPage() {
                                         {(() => {
                                             const configuredList = [
                                                 { id: "gemini", name: "Google Gemini", hasKey: Boolean(settings.geminiApiKey?.trim() || settings.aiApiKey?.trim()) },
-                                                { id: "groq", name: "Groq (LPU)", hasKey: Boolean(settings.groqApiKey?.trim()) },
-                                                { id: "openai", name: "OpenAI", hasKey: Boolean(settings.openaiApiKey?.trim()) },
-                                                { id: "deepseek", name: "DeepSeek", hasKey: Boolean(settings.deepseekApiKey?.trim()) },
-                                                { id: "openrouter", name: "OpenRouter", hasKey: Boolean(settings.openrouterApiKey?.trim()) },
-                                                { id: "custom", name: "Custom", hasKey: Boolean(settings.customApiKey?.trim()) },
+                                                { id: "groq", name: "Groq (LPU)", hasKey: Boolean(settings.groqApiKey?.trim() || (settings.aiProvider === "groq" && settings.aiApiKey?.trim())) },
+                                                { id: "openai", name: "OpenAI", hasKey: Boolean(settings.openaiApiKey?.trim() || (settings.aiProvider === "openai" && settings.aiApiKey?.trim())) },
+                                                { id: "deepseek", name: "DeepSeek", hasKey: Boolean(settings.deepseekApiKey?.trim() || (settings.aiProvider === "deepseek" && settings.aiApiKey?.trim())) },
+                                                { id: "openrouter", name: "OpenRouter", hasKey: Boolean(settings.openrouterApiKey?.trim() || (settings.aiProvider === "openrouter" && settings.aiApiKey?.trim())) },
+                                                { id: "custom", name: "Custom", hasKey: Boolean(settings.customApiKey?.trim() || (settings.aiProvider === "custom" && settings.aiApiKey?.trim())) },
                                             ].filter(p => p.hasKey);
 
                                             return (

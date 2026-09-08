@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-helpers";
 import { getGlobalSettings } from "@/lib/settings";
-import { getResolvedAIConfig, fetchAvailableAIModels, AI_PROVIDERS } from "@/lib/ai";
+import { getResolvedAIConfig, getApiKeyForProvider, fetchAvailableAIModels, AI_PROVIDERS } from "@/lib/ai";
 
 export const dynamic = "force-dynamic";
 
@@ -22,8 +22,11 @@ export async function POST(req: Request) {
         const provider = inputProvider || config.provider || "gemini";
         const preset = AI_PROVIDERS[provider] || AI_PROVIDERS.gemini;
 
-        const apiKey = (inputKey && inputKey.trim()) ? inputKey.trim() : config.apiKey;
-        const baseUrl = inputBaseUrl !== undefined && inputBaseUrl !== "" ? inputBaseUrl : (config.baseUrl || preset.defaultBaseUrl);
+        const resolvedSavedKey = getApiKeyForProvider(settings, provider);
+        const apiKey = (inputKey !== undefined && inputKey !== "") ? inputKey : resolvedSavedKey;
+        const baseUrl = (inputBaseUrl !== undefined && inputBaseUrl !== "")
+            ? inputBaseUrl
+            : ((provider === "custom" || provider === "ollama") && settings.aiBaseUrl?.trim() ? settings.aiBaseUrl.trim() : preset.defaultBaseUrl);
 
         const result = await fetchAvailableAIModels({
             provider,

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-helpers";
 import { getGlobalSettings } from "@/lib/settings";
-import { getResolvedAIConfig, generateAICompletion } from "@/lib/ai";
+import { getResolvedAIConfig, getConfiguredProviders, generateAICompletion } from "@/lib/ai";
 import { getWebsiteKnowledgeString, getWebsiteSeoContext } from "@/lib/website-knowledge";
 
 export const dynamic = "force-dynamic";
@@ -163,7 +163,9 @@ Buatlah rekomendasi ide konten baru yang berkualitas tinggi dan memiliki nilai S
             baseUrl: config.baseUrl,
             model: config.model,
             prompt,
-            maxTokens: 1500
+            maxTokens: 1500,
+            enableFailover: settings.aiAutoFailover !== "false",
+            failoverProviders: getConfiguredProviders(settings)
         });
 
         if (!completion.success) {

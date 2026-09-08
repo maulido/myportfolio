@@ -346,11 +346,16 @@ export function getResolvedAssistantAIConfig(settings: GlobalSettings): Resolved
 
     const customPrompt = settings.assistantAiCustomPrompt?.trim() || globalConfig.customPrompt || "";
 
+    const resolvedKey = assistantApiKey || (assistantProvider === globalConfig.provider ? globalConfig.apiKey : "");
+    const resolvedBaseUrl = (assistantProvider === "custom" || assistantProvider === "ollama") && settings.aiBaseUrl?.trim()
+        ? settings.aiBaseUrl.trim()
+        : preset.defaultBaseUrl;
+
     return {
         ...globalConfig,
         provider: assistantProvider,
-        apiKey: assistantApiKey || globalConfig.apiKey,
-        baseUrl: preset.defaultBaseUrl,
+        apiKey: resolvedKey,
+        baseUrl: resolvedBaseUrl,
         model: assistantModel,
         customPrompt
     };
